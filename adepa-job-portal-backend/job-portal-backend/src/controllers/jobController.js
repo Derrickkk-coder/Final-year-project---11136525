@@ -55,7 +55,7 @@ export async function getJobs(req, res, next) {
     if (type && type !== 'All types') {
       filter.type = type
     }
-    if (location && location !== 'All locations') {
+  if (location && location !== 'All locations') {
   filter.location = { $regex: location, $options: 'i' }
 }
 
