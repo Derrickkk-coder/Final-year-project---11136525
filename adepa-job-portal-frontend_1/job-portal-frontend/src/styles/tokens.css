@@ -1,0 +1,71 @@
+:root {
+  /* ---- Color: FlexJobs-style deep teal + white, coral CTA ---- */
+  --ink: #16232B;
+  --ink-soft: #5A6D74;
+  --ink-faint: #8FA1A7;
+  --paper: #F4F8F9;         /* page background, light cool gray */
+  --paper-raised: #FFFFFF;  /* card surfaces */
+  --teal-900: #013A50;      /* darkest, footer */
+  --teal-700: #004F6D;      /* primary brand teal */
+  --teal-500: #0C7C92;      /* mid teal, links/icons */
+  --teal-100: #E4F1F4;      /* pale teal tint, pill backgrounds */
+  --coral: #FF6A45;         /* CTA accent */
+  --coral-dark: #E8552F;
+  --success: #1E8E5A;
+  --success-bg: #E4F5EA;
+  --line: #E2E9EB;
+  --shadow-card: 0 1px 2px rgba(1,58,80,0.05), 0 6px 20px rgba(1,58,80,0.06);
+  --shadow-lift: 0 6px 16px rgba(1,58,80,0.10), 0 18px 40px rgba(1,58,80,0.10);
+
+  /* ---- Type ---- */
+  --font-display: "Poppins", -apple-system, sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "Inter", sans-serif;
+
+  --radius-card: 10px;
+  --radius-pill: 999px;
+  --container: 1180px;
+
+  /* ---- Aliases for backward compatibility with earlier component styles ---- */
+  --pine: var(--teal-700);
+  --pine-deep: var(--teal-900);
+  --gold: var(--coral);
+  --gold-soft: #FFD9C9;
+  --rust: var(--coral-dark);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root { min-height: 100vh; display: flex; flex-direction: column; }
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--ink);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font-family: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--teal-500);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
