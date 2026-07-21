@@ -4,6 +4,10 @@ import { useAuth } from '../context/AuthContext.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import { fetchMyApplications } from '../api/applications.js'
 
+function formatDate(date) {
+  return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 export default function JobSeekerDashboard() {
   const { user } = useAuth()
   const [applications, setApplications] = useState([])
@@ -80,30 +84,56 @@ export default function JobSeekerDashboard() {
 
         {!loading && !error && (
           applications.length > 0 ? (
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Role</th>
-                  <th>Company</th>
-                  <th>Applied</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              {/* Desktop: table */}
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Role</th>
+                      <th>Company</th>
+                      <th>Applied</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {applications.map((app) => (
+                      <tr key={app._id}>
+                        <td>
+                          <Link to={`/jobs/${app.job?._id}`} style={{ fontWeight: 600, color: 'var(--ink)' }}>
+                            {app.job?.title || 'Job no longer available'}
+                          </Link>
+                        </td>
+                        <td>{app.job?.company || '—'}</td>
+                        <td>{formatDate(app.createdAt)}</td>
+                        <td><StatusPill status={app.status} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile: stacked cards */}
+              <div className="card-list">
                 {applications.map((app) => (
-                  <tr key={app._id}>
-                    <td>
-                      <Link to={`/jobs/${app.job?._id}`} style={{ fontWeight: 600, color: 'var(--ink)' }}>
-                        {app.job?.title || 'Job no longer available'}
-                      </Link>
-                    </td>
-                    <td>{app.job?.company || '—'}</td>
-                    <td>{new Date(app.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                    <td><StatusPill status={app.status} /></td>
-                  </tr>
+                  <div className="data-card" key={app._id}>
+                    <div className="data-card__top">
+                      <div>
+                        <Link to={`/jobs/${app.job?._id}`} className="data-card__title" style={{ color: 'var(--ink)' }}>
+                          {app.job?.title || 'Job no longer available'}
+                        </Link>
+                        <div className="data-card__sub">{app.job?.company || '—'}</div>
+                      </div>
+                      <StatusPill status={app.status} />
+                    </div>
+                    <div className="data-card__row">
+                      <span className="data-card__row-label">Applied</span>
+                      <span>{formatDate(app.createdAt)}</span>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           ) : (
             <div className="empty-state">
               <h3>No applications yet</h3>

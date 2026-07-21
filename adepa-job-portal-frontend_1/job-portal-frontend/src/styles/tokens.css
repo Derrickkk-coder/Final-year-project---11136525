@@ -43,6 +43,7 @@ html, body {
   color: var(--ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden; /* safety net: stops any wide child from forcing page-level horizontal scroll */
 }
 
 #root { min-height: 100vh; display: flex; flex-direction: column; }

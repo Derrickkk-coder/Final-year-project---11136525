@@ -7,6 +7,10 @@ import { fetchApplicationsForEmployer, updateApplicationStatus } from '../api/ap
 
 const STATUS_OPTIONS = ['pending', 'review', 'accepted', 'rejected']
 
+function formatDate(date) {
+  return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
 export default function EmployerDashboard() {
   const { user } = useAuth()
   const [tab, setTab] = useState('jobs')
@@ -106,32 +110,66 @@ export default function EmployerDashboard() {
               <>
                 <h2 style={{ fontSize: 18, marginBottom: 14 }}>My job postings</h2>
                 {jobs.length > 0 ? (
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Ref</th>
-                        <th>Role</th>
-                        <th>Applicants</th>
-                        <th>Posted</th>
-                        <th>Closes</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                  <>
+                    {/* Desktop: table */}
+                    <div className="table-wrap">
+                      <table className="table">
+                        <thead>
+                          <tr>
+                            <th>Ref</th>
+                            <th>Role</th>
+                            <th>Applicants</th>
+                            <th>Posted</th>
+                            <th>Closes</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {jobs.map((job) => (
+                            <tr key={job._id}>
+                              <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5 }}>{job.ref}</td>
+                              <td style={{ fontWeight: 600 }}>
+                                <Link to={`/jobs/${job._id}`} style={{ color: 'var(--ink)' }}>{job.title}</Link>
+                              </td>
+                              <td>{job.applicantsCount || 0}</td>
+                              <td>{formatDate(job.createdAt)}</td>
+                              <td>{formatDate(job.closingAt)}</td>
+                              <td><StatusPill status={job.status} /></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile: stacked cards */}
+                    <div className="card-list">
                       {jobs.map((job) => (
-                        <tr key={job._id}>
-                          <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5 }}>{job.ref}</td>
-                          <td style={{ fontWeight: 600 }}>
-                            <Link to={`/jobs/${job._id}`} style={{ color: 'var(--ink)' }}>{job.title}</Link>
-                          </td>
-                          <td>{job.applicantsCount || 0}</td>
-                          <td>{new Date(job.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</td>
-                          <td>{new Date(job.closingAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</td>
-                          <td><StatusPill status={job.status} /></td>
-                        </tr>
+                        <div className="data-card" key={job._id}>
+                          <div className="data-card__top">
+                            <div>
+                              <Link to={`/jobs/${job._id}`} className="data-card__title" style={{ color: 'var(--ink)' }}>
+                                {job.title}
+                              </Link>
+                              <div className="data-card__sub" style={{ color: 'var(--ink-faint)', fontWeight: 500 }}>{job.ref}</div>
+                            </div>
+                            <StatusPill status={job.status} />
+                          </div>
+                          <div className="data-card__row">
+                            <span className="data-card__row-label">Applicants</span>
+                            <span>{job.applicantsCount || 0}</span>
+                          </div>
+                          <div className="data-card__row">
+                            <span className="data-card__row-label">Posted</span>
+                            <span>{formatDate(job.createdAt)}</span>
+                          </div>
+                          <div className="data-card__row">
+                            <span className="data-card__row-label">Closes</span>
+                            <span>{formatDate(job.closingAt)}</span>
+                          </div>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
+                    </div>
+                  </>
                 ) : (
                   <div className="empty-state">
                     <h3>No jobs posted yet</h3>
@@ -146,37 +184,71 @@ export default function EmployerDashboard() {
               <>
                 <h2 style={{ fontSize: 18, marginBottom: 14 }}>Applicants across all roles</h2>
                 {applications.length > 0 ? (
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Applicant</th>
-                        <th>Role</th>
-                        <th>Applied</th>
-                        <th>Status</th>
-                        <th>Update status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                  <>
+                    {/* Desktop: table */}
+                    <div className="table-wrap">
+                      <table className="table">
+                        <thead>
+                          <tr>
+                            <th>Applicant</th>
+                            <th>Role</th>
+                            <th>Applied</th>
+                            <th>Status</th>
+                            <th>Update status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {applications.map((app) => (
+                            <tr key={app._id}>
+                              <td style={{ fontWeight: 600 }}>{app.applicant?.name || 'Unknown applicant'}</td>
+                              <td>{app.job?.title || '—'}</td>
+                              <td>{formatDate(app.createdAt)}</td>
+                              <td><StatusPill status={app.status} /></td>
+                              <td>
+                                <select
+                                  value={app.status}
+                                  disabled={updatingId === app._id}
+                                  onChange={(e) => handleStatusChange(app._id, e.target.value)}
+                                  style={{ border: '1.5px solid var(--line)', borderRadius: 6, padding: '6px 8px', fontSize: 13 }}
+                                >
+                                  {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile: stacked cards */}
+                    <div className="card-list">
                       {applications.map((app) => (
-                        <tr key={app._id}>
-                          <td style={{ fontWeight: 600 }}>{app.applicant?.name || 'Unknown applicant'}</td>
-                          <td>{app.job?.title || '—'}</td>
-                          <td>{new Date(app.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</td>
-                          <td><StatusPill status={app.status} /></td>
-                          <td>
+                        <div className="data-card" key={app._id}>
+                          <div className="data-card__top">
+                            <div>
+                              <div className="data-card__title">{app.applicant?.name || 'Unknown applicant'}</div>
+                              <div className="data-card__sub">{app.job?.title || '—'}</div>
+                            </div>
+                            <StatusPill status={app.status} />
+                          </div>
+                          <div className="data-card__row">
+                            <span className="data-card__row-label">Applied</span>
+                            <span>{formatDate(app.createdAt)}</span>
+                          </div>
+                          <div className="data-card__row" style={{ alignItems: 'center' }}>
+                            <span className="data-card__row-label">Update status</span>
                             <select
                               value={app.status}
                               disabled={updatingId === app._id}
                               onChange={(e) => handleStatusChange(app._id, e.target.value)}
-                              style={{ border: '1.5px solid var(--line)', borderRadius: 6, padding: '6px 8px', fontSize: 13 }}
                             >
                               {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
                             </select>
-                          </td>
-                        </tr>
+                          </div>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
+                    </div>
+                  </>
                 ) : (
                   <div className="empty-state">
                     <h3>No applicants yet</h3>

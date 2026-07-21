@@ -131,7 +131,7 @@ export default function Home() {
         <div className="container">
           <span className="eyebrow">Why Adepa</span>
           <h2 className="section__title" style={{ marginTop: 8, marginBottom: 36 }}>How Adepa is different</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 28 }}>
+          <div className="features-grid">
             {FEATURES.map((f) => (
               <div key={f.title}>
                 <div style={{

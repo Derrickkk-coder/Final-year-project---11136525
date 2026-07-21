@@ -95,7 +95,7 @@ export default function JobDetails() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 32 }}>
+      <div className="job-detail-grid">
         <div>
           <section style={{ marginBottom: 32 }}>
             <h2 style={{ fontSize: 20, marginBottom: 12 }}>About this role</h2>
@@ -122,7 +122,7 @@ export default function JobDetails() {
         </div>
 
         <aside>
-          <div className="panel" style={{ position: 'sticky', top: 90 }}>
+          <div className="panel job-detail-aside">
             <div className="hero__stat-label" style={{ marginBottom: 4 }}>Applicants so far</div>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'var(--pine)', marginBottom: 20 }}>
               {job.applicantsCount || 0}

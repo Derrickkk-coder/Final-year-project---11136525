@@ -101,7 +101,7 @@ export default function PostJob() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="form-row">
           <div className="form-field">
             <label htmlFor="salary">Salary range</label>
             <input id="salary" value={form.salary} onChange={update('salary')} placeholder="e.g. GHS 6,000 – 9,000" />
