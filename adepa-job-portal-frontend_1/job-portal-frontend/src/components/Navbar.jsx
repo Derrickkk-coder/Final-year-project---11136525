@@ -22,8 +22,8 @@ export default function Navbar() {
     <header className="nav">
       <div className="container nav__inner">
         <Link to="/" className="nav__brand">
-          <span className="nav__brand-mark">A</span>
-          Adepa
+          <span className="nav__brand-mark">N</span>
+          Nextleap
         </Link>
 
         <nav className="nav__links nav__links--desktop">

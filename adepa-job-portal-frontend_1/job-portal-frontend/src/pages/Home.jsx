@@ -55,7 +55,7 @@ export default function Home() {
               Find a <em>better way</em> to get hired
             </h1>
             <p className="hero__sub">
-              Adepa connects job seekers with verified employers across Accra, Tema, and remote
+              Nextleap connects job seekers with verified employers across Accra, Tema, and remote
               teams — search once, apply in a click, and track every application in one place.
             </p>
 
