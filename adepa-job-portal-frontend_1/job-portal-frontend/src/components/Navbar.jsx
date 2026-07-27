@@ -23,7 +23,7 @@ export default function Navbar() {
       <div className="container nav__inner">
         <Link to="/" className="nav__brand">
           <span className="nav__brand-mark">N</span>
-          Nextleap
+          NextLeap
         </Link>
 
         <nav className="nav__links nav__links--desktop">
