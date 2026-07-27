@@ -1,6 +1,23 @@
 import User from '../models/User.js'
 import { generateToken } from '../utils/generateToken.js'
 
+// Common free/personal email providers. Employers are asked to register with
+// a company email instead, as a lightweight (not foolproof) signal that the
+// account belongs to a real business rather than an individual.
+const FREE_EMAIL_DOMAINS = [
+  'gmail.com',
+  'yahoo.com',
+  'outlook.com',
+  'hotmail.com',
+  'live.com',
+  'icloud.com',
+  'aol.com',
+  'protonmail.com',
+  'mail.com',
+  'gmx.com',
+  'yandex.com',
+]
+
 // @route   POST /api/auth/register
 // @access  Public
 export async function register(req, res, next) {
@@ -19,6 +36,18 @@ export async function register(req, res, next) {
         success: false,
         message: "Role must be either 'seeker' or 'employer'.",
       })
+    }
+
+    // Employers only: reject free/personal email providers, nudging them
+    // toward a company email address as a basic legitimacy signal.
+    if (role === 'employer') {
+      const emailDomain = email.toLowerCase().split('@')[1]
+      if (FREE_EMAIL_DOMAINS.includes(emailDomain)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please register with your company email address rather than a personal email provider.',
+        })
+      }
     }
 
     const existing = await User.findOne({ email: email.toLowerCase() })
