@@ -5,7 +5,7 @@ export default function Footer() {
   return (
     <footer className="footer">
       <div className="container footer__inner">
-        <span>© {new Date().getFullYear()} NextLeap · University of Ghana Final Year Project - 11136525</span>
+        <span>© {new Date().getFullYear()} NextLeap · University of Ghana Final Year Project - Akwaboah Derrick-11136525</span>
 
         <div className="footer__links">
           <Link to="/jobs">Browse jobs</Link>
