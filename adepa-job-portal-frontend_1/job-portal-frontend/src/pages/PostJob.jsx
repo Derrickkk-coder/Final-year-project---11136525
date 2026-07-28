@@ -35,7 +35,6 @@ export default function PostJob() {
         salary: form.salary,
         closingAt: form.closingAt,
         description: form.description,
-        // Turn newline-separated textareas into string arrays for the backend
         responsibilities: form.responsibilities.split('\n').map((s) => s.trim()).filter(Boolean),
         requirements: form.requirements.split('\n').map((s) => s.trim()).filter(Boolean),
       })
@@ -71,7 +70,7 @@ export default function PostJob() {
           <input id="title" value={form.title} onChange={update('title')} placeholder="e.g. Frontend Engineer" required />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="form-row">
           <div className="form-field">
             <label htmlFor="category">Category</label>
             <select id="category" value={form.category} onChange={update('category')}>
@@ -86,7 +85,7 @@ export default function PostJob() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="form-row">
           <div className="form-field">
             <label htmlFor="location">Location</label>
             <input id="location" value={form.location} onChange={update('location')} placeholder="e.g. Accra, GH" required />
