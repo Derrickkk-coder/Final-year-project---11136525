@@ -19,11 +19,6 @@ const FREE_EMAIL_DOMAINS = [
   'yandex.com',
 ]
 
-// Generates a verification token, saves it to the user, and sends the email.
-// IMPORTANT: this is intentionally NOT awaited by its callers below.
-// Sending email can be slow or occasionally fail (network hiccups, provider
-// issues) — none of that should ever block or break account creation itself.
-// Errors are caught and logged here instead of propagating up.
 async function issueVerificationEmail(user) {
   try {
     const { rawToken, hashedToken } = generateVerificationToken()
@@ -37,8 +32,9 @@ async function issueVerificationEmail(user) {
       subject: 'Verify your NextLeap account',
       html: verificationEmailTemplate({ name: user.name, verifyUrl }),
     })
+    console.log(`[email] Verification email SENT successfully to ${user.email}`)
   } catch (err) {
-    console.error(`Failed to send verification email to ${user.email}:`, err.message)
+    console.error(`[email] FAILED to send verification email to ${user.email}:`, err.message)
   }
 }
 
@@ -88,9 +84,6 @@ export async function register(req, res, next) {
       company: role === 'employer' ? company || '' : '',
     })
 
-    // Fire-and-forget: do NOT await. The account is already created — the
-    // HTTP response below goes out immediately regardless of how long
-    // sending the email takes or whether it succeeds.
     issueVerificationEmail(user)
 
     res.status(201).json({
@@ -189,6 +182,7 @@ export async function resendVerification(req, res, next) {
     const user = await User.findOne({ email: email.toLowerCase() })
 
     if (!user) {
+      console.log(`[email] Resend requested for unknown email: ${email}`)
       return res.json({
         success: true,
         message: 'If an account exists with this email, a verification link has been sent.',
@@ -202,7 +196,6 @@ export async function resendVerification(req, res, next) {
       })
     }
 
-    // Same fire-and-forget approach as register — respond immediately.
     issueVerificationEmail(user)
 
     res.json({ success: true, message: 'Verification email sent. Please check your inbox.' })
