@@ -229,7 +229,18 @@
 .password-toggle:hover { color: var(--teal-700); }
 
 .auth-shell { min-height: calc(100vh - 72px); display: grid; grid-template-columns: 1fr 1fr; }
-.auth-shell__art { background: var(--teal-700); color: #fff; padding: 64px; display: flex; flex-direction: column; justify-content: space-between; }
+.auth-shell__art {
+  background:
+    linear-gradient(180deg, rgba(1,58,80,0.85) 0%, rgba(1,58,80,0.55) 40%, rgba(1,58,80,0.55) 65%, rgba(1,58,80,0.88) 100%),
+    url('/images/auth-bg.png');
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  padding: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
 .auth-shell__form { padding: 64px; display: flex; flex-direction: column; justify-content: center; max-width: 460px; margin: 0 auto; width: 100%; }
 
 .role-toggle {
