@@ -232,9 +232,59 @@
 .auth-shell__art { background: var(--teal-700); color: #fff; padding: 64px; display: flex; flex-direction: column; justify-content: space-between; }
 .auth-shell__form { padding: 64px; display: flex; flex-direction: column; justify-content: center; max-width: 460px; margin: 0 auto; width: 100%; }
 
-.role-toggle { display: flex; border: 1.5px solid var(--line); border-radius: var(--radius-pill); padding: 4px; margin-bottom: 24px; background: var(--paper); }
-.role-toggle button { flex: 1; border: none; background: transparent; padding: 9px 12px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 700; color: var(--ink-soft); cursor: pointer; }
-.role-toggle button.active { background: var(--teal-700); color: #fff; }
+.role-toggle {
+  position: relative;
+  display: flex;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+  margin-bottom: 24px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.role-toggle__indicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  background: var(--teal-700);
+  border-radius: var(--radius-pill);
+  transition: transform 0.28s ease;
+  z-index: 0;
+}
+.role-toggle__indicator.is-employer { transform: translateX(100%); }
+.role-toggle button {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 9px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.role-toggle button.active { color: #fff; }
+
+/* Crossfade for text that changes when the role toggle switches */
+@keyframes roleFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.role-fade { animation: roleFadeIn 0.3s ease; }
+
+/* Smooth expand/collapse for the conditional "Company name" field */
+.collapsible {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+.collapsible.is-open { grid-template-rows: 1fr; }
+.collapsible__inner { overflow: hidden; min-height: 0; }
 
 /* ============ Dashboard ============ */
 .dash-shell { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 72px); }

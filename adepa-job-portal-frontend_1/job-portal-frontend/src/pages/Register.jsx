@@ -103,7 +103,7 @@ export default function Register() {
       <div className="auth-shell__art">
         <div>
           <span className="hero__eyebrow">Join NextLeap</span>
-          <h2 style={{ fontSize: 34, marginTop: 12, maxWidth: '16ch' }}>
+          <h2 key={role} className="role-fade" style={{ fontSize: 34, marginTop: 12, maxWidth: '16ch' }}>
             {role === 'employer' ? 'Post roles. Manage applicants. Hire faster.' : 'Search once. Apply everywhere that matters.'}
           </h2>
         </div>
@@ -121,6 +121,7 @@ export default function Register() {
         </p>
 
         <div className="role-toggle" role="tablist" aria-label="Account type">
+          <div className={`role-toggle__indicator ${role === 'employer' ? 'is-employer' : ''}`} aria-hidden="true" />
           <button type="button" className={role === 'seeker' ? 'active' : ''} onClick={() => setRole('seeker')}>
             Job seeker
           </button>
@@ -135,12 +136,14 @@ export default function Register() {
             <input id="name" value={form.name} onChange={update('name')} placeholder="e.g. Ama Serwaa" />
           </div>
 
-          {role === 'employer' && (
-            <div className="form-field">
-              <label htmlFor="company">Company name</label>
-              <input id="company" value={form.company} onChange={update('company')} placeholder="e.g. Zaya Health" />
+          <div className={`collapsible ${role === 'employer' ? 'is-open' : ''}`}>
+            <div className="collapsible__inner">
+              <div className="form-field">
+                <label htmlFor="company">Company name</label>
+                <input id="company" value={form.company} onChange={update('company')} placeholder="e.g. Zaya Health" />
+              </div>
             </div>
-          )}
+          </div>
 
           <div className="form-field">
             <label htmlFor="email">Email address</label>
