@@ -1,33 +1,29 @@
-import nodemailer from 'nodemailer'
-
-// Using explicit SMTP settings instead of the `service: 'gmail'` shorthand,
-// with `family: 4` forcing an IPv4 connection — Render's outbound network
-// doesn't reliably route IPv6, and Node tries IPv6 first by default.
-//
-// The timeout values matter too: without them, a hung connection can block
-// for a long time before failing. These make sure any network problem
-// surfaces quickly (a few seconds) rather than hanging indefinitely.
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  family: 4,
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
-})
+// Uses Brevo's transactional email HTTP API instead of raw SMTP.
+// Render (and many free-tier hosts) block outbound SMTP ports (25/465/587)
+// to prevent spam abuse — an HTTPS API call is unaffected by that, since
+// blocking normal web traffic would break every app on the platform.
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email'
 
 export async function sendEmail({ to, subject, html }) {
-  await transporter.sendMail({
-    from: `"NextLeap" <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    html,
+  const response = await fetch(BREVO_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'api-key': process.env.BREVO_API_KEY,
+    },
+    body: JSON.stringify({
+      sender: { name: 'NextLeap', email: process.env.EMAIL_USER },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
   })
+
+  if (!response.ok) {
+    const errorBody = await response.text()
+    throw new Error(`Brevo API error (${response.status}): ${errorBody}`)
+  }
 }
 
 export function verificationEmailTemplate({ name, verifyUrl }) {
