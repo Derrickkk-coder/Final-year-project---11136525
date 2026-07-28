@@ -62,9 +62,9 @@ export default function EmployerDashboard() {
           </a>
         </div>
         <div className="dash-sidebar__group">
-          <span className="dash-sidebar__label">Account</span>
-          <a href="#company">Company profile</a>
-        </div>
+  <span className="dash-sidebar__label">Account</span>
+  <Link to="/employer/profile">Company profile</Link>
+</div>
       </aside>
 
       <div className="dash-main">

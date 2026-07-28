@@ -24,3 +24,8 @@ export async function resendVerification(email) {
   const { data } = await client.post('/auth/resend-verification', { email })
   return data // { success, message }
 }
+
+export async function updateProfile(payload) {
+  const { data } = await client.put('/auth/profile', payload)
+  return data // { success, user }
+}

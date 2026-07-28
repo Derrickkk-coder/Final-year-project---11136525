@@ -32,6 +32,16 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    companyDescription: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    companyWebsite: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     resumeUrl: {
       type: String,
       default: '',

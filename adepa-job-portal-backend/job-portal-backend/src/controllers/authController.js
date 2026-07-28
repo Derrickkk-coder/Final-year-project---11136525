@@ -193,3 +193,30 @@ export async function getMe(req, res, next) {
     next(err)
   }
 }
+
+// @route   PUT /api/auth/profile
+// @access  Private
+// Lets the logged-in user update their own profile fields. Currently used by
+// the employer "Company profile" page, but written generically enough to
+// reuse for a job seeker profile page later.
+export async function updateProfile(req, res, next) {
+  try {
+    const { name, company, companyDescription, companyWebsite } = req.body
+
+    if (name !== undefined) {
+      if (!name.trim()) {
+        return res.status(400).json({ success: false, message: 'Name cannot be empty.' })
+      }
+      req.user.name = name
+    }
+    if (company !== undefined) req.user.company = company
+    if (companyDescription !== undefined) req.user.companyDescription = companyDescription
+    if (companyWebsite !== undefined) req.user.companyWebsite = companyWebsite
+
+    await req.user.save()
+
+    res.json({ success: true, user: req.user })
+  } catch (err) {
+    next(err)
+  }
+}

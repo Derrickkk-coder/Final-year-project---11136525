@@ -6,9 +6,8 @@ const TOKEN_KEY = 'adepa_token'
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true) // true while we check for an existing session
+  const [loading, setLoading] = useState(true)
 
-  // On first load, if a token is saved, try to restore the session.
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY)
     if (!token) {
@@ -19,7 +18,6 @@ export function AuthProvider({ children }) {
     getMe()
       .then((data) => setUser(data.user))
       .catch(() => {
-        // Token is invalid/expired — clear it so we don't keep retrying
         localStorage.removeItem(TOKEN_KEY)
       })
       .finally(() => setLoading(false))
@@ -44,8 +42,12 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  const updateUser = (updatedUser) => {
+    setUser(updatedUser)
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )
