@@ -5,6 +5,9 @@ import axios from 'axios'
 const client = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   headers: { 'Content-Type': 'application/json' },
+  // Safety net: if a request ever hangs (network issue, server problem),
+  // fail after 20s instead of leaving the UI stuck indefinitely.
+  timeout: 20000,
 })
 
 client.interceptors.request.use((config) => {

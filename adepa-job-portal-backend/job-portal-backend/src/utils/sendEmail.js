@@ -1,10 +1,12 @@
 import nodemailer from 'nodemailer'
 
 // Using explicit SMTP settings instead of the `service: 'gmail'` shorthand,
-// with `family: 4` forcing an IPv4 connection. Render's outbound network
-// doesn't reliably route IPv6, and Node tries IPv6 first by default — without
-// this, sending fails with ECONNREFUSED/ENETUNREACH even with correct
-// credentials.
+// with `family: 4` forcing an IPv4 connection — Render's outbound network
+// doesn't reliably route IPv6, and Node tries IPv6 first by default.
+//
+// The timeout values matter too: without them, a hung connection can block
+// for a long time before failing. These make sure any network problem
+// surfaces quickly (a few seconds) rather than hanging indefinitely.
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
@@ -14,6 +16,9 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
   family: 4,
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
 })
 
 export async function sendEmail({ to, subject, html }) {

@@ -19,18 +19,27 @@ const FREE_EMAIL_DOMAINS = [
   'yandex.com',
 ]
 
+// Generates a verification token, saves it to the user, and sends the email.
+// IMPORTANT: this is intentionally NOT awaited by its callers below.
+// Sending email can be slow or occasionally fail (network hiccups, provider
+// issues) — none of that should ever block or break account creation itself.
+// Errors are caught and logged here instead of propagating up.
 async function issueVerificationEmail(user) {
-  const { rawToken, hashedToken } = generateVerificationToken()
-  user.verificationToken = hashedToken
-  user.verificationTokenExpires = Date.now() + VERIFICATION_TOKEN_TTL_MS
-  await user.save()
+  try {
+    const { rawToken, hashedToken } = generateVerificationToken()
+    user.verificationToken = hashedToken
+    user.verificationTokenExpires = Date.now() + VERIFICATION_TOKEN_TTL_MS
+    await user.save()
 
-  const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${rawToken}`
-  await sendEmail({
-    to: user.email,
-    subject: 'Verify your NextLeap account',
-    html: verificationEmailTemplate({ name: user.name, verifyUrl }),
-  })
+    const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${rawToken}`
+    await sendEmail({
+      to: user.email,
+      subject: 'Verify your NextLeap account',
+      html: verificationEmailTemplate({ name: user.name, verifyUrl }),
+    })
+  } catch (err) {
+    console.error(`Failed to send verification email to ${user.email}:`, err.message)
+  }
 }
 
 // @route   POST /api/auth/register
@@ -79,7 +88,10 @@ export async function register(req, res, next) {
       company: role === 'employer' ? company || '' : '',
     })
 
-    await issueVerificationEmail(user)
+    // Fire-and-forget: do NOT await. The account is already created — the
+    // HTTP response below goes out immediately regardless of how long
+    // sending the email takes or whether it succeeds.
+    issueVerificationEmail(user)
 
     res.status(201).json({
       success: true,
@@ -190,7 +202,8 @@ export async function resendVerification(req, res, next) {
       })
     }
 
-    await issueVerificationEmail(user)
+    // Same fire-and-forget approach as register — respond immediately.
+    issueVerificationEmail(user)
 
     res.json({ success: true, message: 'Verification email sent. Please check your inbox.' })
   } catch (err) {
