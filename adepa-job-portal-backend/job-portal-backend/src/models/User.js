@@ -20,29 +20,38 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Password is required'],
       minlength: [8, 'Password must be at least 8 characters'],
-      select: false, // never return password in queries by default
+      select: false,
     },
     role: {
       type: String,
       enum: ['seeker', 'employer'],
       required: [true, 'Role is required'],
     },
-    // Only relevant for employer accounts
     company: {
       type: String,
       trim: true,
       default: '',
     },
-    // Only relevant for seeker accounts — populated later when we add profile/resume features
     resumeUrl: {
       type: String,
       default: '',
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: {
+      type: String,
+      select: false,
+    },
+    verificationTokenExpires: {
+      type: Date,
+      select: false,
     },
   },
   { timestamps: true }
 )
 
-// Hash the password before saving, but only if it was modified (e.g. not on every profile update)
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next()
 
@@ -51,15 +60,15 @@ userSchema.pre('save', async function (next) {
   next()
 })
 
-// Instance method to check a plaintext password against the stored hash
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password)
 }
 
-// Strip sensitive/internal fields whenever a user document is sent as JSON
 userSchema.methods.toJSON = function () {
   const obj = this.toObject()
   delete obj.password
+  delete obj.verificationToken
+  delete obj.verificationTokenExpires
   delete obj.__v
   return obj
 }

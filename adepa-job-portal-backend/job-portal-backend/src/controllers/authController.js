@@ -1,9 +1,10 @@
 import User from '../models/User.js'
 import { generateToken } from '../utils/generateToken.js'
+import { sendEmail, verificationEmailTemplate } from '../utils/sendEmail.js'
+import { generateVerificationToken, hashToken } from '../utils/generateVerificationToken.js'
 
-// Common free/personal email providers. Employers are asked to register with
-// a company email instead, as a lightweight (not foolproof) signal that the
-// account belongs to a real business rather than an individual.
+const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
+
 const FREE_EMAIL_DOMAINS = [
   'gmail.com',
   'yahoo.com',
@@ -17,6 +18,20 @@ const FREE_EMAIL_DOMAINS = [
   'gmx.com',
   'yandex.com',
 ]
+
+async function issueVerificationEmail(user) {
+  const { rawToken, hashedToken } = generateVerificationToken()
+  user.verificationToken = hashedToken
+  user.verificationTokenExpires = Date.now() + VERIFICATION_TOKEN_TTL_MS
+  await user.save()
+
+  const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${rawToken}`
+  await sendEmail({
+    to: user.email,
+    subject: 'Verify your NextLeap account',
+    html: verificationEmailTemplate({ name: user.name, verifyUrl }),
+  })
+}
 
 // @route   POST /api/auth/register
 // @access  Public
@@ -38,8 +53,6 @@ export async function register(req, res, next) {
       })
     }
 
-    // Employers only: reject free/personal email providers, nudging them
-    // toward a company email address as a basic legitimacy signal.
     if (role === 'employer') {
       const emailDomain = email.toLowerCase().split('@')[1]
       if (FREE_EMAIL_DOMAINS.includes(emailDomain)) {
@@ -66,12 +79,11 @@ export async function register(req, res, next) {
       company: role === 'employer' ? company || '' : '',
     })
 
-    const token = generateToken(user)
+    await issueVerificationEmail(user)
 
     res.status(201).json({
       success: true,
-      token,
-      user,
+      message: 'Account created. Please check your email to verify your account before logging in.',
     })
   } catch (err) {
     next(err)
@@ -91,7 +103,6 @@ export async function login(req, res, next) {
       })
     }
 
-    // Password has `select: false` in the schema, so we explicitly request it here
     const user = await User.findOne({ email: email.toLowerCase() }).select('+password')
 
     if (!user) {
@@ -103,13 +114,85 @@ export async function login(req, res, next) {
       return res.status(401).json({ success: false, message: 'Invalid email or password.' })
     }
 
+    if (!user.isVerified) {
+      return res.status(403).json({
+        success: false,
+        notVerified: true,
+        message: 'Please verify your email before logging in. Check your inbox for the verification link.',
+      })
+    }
+
     const token = generateToken(user)
 
     res.json({
       success: true,
       token,
-      user, // toJSON() on the model strips the password automatically
+      user,
     })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// @route   GET /api/auth/verify-email/:token
+// @access  Public
+export async function verifyEmail(req, res, next) {
+  try {
+    const { token } = req.params
+    const hashedToken = hashToken(token)
+
+    const user = await User.findOne({
+      verificationToken: hashedToken,
+      verificationTokenExpires: { $gt: Date.now() },
+    })
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'This verification link is invalid or has expired. Please request a new one.',
+      })
+    }
+
+    user.isVerified = true
+    user.verificationToken = undefined
+    user.verificationTokenExpires = undefined
+    await user.save()
+
+    res.json({ success: true, message: 'Email verified successfully. You can now log in.' })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// @route   POST /api/auth/resend-verification
+// @access  Public
+export async function resendVerification(req, res, next) {
+  try {
+    const { email } = req.body
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required.' })
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() })
+
+    if (!user) {
+      return res.json({
+        success: true,
+        message: 'If an account exists with this email, a verification link has been sent.',
+      })
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'This account is already verified. Please log in.',
+      })
+    }
+
+    await issueVerificationEmail(user)
+
+    res.json({ success: true, message: 'Verification email sent. Please check your inbox.' })
   } catch (err) {
     next(err)
   }
@@ -119,7 +202,6 @@ export async function login(req, res, next) {
 // @access  Private
 export async function getMe(req, res, next) {
   try {
-    // req.user is already attached by the `protect` middleware
     res.json({ success: true, user: req.user })
   } catch (err) {
     next(err)
