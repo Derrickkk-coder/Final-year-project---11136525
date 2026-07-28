@@ -118,10 +118,9 @@ export default function Register() {
           )}
 
           <div className="form-field">
-            <label htmlFor="email">Email address</label>
-            <input id="email" type="email" value={form.email} onChange={update('email')} placeholder="you@example.com" />
-            {role === 'employer' && <span className="hint">Please use your company email, not a personal Gmail/Yahoo address.</span>}
-          </div>
+  <label htmlFor="email">Email address</label>
+  <input id="email" type="email" value={form.email} onChange={update('email')} placeholder="you@example.com" />
+</div>
 
           <div className="form-field">
             <label htmlFor="password">Password</label>

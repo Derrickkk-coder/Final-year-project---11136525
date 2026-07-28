@@ -5,20 +5,6 @@ import { generateVerificationToken, hashToken } from '../utils/generateVerificat
 
 const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
 
-const FREE_EMAIL_DOMAINS = [
-  'gmail.com',
-  'yahoo.com',
-  'outlook.com',
-  'hotmail.com',
-  'live.com',
-  'icloud.com',
-  'aol.com',
-  'protonmail.com',
-  'mail.com',
-  'gmx.com',
-  'yandex.com',
-]
-
 async function issueVerificationEmail(user) {
   try {
     const { rawToken, hashedToken } = generateVerificationToken()
@@ -58,15 +44,9 @@ export async function register(req, res, next) {
       })
     }
 
-    if (role === 'employer') {
-      const emailDomain = email.toLowerCase().split('@')[1]
-      if (FREE_EMAIL_DOMAINS.includes(emailDomain)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Please register with your company email address rather than a personal email provider.',
-        })
-      }
-    }
+    // NOTE: employers can currently register with any email, including
+    // personal providers like Gmail — the earlier free-email-domain
+    // restriction has been disabled for now.
 
     const existing = await User.findOne({ email: email.toLowerCase() })
     if (existing) {
