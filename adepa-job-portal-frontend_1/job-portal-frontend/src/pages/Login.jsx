@@ -1,18 +1,24 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { resendVerification } from '../api/auth.js'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [notVerified, setNotVerified] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [resendMessage, setResendMessage] = useState('')
   const { login } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setNotVerified(false)
+    setResendMessage('')
 
     if (!email || !password) {
       setError('Enter both your email and password.')
@@ -24,9 +30,29 @@ export default function Login() {
       const user = await login({ email, password })
       navigate(user.role === 'employer' ? '/employer' : '/dashboard')
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong logging in. Please try again.')
+      if (!err.response) {
+        setError("The server is taking longer than usual to respond — it may be waking up from being idle (this can take up to a minute on a free hosting tier). Please wait a few seconds and try again.")
+      } else if (err.response.data?.notVerified) {
+        setNotVerified(true)
+        setError(err.response.data.message)
+      } else {
+        setError(err.response.data?.message || 'Something went wrong logging in. Please try again.')
+      }
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleResend = async () => {
+    setResending(true)
+    setResendMessage('')
+    try {
+      const data = await resendVerification(email)
+      setResendMessage(data.message)
+    } catch (err) {
+      setResendMessage(err.response?.data?.message || 'Could not resend the verification email. Please try again.')
+    } finally {
+      setResending(false)
     }
   }
 
@@ -43,8 +69,8 @@ export default function Login() {
           />
         </div>
         <p style={{ color: 'rgba(238,241,236,0.65)', fontSize: 14 }}>
-          "Adepa" — Twi for a good thing. Built as a final year project for the Department of
-          Computer Science, University of Ghana.
+          NextLeap — built as a final year project for the Department of Computer Science,
+          University of Ghana.
         </p>
       </div>
 
@@ -65,6 +91,20 @@ export default function Login() {
           </div>
 
           {error && <p style={{ color: 'var(--rust)', fontSize: 13, marginBottom: 14 }}>{error}</p>}
+
+          {notVerified && (
+            <div style={{ marginBottom: 18 }}>
+              <button
+                type="button"
+                className="btn btn--outline-pine btn--sm"
+                onClick={handleResend}
+                disabled={resending}
+              >
+                {resending ? 'Sending…' : 'Resend verification email'}
+              </button>
+              {resendMessage && <p style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 10 }}>{resendMessage}</p>}
+            </div>
+          )}
 
           <button className="btn btn--pine btn--block" type="submit" disabled={submitting}>
             {submitting ? 'Logging in…' : 'Log in'}

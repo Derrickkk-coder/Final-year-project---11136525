@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'
 import Home from './pages/Home.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
+import VerifyEmail from './pages/VerifyEmail.jsx'
 import JobListings from './pages/JobListings.jsx'
 import JobDetails from './pages/JobDetails.jsx'
 import JobSeekerDashboard from './pages/JobSeekerDashboard.jsx'
@@ -21,6 +22,7 @@ export default function App() {
       <Route path="/jobs/:id" element={<Layout><JobDetails /></Layout>} />
       <Route path="/login" element={<Layout hideFooter><Login /></Layout>} />
       <Route path="/register" element={<Layout hideFooter><Register /></Layout>} />
+      <Route path="/verify-email/:token" element={<Layout hideFooter><VerifyEmail /></Layout>} />
 
       <Route
         path="/dashboard"
