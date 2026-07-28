@@ -210,6 +210,23 @@
   outline: none; border-color: var(--teal-500); box-shadow: 0 0 0 3px var(--teal-100);
 }
 .form-field textarea { resize: vertical; min-height: 100px; font-family: var(--font-body); }
+/* Password field with a show/hide toggle icon inside it */
+.password-field { position: relative; }
+.password-field input { padding-right: 42px; }
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ink-faint);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+.password-toggle:hover { color: var(--teal-700); }
 
 .auth-shell { min-height: calc(100vh - 72px); display: grid; grid-template-columns: 1fr 1fr; }
 .auth-shell__art { background: var(--teal-700); color: #fff; padding: 64px; display: flex; flex-direction: column; justify-content: space-between; }

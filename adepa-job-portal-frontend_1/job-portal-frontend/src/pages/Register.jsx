@@ -9,9 +9,30 @@ function getErrorMessage(err) {
   return err.response.data?.message || 'Something went wrong creating your account. Please try again.'
 }
 
+function EyeIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path>
+      <circle cx="12" cy="12" r="3"></circle>
+    </svg>
+  )
+}
+
+function EyeOffIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="2" y1="2" x2="22" y2="22"></line>
+      <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path>
+      <path d="M16.7 16.7C15.1 17.5 13.6 18 12 18c-7 0-11-7-11-7a19.8 19.8 0 0 1 4.2-5.2"></path>
+      <path d="M9.9 4.2C10.6 4.1 11.3 4 12 4c7 0 11 7 11 7a19.9 19.9 0 0 1-2.6 3.6"></path>
+    </svg>
+  )
+}
+
 export default function Register() {
   const [role, setRole] = useState('seeker')
-  const [form, setForm] = useState({ name: '', email: '', password: '', company: '' })
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '', company: '' })
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -23,12 +44,16 @@ export default function Register() {
     e.preventDefault()
     setError('')
 
-    if (!form.name || !form.email || !form.password) {
+    if (!form.name || !form.email || !form.password || !form.confirmPassword) {
       setError('Please fill in all required fields.')
       return
     }
     if (form.password.length < 8) {
       setError('Password must be at least 8 characters.')
+      return
+    }
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match.')
       return
     }
 
@@ -118,14 +143,51 @@ export default function Register() {
           )}
 
           <div className="form-field">
-  <label htmlFor="email">Email address</label>
-  <input id="email" type="email" value={form.email} onChange={update('email')} placeholder="you@example.com" />
-</div>
+            <label htmlFor="email">Email address</label>
+            <input id="email" type="email" value={form.email} onChange={update('email')} placeholder="you@example.com" />
+          </div>
 
           <div className="form-field">
             <label htmlFor="password">Password</label>
-            <input id="password" type="password" value={form.password} onChange={update('password')} placeholder="At least 8 characters" />
+            <div className="password-field">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={form.password}
+                onChange={update('password')}
+                placeholder="At least 8 characters"
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
             <span className="hint">Will be hashed with bcrypt before storage.</span>
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="confirmPassword">Confirm password</label>
+            <div className="password-field">
+              <input
+                id="confirmPassword"
+                type={showPassword ? 'text' : 'password'}
+                value={form.confirmPassword}
+                onChange={update('confirmPassword')}
+                placeholder="Re-enter your password"
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
           </div>
 
           {error && <p style={{ color: 'var(--rust)', fontSize: 13, marginBottom: 14 }}>{error}</p>}
