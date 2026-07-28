@@ -1,11 +1,19 @@
 import nodemailer from 'nodemailer'
 
+// Using explicit SMTP settings instead of the `service: 'gmail'` shorthand,
+// with `family: 4` forcing an IPv4 connection. Render's outbound network
+// doesn't reliably route IPv6, and Node tries IPv6 first by default — without
+// this, sending fails with ECONNREFUSED/ENETUNREACH even with correct
+// credentials.
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  family: 4,
 })
 
 export async function sendEmail({ to, subject, html }) {
