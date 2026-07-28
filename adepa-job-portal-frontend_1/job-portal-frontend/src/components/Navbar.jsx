@@ -8,7 +8,6 @@ export default function Navbar() {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
 
-  // Close the mobile menu automatically whenever the route changes
   useEffect(() => {
     setMenuOpen(false)
   }, [location.pathname])
@@ -22,7 +21,7 @@ export default function Navbar() {
     <header className="nav">
       <div className="container nav__inner">
         <Link to="/" className="nav__brand">
-          <span className="nav__brand-mark">N</span>
+          <img src="/images/logo-mark.png" alt="NextLeap logo" className="nav__brand-mark" />
           NextLeap
         </Link>
 

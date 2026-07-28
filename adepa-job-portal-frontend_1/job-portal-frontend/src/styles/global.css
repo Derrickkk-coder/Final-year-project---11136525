@@ -25,11 +25,13 @@
   color: var(--teal-700);
 }
 .nav__brand-mark {
-  width: 30px; height: 30px; border-radius: 8px;
-  background: var(--teal-700);
-  display: inline-flex; align-items: center; justify-content: center;
-  color: #fff; font-weight: 800; font-size: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
 }
+
 .nav__links { display: flex; align-items: center; gap: 30px; font-size: 14.5px; font-weight: 600; color: var(--ink); }
 .nav__links a { opacity: 0.85; padding: 6px 0; border-bottom: 2px solid transparent; transition: all .15s ease; }
 .nav__links a:hover { opacity: 1; color: var(--teal-700); }
