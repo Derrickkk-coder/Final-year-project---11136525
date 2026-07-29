@@ -5,13 +5,19 @@ import Job from '../models/Job.js'
 // @access  Private (seeker only)
 export async function applyToJob(req, res, next) {
   try {
-    const { jobId, resumeUrl } = req.body
+    const { jobId, resumeUrl, phone, contactEmail } = req.body
 
     if (!jobId) {
       return res.status(400).json({ success: false, message: 'jobId is required.' })
     }
     if (!resumeUrl) {
       return res.status(400).json({ success: false, message: 'A resume is required to apply.' })
+    }
+    if (!phone) {
+      return res.status(400).json({ success: false, message: 'A phone number is required to apply.' })
+    }
+    if (!contactEmail) {
+      return res.status(400).json({ success: false, message: 'A contact email is required to apply.' })
     }
 
     const job = await Job.findById(jobId)
@@ -32,13 +38,25 @@ export async function applyToJob(req, res, next) {
       job: jobId,
       applicant: req.user._id,
       resumeUrl,
+      phone,
+      contactEmail,
     })
 
     job.applicantsCount += 1
     await job.save()
 
+    // Save this resume and phone number to the seeker's profile so they're
+    // reused automatically as defaults for future applications.
+    let profileChanged = false
     if (req.user.resumeUrl !== resumeUrl) {
       req.user.resumeUrl = resumeUrl
+      profileChanged = true
+    }
+    if (req.user.phone !== phone) {
+      req.user.phone = phone
+      profileChanged = true
+    }
+    if (profileChanged) {
       await req.user.save()
     }
 

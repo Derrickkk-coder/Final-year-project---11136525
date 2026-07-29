@@ -186,6 +186,8 @@ export default function EmployerDashboard() {
                             <th>Applicant</th>
                             <th>Role</th>
                             <th>Applied</th>
+                            <th>Phone</th>
+                            <th>Email</th>
                             <th>Resume</th>
                             <th>Status</th>
                             <th>Update status</th>
@@ -197,6 +199,18 @@ export default function EmployerDashboard() {
                               <td style={{ fontWeight: 600 }}>{app.applicant?.name || 'Unknown applicant'}</td>
                               <td>{app.job?.title || '—'}</td>
                               <td>{formatDate(app.createdAt)}</td>
+                              <td>
+                                {app.phone ? (
+                                  <a href={`tel:${app.phone}`} style={{ color: 'var(--teal-700)' }}>{app.phone}</a>
+                                ) : '—'}
+                              </td>
+                              <td>
+                                {app.contactEmail || app.applicant?.email ? (
+                                  <a href={`mailto:${app.contactEmail || app.applicant?.email}`} style={{ color: 'var(--teal-700)' }}>
+                                    {app.contactEmail || app.applicant?.email}
+                                  </a>
+                                ) : '—'}
+                              </td>
                               <td>
                                 {app.resumeUrl ? (
                                   <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer" className="btn btn--ghost btn--sm">
@@ -234,6 +248,20 @@ export default function EmployerDashboard() {
                           <div className="data-card__row">
                             <span className="data-card__row-label">Applied</span>
                             <span>{formatDate(app.createdAt)}</span>
+                          </div>
+                          <div className="data-card__row">
+                            <span className="data-card__row-label">Phone</span>
+                            {app.phone ? (
+                              <a href={`tel:${app.phone}`} style={{ color: 'var(--teal-700)', fontWeight: 600 }}>{app.phone}</a>
+                            ) : <span>—</span>}
+                          </div>
+                          <div className="data-card__row">
+                            <span className="data-card__row-label">Email</span>
+                            {app.contactEmail || app.applicant?.email ? (
+                              <a href={`mailto:${app.contactEmail || app.applicant?.email}`} style={{ color: 'var(--teal-700)', fontWeight: 600 }}>
+                                {app.contactEmail || app.applicant?.email}
+                              </a>
+                            ) : <span>—</span>}
                           </div>
                           <div className="data-card__row">
                             <span className="data-card__row-label">Resume</span>

@@ -46,6 +46,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    // Saved automatically from the most recent job application, so it's
+    // pre-filled (and reusable) next time they apply — same pattern as resumeUrl.
+    phone: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     isVerified: {
       type: Boolean,
       default: false,

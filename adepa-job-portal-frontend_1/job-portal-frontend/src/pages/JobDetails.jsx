@@ -18,10 +18,21 @@ export default function JobDetails() {
 
   const [resumeFile, setResumeFile] = useState(null)
   const [resumeError, setResumeError] = useState('')
+  const [phone, setPhone] = useState('')
+  const [contactEmail, setContactEmail] = useState('')
   const [uploading, setUploading] = useState(false)
   const [applying, setApplying] = useState(false)
   const [applied, setApplied] = useState(false)
   const [applyError, setApplyError] = useState('')
+
+  // Pre-fill phone from the seeker's saved profile, and contact email from
+  // their account email, once their session loads.
+  useEffect(() => {
+    if (user) {
+      setPhone(user.phone || '')
+      setContactEmail((prev) => prev || user.email || '')
+    }
+  }, [user])
 
   useEffect(() => {
     setLoading(true)
@@ -75,11 +86,19 @@ export default function JobDetails() {
       setApplyError('Please attach your resume (PDF) before applying.')
       return
     }
+    if (!phone.trim()) {
+      setApplyError('Please enter a phone number employers can reach you on.')
+      return
+    }
+    if (!contactEmail.trim()) {
+      setApplyError('Please enter a contact email.')
+      return
+    }
 
     setApplying(true)
     try {
-      await applyToJob(id, resumeUrlToSubmit)
-      updateUser({ ...user, resumeUrl: resumeUrlToSubmit })
+      await applyToJob(id, resumeUrlToSubmit, phone.trim(), contactEmail.trim())
+      updateUser({ ...user, resumeUrl: resumeUrlToSubmit, phone: phone.trim() })
       setApplied(true)
     } catch (err) {
       const message = err.response?.data?.message
@@ -201,6 +220,29 @@ export default function JobDetails() {
 
             {user?.role === 'seeker' && !applied && (
               <>
+                <div className="form-field">
+                  <label htmlFor="phone">Phone number</label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="e.g. 0592081217"
+                  />
+                  <span className="hint">So the employer can reach you directly about this application.</span>
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="contactEmail">Contact email</label>
+                  <input
+                    id="contactEmail"
+                    type="email"
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    placeholder="you@example.com"
+                  />
+                </div>
+
                 <div className="form-field">
                   <label htmlFor="resume">Resume (PDF)</label>
                   <input id="resume" type="file" accept="application/pdf,.pdf" onChange={handleFileChange} />

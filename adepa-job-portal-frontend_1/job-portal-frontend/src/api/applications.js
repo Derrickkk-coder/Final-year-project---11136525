@@ -1,7 +1,7 @@
 import client from './client.js'
 
-export async function applyToJob(jobId, resumeUrl) {
-  const { data } = await client.post('/applications', { jobId, resumeUrl })
+export async function applyToJob(jobId, resumeUrl, phone, contactEmail) {
+  const { data } = await client.post('/applications', { jobId, resumeUrl, phone, contactEmail })
   return data
 }
 
