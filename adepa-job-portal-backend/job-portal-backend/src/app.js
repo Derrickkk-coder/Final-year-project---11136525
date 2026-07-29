@@ -27,4 +27,6 @@ app.use('/api/applications', applicationRoutes)
 app.use(notFound)
 app.use(errorHandler)
 
+import adminRoutes from './routes/adminRoutes.js'
+app.use('/api/admin', adminRoutes)
 export default app
