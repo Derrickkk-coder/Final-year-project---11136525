@@ -27,8 +27,8 @@ export default function Login() {
 
     setSubmitting(true)
     try {
-      const user = await login({ email, password })
-      navigate(user.role === 'employer' ? '/employer' : '/dashboard')
+     const user = await login({ email, password })
+navigate(user.role === 'employer' ? '/employer' : user.role === 'admin' ? '/admin' : '/dashboard')
     } catch (err) {
       if (!err.response) {
         setError("The server is taking longer than usual to respond — it may be waking up from being idle (this can take up to a minute on a free hosting tier). Please wait a few seconds and try again.")
