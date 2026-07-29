@@ -13,6 +13,7 @@ import JobSeekerDashboard from './pages/JobSeekerDashboard.jsx'
 import EmployerDashboard from './pages/EmployerDashboard.jsx'
 import PostJob from './pages/PostJob.jsx'
 import CompanyProfile from './pages/CompanyProfile.jsx'
+import AdminDashboard from './pages/AdminDashboard.jsx'
 import NotFound from './pages/NotFound.jsx'
 
 export default function App() {
@@ -64,6 +65,17 @@ export default function App() {
           <Layout>
             <ProtectedRoute role="employer">
               <CompanyProfile />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/admin"
+        element={
+          <Layout>
+            <ProtectedRoute role="admin">
+              <AdminDashboard />
             </ProtectedRoute>
           </Layout>
         }

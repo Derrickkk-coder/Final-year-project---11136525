@@ -169,14 +169,22 @@ export async function resendVerification(req, res, next) {
       })
     }
 
-    if (user.isVerified) {
-      return res.status(400).json({
+    if (!user.isVerified) {
+      return res.status(403).json({
         success: false,
-        message: 'This account is already verified. Please log in.',
+        notVerified: true,
+        message: 'Please verify your email before logging in. Check your inbox for the verification link.',
       })
     }
 
-    issueVerificationEmail(user)
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: 'This account has been deactivated. Contact support if you believe this is a mistake.',
+      })
+    }
+
+    const token = generateToken(user)
 
     res.json({ success: true, message: 'Verification email sent. Please check your inbox.' })
   } catch (err) {

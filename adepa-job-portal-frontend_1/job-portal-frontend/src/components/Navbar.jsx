@@ -39,6 +39,11 @@ export default function Navbar() {
               My applications
             </NavLink>
           )}
+          {user?.role === 'admin' && (
+            <NavLink to="/admin" className={({ isActive }) => (isActive ? 'active' : '')}>
+              Admin dashboard
+            </NavLink>
+          )}
         </nav>
 
         <div className="nav__actions nav__actions--desktop">
@@ -87,6 +92,11 @@ export default function Navbar() {
             {user?.role === 'seeker' && (
               <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>
                 My applications
+              </NavLink>
+            )}
+            {user?.role === 'admin' && (
+              <NavLink to="/admin" className={({ isActive }) => (isActive ? 'active' : '')}>
+                Admin dashboard
               </NavLink>
             )}
           </nav>

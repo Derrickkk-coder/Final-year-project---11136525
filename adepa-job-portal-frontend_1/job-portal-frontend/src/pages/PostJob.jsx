@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { categories, jobTypes } from '../data/mockJobs.js' // static option lists only
 import { createJob } from '../api/jobs.js'
+import { useAuth } from '../context/AuthContext.jsx'
 
 export default function PostJob() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -44,6 +46,27 @@ export default function PostJob() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  if (user?.employerStatus !== 'approved') {
+    return (
+      <div className="container" style={{ padding: '80px 24px', textAlign: 'center' }}>
+        <span className="eyebrow">
+          {user?.employerStatus === 'rejected' ? 'Account not approved' : 'Awaiting approval'}
+        </span>
+        <h1 style={{ fontSize: 26, margin: '12px 0' }}>
+          {user?.employerStatus === 'rejected'
+            ? "You can't post jobs yet"
+            : "Your account is still awaiting admin approval"}
+        </h1>
+        <p style={{ color: 'var(--ink-soft)', marginBottom: 24, maxWidth: '48ch', marginLeft: 'auto', marginRight: 'auto' }}>
+          {user?.employerStatus === 'rejected'
+            ? 'Your employer account was not approved. Contact support if you believe this is a mistake.'
+            : "We're reviewing your employer account. You'll be able to post jobs as soon as it's approved."}
+        </p>
+        <Link to="/employer" className="btn btn--outline-pine">Back to dashboard</Link>
+      </div>
+    )
   }
 
   if (submitted) {

@@ -24,9 +24,19 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['seeker', 'employer'],
+      enum: ['seeker', 'employer', 'admin'],
       required: [true, 'Role is required'],
     },
+    // Only meaningful for employer accounts. Admins manually approve new
+    // employers before they can post jobs — see the Admin Dashboard.
+    // NOTE: admin accounts can never be created via public registration —
+    // they must be promoted manually (e.g. directly in MongoDB Atlas).
+    employerStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
+    // ---- Employer profile fields ----
     company: {
       type: String,
       trim: true,
@@ -46,16 +56,22 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
-    // Saved automatically from the most recent job application, so it's
-    // pre-filled (and reusable) next time they apply — same pattern as resumeUrl.
     phone: {
       type: String,
       trim: true,
       default: '',
     },
+    // ---- Email verification ----
     isVerified: {
       type: Boolean,
       default: false,
+    },
+    // General account deactivation, independent of employer approval status.
+    // An admin can deactivate any account (seeker, employer, or another
+    // admin's misuse case) — a deactivated account cannot log in.
+    isActive: {
+      type: Boolean,
+      default: true,
     },
     verificationToken: {
       type: String,
