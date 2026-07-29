@@ -478,3 +478,12 @@
   .auth-shell__form { padding: 40px 24px; }
   .features-grid { grid-template-columns: 1fr; }
 }
+
+.job-detail-grid > * {
+  min-width: 0;
+}
+
+.form-field input[type="file"] {
+  width: 100%;
+  max-width: 100%;
+}
