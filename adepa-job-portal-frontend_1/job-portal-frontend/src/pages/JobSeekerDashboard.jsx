@@ -36,11 +36,6 @@ export default function JobSeekerDashboard() {
           <a href="/dashboard" className="active">My applications</a>
           <a href="/jobs">Browse jobs</a>
         </div>
-        <div className="dash-sidebar__group">
-          <span className="dash-sidebar__label">Account</span>
-          <a href="#profile">Profile &amp; resume</a>
-          <a href="#settings">Settings</a>
-        </div>
       </aside>
 
       <div className="dash-main">
@@ -85,7 +80,6 @@ export default function JobSeekerDashboard() {
         {!loading && !error && (
           applications.length > 0 ? (
             <>
-              {/* Desktop: table */}
               <div className="table-wrap">
                 <table className="table">
                   <thead>
@@ -93,6 +87,7 @@ export default function JobSeekerDashboard() {
                       <th>Role</th>
                       <th>Company</th>
                       <th>Applied</th>
+                      <th>Resume</th>
                       <th>Status</th>
                     </tr>
                   </thead>
@@ -106,6 +101,13 @@ export default function JobSeekerDashboard() {
                         </td>
                         <td>{app.job?.company || '—'}</td>
                         <td>{formatDate(app.createdAt)}</td>
+                        <td>
+                          {app.resumeUrl ? (
+                            <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer" className="btn btn--ghost btn--sm">
+                              View
+                            </a>
+                          ) : '—'}
+                        </td>
                         <td><StatusPill status={app.status} /></td>
                       </tr>
                     ))}
@@ -113,7 +115,6 @@ export default function JobSeekerDashboard() {
                 </table>
               </div>
 
-              {/* Mobile: stacked cards */}
               <div className="card-list">
                 {applications.map((app) => (
                   <div className="data-card" key={app._id}>
@@ -129,6 +130,14 @@ export default function JobSeekerDashboard() {
                     <div className="data-card__row">
                       <span className="data-card__row-label">Applied</span>
                       <span>{formatDate(app.createdAt)}</span>
+                    </div>
+                    <div className="data-card__row">
+                      <span className="data-card__row-label">Resume</span>
+                      {app.resumeUrl ? (
+                        <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--teal-700)', fontWeight: 600 }}>
+                          View
+                        </a>
+                      ) : <span>—</span>}
                     </div>
                   </div>
                 ))}

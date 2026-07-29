@@ -12,11 +12,9 @@ const applicationSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
-    // Optional note from the applicant, shown to the employer alongside their profile
-    coverLetter: {
+    resumeUrl: {
       type: String,
-      default: '',
-      trim: true,
+      required: [true, 'A resume is required to apply'],
     },
     status: {
       type: String,
@@ -24,10 +22,9 @@ const applicationSchema = new mongoose.Schema(
       default: 'pending',
     },
   },
-  { timestamps: true } // createdAt doubles as "applied at"
+  { timestamps: true }
 )
 
-// A seeker can only apply to a given job once
 applicationSchema.index({ job: 1, applicant: 1 }, { unique: true })
 
 const Application = mongoose.model('Application', applicationSchema)

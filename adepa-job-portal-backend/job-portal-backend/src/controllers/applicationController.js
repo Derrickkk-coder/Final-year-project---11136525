@@ -5,10 +5,13 @@ import Job from '../models/Job.js'
 // @access  Private (seeker only)
 export async function applyToJob(req, res, next) {
   try {
-    const { jobId, coverLetter } = req.body
+    const { jobId, resumeUrl } = req.body
 
     if (!jobId) {
       return res.status(400).json({ success: false, message: 'jobId is required.' })
+    }
+    if (!resumeUrl) {
+      return res.status(400).json({ success: false, message: 'A resume is required to apply.' })
     }
 
     const job = await Job.findById(jobId)
@@ -28,12 +31,16 @@ export async function applyToJob(req, res, next) {
     const application = await Application.create({
       job: jobId,
       applicant: req.user._id,
-      coverLetter: coverLetter || '',
+      resumeUrl,
     })
 
-    // Keep the denormalised counter on Job in sync
     job.applicantsCount += 1
     await job.save()
+
+    if (req.user.resumeUrl !== resumeUrl) {
+      req.user.resumeUrl = resumeUrl
+      await req.user.save()
+    }
 
     res.status(201).json({ success: true, application })
   } catch (err) {
@@ -57,7 +64,6 @@ export async function getMyApplications(req, res, next) {
 
 // @route   GET /api/applications/employer
 // @access  Private (employer only)
-// Returns every application submitted to any job this employer has posted.
 export async function getApplicationsForEmployer(req, res, next) {
   try {
     const myJobs = await Job.find({ postedBy: req.user._id }).select('_id')
@@ -76,7 +82,6 @@ export async function getApplicationsForEmployer(req, res, next) {
 
 // @route   GET /api/applications/job/:jobId
 // @access  Private (employer who owns the job)
-// Returns applicants for one specific job posting.
 export async function getApplicationsForJob(req, res, next) {
   try {
     const job = await Job.findById(req.params.jobId)

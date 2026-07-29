@@ -61,10 +61,6 @@ export default function EmployerDashboard() {
             Applicants
           </a>
         </div>
-        <div className="dash-sidebar__group">
-  <span className="dash-sidebar__label">Account</span>
-  <Link to="/employer/profile">Company profile</Link>
-</div>
       </aside>
 
       <div className="dash-main">
@@ -111,7 +107,6 @@ export default function EmployerDashboard() {
                 <h2 style={{ fontSize: 18, marginBottom: 14 }}>My job postings</h2>
                 {jobs.length > 0 ? (
                   <>
-                    {/* Desktop: table */}
                     <div className="table-wrap">
                       <table className="table">
                         <thead>
@@ -141,7 +136,6 @@ export default function EmployerDashboard() {
                       </table>
                     </div>
 
-                    {/* Mobile: stacked cards */}
                     <div className="card-list">
                       {jobs.map((job) => (
                         <div className="data-card" key={job._id}>
@@ -185,7 +179,6 @@ export default function EmployerDashboard() {
                 <h2 style={{ fontSize: 18, marginBottom: 14 }}>Applicants across all roles</h2>
                 {applications.length > 0 ? (
                   <>
-                    {/* Desktop: table */}
                     <div className="table-wrap">
                       <table className="table">
                         <thead>
@@ -193,6 +186,7 @@ export default function EmployerDashboard() {
                             <th>Applicant</th>
                             <th>Role</th>
                             <th>Applied</th>
+                            <th>Resume</th>
                             <th>Status</th>
                             <th>Update status</th>
                           </tr>
@@ -203,6 +197,13 @@ export default function EmployerDashboard() {
                               <td style={{ fontWeight: 600 }}>{app.applicant?.name || 'Unknown applicant'}</td>
                               <td>{app.job?.title || '—'}</td>
                               <td>{formatDate(app.createdAt)}</td>
+                              <td>
+                                {app.resumeUrl ? (
+                                  <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer" className="btn btn--ghost btn--sm">
+                                    View
+                                  </a>
+                                ) : '—'}
+                              </td>
                               <td><StatusPill status={app.status} /></td>
                               <td>
                                 <select
@@ -220,7 +221,6 @@ export default function EmployerDashboard() {
                       </table>
                     </div>
 
-                    {/* Mobile: stacked cards */}
                     <div className="card-list">
                       {applications.map((app) => (
                         <div className="data-card" key={app._id}>
@@ -234,6 +234,14 @@ export default function EmployerDashboard() {
                           <div className="data-card__row">
                             <span className="data-card__row-label">Applied</span>
                             <span>{formatDate(app.createdAt)}</span>
+                          </div>
+                          <div className="data-card__row">
+                            <span className="data-card__row-label">Resume</span>
+                            {app.resumeUrl ? (
+                              <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--teal-700)', fontWeight: 600 }}>
+                                View
+                              </a>
+                            ) : <span>—</span>}
                           </div>
                           <div className="data-card__row" style={{ alignItems: 'center' }}>
                             <span className="data-card__row-label">Update status</span>

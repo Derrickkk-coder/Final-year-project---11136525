@@ -2,16 +2,23 @@ import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { fetchJobById } from '../api/jobs.js'
 import { applyToJob } from '../api/applications.js'
+import { uploadResumeToCloudinary } from '../api/cloudinary.js'
 import { useAuth } from '../context/AuthContext.jsx'
+
+const MAX_RESUME_SIZE = 5 * 1024 * 1024 // 5MB
 
 export default function JobDetails() {
   const { id } = useParams()
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
 
   const [job, setJob] = useState(null)
   const [loading, setLoading] = useState(true)
   const [notFoundError, setNotFoundError] = useState(false)
+  const [serverError, setServerError] = useState(false)
 
+  const [resumeFile, setResumeFile] = useState(null)
+  const [resumeError, setResumeError] = useState('')
+  const [uploading, setUploading] = useState(false)
   const [applying, setApplying] = useState(false)
   const [applied, setApplied] = useState(false)
   const [applyError, setApplyError] = useState('')
@@ -20,20 +27,63 @@ export default function JobDetails() {
     setLoading(true)
     fetchJobById(id)
       .then((data) => setJob(data.job))
-      .catch(() => setNotFoundError(true))
+      .catch((err) => {
+        if (err.response?.status === 404 || err.response?.status === 400) {
+          setNotFoundError(true)
+        } else {
+          setServerError(true)
+        }
+      })
       .finally(() => setLoading(false))
   }, [id])
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    setResumeError('')
+    setResumeFile(null)
+    if (!file) return
+
+    if (file.type !== 'application/pdf') {
+      setResumeError('Please upload a PDF file.')
+      return
+    }
+    if (file.size > MAX_RESUME_SIZE) {
+      setResumeError('File is too large — please keep it under 5MB.')
+      return
+    }
+    setResumeFile(file)
+  }
+
   const handleApply = async () => {
-    setApplying(true)
     setApplyError('')
+
+    let resumeUrlToSubmit = user?.resumeUrl || ''
+
+    if (resumeFile) {
+      setUploading(true)
+      try {
+        resumeUrlToSubmit = await uploadResumeToCloudinary(resumeFile)
+      } catch {
+        setApplyError('Could not upload your resume. Please check your connection and try again.')
+        setUploading(false)
+        return
+      }
+      setUploading(false)
+    }
+
+    if (!resumeUrlToSubmit) {
+      setApplyError('Please attach your resume (PDF) before applying.')
+      return
+    }
+
+    setApplying(true)
     try {
-      await applyToJob(id)
+      await applyToJob(id, resumeUrlToSubmit)
+      updateUser({ ...user, resumeUrl: resumeUrlToSubmit })
       setApplied(true)
     } catch (err) {
       const message = err.response?.data?.message
       if (err.response?.status === 409) {
-        // Already applied — treat this as success from the user's point of view
         setApplied(true)
       } else {
         setApplyError(message || 'Could not submit your application. Please try again.')
@@ -47,6 +97,18 @@ export default function JobDetails() {
     return (
       <div className="container" style={{ padding: '60px 24px', textAlign: 'center', color: 'var(--ink-soft)' }}>
         Loading job…
+      </div>
+    )
+  }
+
+  if (serverError) {
+    return (
+      <div className="container" style={{ padding: '60px 24px' }}>
+        <div className="empty-state">
+          <h3>Something went wrong</h3>
+          <p>We couldn't load this job right now. Please try again in a moment.</p>
+          <Link to="/jobs" className="btn btn--outline-pine" style={{ marginTop: 16 }}>Back to jobs</Link>
+        </div>
       </div>
     )
   }
@@ -139,8 +201,27 @@ export default function JobDetails() {
 
             {user?.role === 'seeker' && !applied && (
               <>
-                <button className="btn btn--coral btn--block" onClick={handleApply} disabled={applying}>
-                  {applying ? 'Submitting…' : 'Apply for this role'}
+                <div className="form-field">
+                  <label htmlFor="resume">Resume (PDF)</label>
+                  <input id="resume" type="file" accept="application/pdf,.pdf" onChange={handleFileChange} />
+
+                  {resumeError && <span className="hint" style={{ color: 'var(--rust)' }}>{resumeError}</span>}
+
+                  {!resumeFile && !resumeError && user?.resumeUrl && (
+                    <span className="hint">
+                      Using your saved resume —{' '}
+                      <a href={user.resumeUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--teal-700)', fontWeight: 600 }}>
+                        view it
+                      </a>
+                      , or choose a new file above to replace it.
+                    </span>
+                  )}
+
+                  {resumeFile && <span className="hint">Selected: {resumeFile.name}</span>}
+                </div>
+
+                <button className="btn btn--coral btn--block" onClick={handleApply} disabled={applying || uploading}>
+                  {uploading ? 'Uploading resume…' : applying ? 'Submitting…' : 'Apply for this role'}
                 </button>
                 {applyError && <p style={{ color: 'var(--rust)', fontSize: 13, marginTop: 10 }}>{applyError}</p>}
               </>
