@@ -12,6 +12,7 @@ import JobDetails from './pages/JobDetails.jsx'
 import JobSeekerDashboard from './pages/JobSeekerDashboard.jsx'
 import EmployerDashboard from './pages/EmployerDashboard.jsx'
 import PostJob from './pages/PostJob.jsx'
+import EditJob from './pages/EditJob.jsx'
 import CompanyProfile from './pages/CompanyProfile.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import NotFound from './pages/NotFound.jsx'
@@ -48,12 +49,23 @@ export default function App() {
         }
       />
 
-      <Route
+     <Route
         path="/employer/post"
         element={
           <Layout>
             <ProtectedRoute role="employer">
               <PostJob />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/employer/jobs/:id/edit"
+        element={
+          <Layout>
+            <ProtectedRoute role="employer">
+              <EditJob />
             </ProtectedRoute>
           </Layout>
         }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import StatusPill from '../components/StatusPill.jsx'
-import { fetchMyJobs } from '../api/jobs.js'
+import { fetchMyJobs, updateJob } from '../api/jobs.js'
 import { fetchApplicationsForEmployer, updateApplicationStatus } from '../api/applications.js'
 
 const STATUS_OPTIONS = ['pending', 'review', 'accepted', 'rejected']
@@ -40,6 +40,18 @@ export default function EmployerDashboard() {
       )
     } catch {
       // Silently ignore for now — could add a toast/error banner here later
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  const handleToggleJobStatus = async (jobId, currentStatus) => {
+    const newStatus = currentStatus === 'open' ? 'closed' : 'open'
+    setUpdatingId(jobId)
+    try {
+      const data = await updateJob(jobId, { status: newStatus })
+      setJobs((prev) => prev.map((j) => (j._id === jobId ? { ...j, status: data.job.status } : j)))
+    } catch {
     } finally {
       setUpdatingId(null)
     }
@@ -135,6 +147,7 @@ export default function EmployerDashboard() {
                             <th>Posted</th>
                             <th>Closes</th>
                             <th>Status</th>
+                            <th>Actions</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -148,6 +161,18 @@ export default function EmployerDashboard() {
                               <td>{formatDate(job.createdAt)}</td>
                               <td>{formatDate(job.closingAt)}</td>
                               <td><StatusPill status={job.status} /></td>
+                              <td>
+                                <div style={{ display: 'flex', gap: 6 }}>
+                                  <Link to={`/employer/jobs/${job._id}/edit`} className="btn btn--ghost btn--sm">Edit</Link>
+                                  <button
+                                    className="btn btn--ghost btn--sm"
+                                    disabled={updatingId === job._id}
+                                    onClick={() => handleToggleJobStatus(job._id, job.status)}
+                                  >
+                                    {job.status === 'open' ? 'Close' : 'Reopen'}
+                                  </button>
+                                </div>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -177,6 +202,17 @@ export default function EmployerDashboard() {
                           <div className="data-card__row">
                             <span className="data-card__row-label">Closes</span>
                             <span>{formatDate(job.closingAt)}</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                            <Link to={`/employer/jobs/${job._id}/edit`} className="btn btn--ghost btn--sm" style={{ flex: 1 }}>Edit</Link>
+                            <button
+                              className="btn btn--ghost btn--sm"
+                              style={{ flex: 1 }}
+                              disabled={updatingId === job._id}
+                              onClick={() => handleToggleJobStatus(job._id, job.status)}
+                            >
+                              {job.status === 'open' ? 'Close' : 'Reopen'}
+                            </button>
                           </div>
                         </div>
                       ))}
