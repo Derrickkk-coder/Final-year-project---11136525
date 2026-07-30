@@ -52,3 +52,51 @@ export function verificationEmailTemplate({ name, verifyUrl }) {
   </div>
   `
 }
+
+// Status-specific copy for the applicant-facing email — kept separate from
+// the generic status strings shown in the UI so the email can read naturally.
+const STATUS_COPY = {
+  review: {
+    heading: 'Your application is being reviewed',
+    body: 'is now under review. The employer is taking a closer look — we\'ll let you know as soon as there\'s an update.',
+    accent: '#0C7C92',
+  },
+  accepted: {
+    heading: 'Good news about your application',
+    body: 'has been accepted! The employer will be in touch with next steps.',
+    accent: '#1E8E5A',
+  },
+  rejected: {
+    heading: 'Update on your application',
+    body: 'was not selected to move forward this time. Don\'t be discouraged — keep applying, the right role is out there.',
+    accent: '#FF6A45',
+  },
+  pending: {
+    heading: 'Your application has been received',
+    body: 'is now marked as pending review with the employer.',
+    accent: '#004F6D',
+  },
+}
+
+export function applicationStatusEmailTemplate({ name, jobTitle, company, status }) {
+  const copy = STATUS_COPY[status] || STATUS_COPY.pending
+
+  return `
+  <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; color: #16232B;">
+    <div style="background: #004F6D; padding: 20px 24px; border-radius: 10px 10px 0 0;">
+      <span style="color: #fff; font-size: 20px; font-weight: bold;">NextLeap</span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #E2E9EB; border-top: none; border-radius: 0 0 10px 10px; padding: 32px 24px;">
+      <h2 style="margin: 0 0 16px; font-size: 20px; color: ${copy.accent};">${copy.heading}</h2>
+      <p style="line-height: 1.6; color: #5A6D74;">
+        Hi ${name}, your application for <strong>${jobTitle}</strong> at <strong>${company}</strong> ${copy.body}
+      </p>
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${process.env.CLIENT_URL}/dashboard" style="background: #FF6A45; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-weight: bold; display: inline-block;">
+          View your applications
+        </a>
+      </p>
+    </div>
+  </div>
+  `
+}

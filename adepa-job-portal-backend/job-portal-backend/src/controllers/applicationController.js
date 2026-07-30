@@ -1,5 +1,26 @@
 import Application from '../models/Application.js'
 import Job from '../models/Job.js'
+import { sendEmail, applicationStatusEmailTemplate } from '../utils/sendEmail.js'
+
+// Fire-and-forget, same pattern as verification emails — a slow/failed email
+// should never block or break the status update itself.
+async function notifyApplicantOfStatusChange(application) {
+  try {
+    await sendEmail({
+      to: application.applicant.email,
+      subject: `Update on your application — ${application.job.title}`,
+      html: applicationStatusEmailTemplate({
+        name: application.applicant.name,
+        jobTitle: application.job.title,
+        company: application.job.company,
+        status: application.status,
+      }),
+    })
+    console.log(`[email] Status update email SENT to ${application.applicant.email}`)
+  } catch (err) {
+    console.error(`[email] FAILED to send status update email:`, err.message)
+  }
+}
 
 // @route   POST /api/applications
 // @access  Private (seeker only)
@@ -42,6 +63,7 @@ export async function applyToJob(req, res, next) {
       contactEmail,
     })
 
+    // Keep the denormalised counter on Job in sync
     job.applicantsCount += 1
     await job.save()
 
@@ -82,6 +104,7 @@ export async function getMyApplications(req, res, next) {
 
 // @route   GET /api/applications/employer
 // @access  Private (employer only)
+// Returns every application submitted to any job this employer has posted.
 export async function getApplicationsForEmployer(req, res, next) {
   try {
     const myJobs = await Job.find({ postedBy: req.user._id }).select('_id')
@@ -100,6 +123,7 @@ export async function getApplicationsForEmployer(req, res, next) {
 
 // @route   GET /api/applications/job/:jobId
 // @access  Private (employer who owns the job)
+// Returns applicants for one specific job posting.
 export async function getApplicationsForJob(req, res, next) {
   try {
     const job = await Job.findById(req.params.jobId)
@@ -134,7 +158,9 @@ export async function updateApplicationStatus(req, res, next) {
       })
     }
 
-    const application = await Application.findById(req.params.id).populate('job', 'postedBy')
+    const application = await Application.findById(req.params.id)
+      .populate('job', 'postedBy title company')
+      .populate('applicant', 'name email')
     if (!application) {
       return res.status(404).json({ success: false, message: 'Application not found.' })
     }
@@ -148,6 +174,9 @@ export async function updateApplicationStatus(req, res, next) {
 
     application.status = status
     await application.save()
+
+    // Fire-and-forget — does not delay or affect this response either way.
+    notifyApplicantOfStatusChange(application)
 
     res.json({ success: true, application })
   } catch (err) {
