@@ -209,7 +209,7 @@ export async function getMe(req, res, next) {
 // reuse for a job seeker profile page later.
 export async function updateProfile(req, res, next) {
   try {
-    const { name, company, companyDescription, companyWebsite } = req.body
+    const { name, company, companyDescription, companyWebsite, profilePictureUrl } = req.body
 
     if (name !== undefined) {
       if (!name.trim()) {
@@ -220,6 +220,7 @@ export async function updateProfile(req, res, next) {
     if (company !== undefined) req.user.company = company
     if (companyDescription !== undefined) req.user.companyDescription = companyDescription
     if (companyWebsite !== undefined) req.user.companyWebsite = companyWebsite
+    if (profilePictureUrl !== undefined) req.user.profilePictureUrl = profilePictureUrl
 
     await req.user.save()
 

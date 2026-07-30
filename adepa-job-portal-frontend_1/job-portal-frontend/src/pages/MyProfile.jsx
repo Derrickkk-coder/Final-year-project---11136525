@@ -6,14 +6,9 @@ import Avatar from '../components/Avatar.jsx'
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2MB
 
-export default function CompanyProfile() {
+export default function MyProfile() {
   const { user, updateUser } = useAuth()
-  const [form, setForm] = useState({
-    name: user?.name || '',
-    company: user?.company || '',
-    companyDescription: user?.companyDescription || '',
-    companyWebsite: user?.companyWebsite || '',
-  })
+  const [name, setName] = useState(user?.name || '')
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(user?.profilePictureUrl || '')
   const [imageError, setImageError] = useState('')
@@ -21,11 +16,6 @@ export default function CompanyProfile() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
-
-  const update = (field) => (e) => {
-    setForm((f) => ({ ...f, [field]: e.target.value }))
-    setSaved(false)
-  }
 
   const handleImageChange = (e) => {
     const file = e.target.files[0]
@@ -51,7 +41,7 @@ export default function CompanyProfile() {
     setError('')
     setSaved(false)
 
-    if (!form.name.trim()) {
+    if (!name.trim()) {
       setError('Name cannot be empty.')
       return
     }
@@ -72,7 +62,7 @@ export default function CompanyProfile() {
 
     setSaving(true)
     try {
-      const data = await updateProfile({ ...form, profilePictureUrl })
+      const data = await updateProfile({ name, profilePictureUrl })
       updateUser(data.user)
       setImageFile(null)
       setSaved(true)
@@ -87,13 +77,13 @@ export default function CompanyProfile() {
     <div className="dash-shell">
       <aside className="dash-sidebar">
         <div className="dash-sidebar__group">
-          <span className="dash-sidebar__label">Employer</span>
-          <a href="/employer">My job postings</a>
-          <a href="/employer">Applicants</a>
+          <span className="dash-sidebar__label">Job seeker</span>
+          <a href="/dashboard">My applications</a>
+          <a href="/jobs">Browse jobs</a>
         </div>
         <div className="dash-sidebar__group">
           <span className="dash-sidebar__label">Account</span>
-          <a href="/employer/profile" className="active">Company profile</a>
+          <a href="/profile" className="active">My profile</a>
         </div>
       </aside>
 
@@ -101,15 +91,15 @@ export default function CompanyProfile() {
         <div className="dash-header">
           <div>
             <span className="eyebrow">Account</span>
-            <h1 style={{ fontSize: 26, marginTop: 6 }}>Company profile</h1>
+            <h1 style={{ fontSize: 26, marginTop: 6 }}>My profile</h1>
           </div>
         </div>
 
-        <form className="panel" style={{ maxWidth: 560 }} onSubmit={handleSubmit}>
+        <form className="panel" style={{ maxWidth: 480 }} onSubmit={handleSubmit}>
           <div className="form-field">
             <label>Profile picture</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <Avatar src={imagePreview} name={form.name} size={64} />
+              <Avatar src={imagePreview} name={name} size={64} />
               <div>
                 <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} />
                 {imageError && <div className="hint" style={{ color: 'var(--rust)' }}>{imageError}</div>}
@@ -118,30 +108,8 @@ export default function CompanyProfile() {
           </div>
 
           <div className="form-field">
-            <label htmlFor="name">Contact name</label>
-            <input id="name" value={form.name} onChange={update('name')} placeholder="e.g. Ama Serwaa" />
-            <span className="hint">The person managing this account — shown internally, not on job listings.</span>
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="company">Company name</label>
-            <input id="company" value={form.company} onChange={update('company')} placeholder="e.g. Zaya Health" />
-            <span className="hint">This is the name shown on all of your job listings.</span>
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="companyWebsite">Company website</label>
-            <input id="companyWebsite" value={form.companyWebsite} onChange={update('companyWebsite')} placeholder="https://yourcompany.com" />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="companyDescription">About the company</label>
-            <textarea
-              id="companyDescription"
-              value={form.companyDescription}
-              onChange={update('companyDescription')}
-              placeholder="A few sentences about what your company does — shown to job seekers viewing your listings."
-            />
+            <label htmlFor="name">Full name</label>
+            <input id="name" value={name} onChange={(e) => { setName(e.target.value); setSaved(false) }} placeholder="e.g. Ama Serwaa" />
           </div>
 
           {error && <p style={{ color: 'var(--rust)', fontSize: 13, marginBottom: 14 }}>{error}</p>}

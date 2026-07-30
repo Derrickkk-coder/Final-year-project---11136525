@@ -40,11 +40,15 @@ export default function JobSeekerDashboard() {
 
   return (
     <div className="dash-shell">
-      <aside className="dash-sidebar">
+     <aside className="dash-sidebar">
         <div className="dash-sidebar__group">
           <span className="dash-sidebar__label">Job seeker</span>
           <a href="/dashboard" className="active">My applications</a>
           <a href="/jobs">Browse jobs</a>
+        </div>
+        <div className="dash-sidebar__group">
+          <span className="dash-sidebar__label">Account</span>
+          <a href="/profile">My profile</a>
         </div>
       </aside>
 

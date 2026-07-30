@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import Avatar from './Avatar.jsx'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
@@ -49,6 +50,7 @@ export default function Navbar() {
         <div className="nav__actions nav__actions--desktop">
           {user ? (
             <>
+              <Avatar src={user.profilePictureUrl} name={user.name} size={28} />
               <span style={{ fontSize: 13, opacity: 0.75 }}>{user.name}</span>
               <button className="btn btn--outline-light btn--sm" onClick={handleLogout}>
                 Log out
@@ -104,7 +106,10 @@ export default function Navbar() {
           <div className="nav__mobile-actions">
             {user ? (
               <>
-                <span style={{ fontSize: 13, opacity: 0.75 }}>Signed in as {user.name}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Avatar src={user.profilePictureUrl} name={user.name} size={28} />
+                  <span style={{ fontSize: 13, opacity: 0.75 }}>Signed in as {user.name}</span>
+                </div>
                 <button className="btn btn--outline-light btn--block" onClick={handleLogout}>
                   Log out
                 </button>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import StatusPill from '../components/StatusPill.jsx'
+import Avatar from '../components/Avatar.jsx'
 import { fetchMyJobs, updateJob } from '../api/jobs.js'
 import { fetchApplicationsForEmployer, updateApplicationStatus } from '../api/applications.js'
 
@@ -250,7 +251,12 @@ export default function EmployerDashboard() {
                         <tbody>
                           {applications.map((app) => (
                             <tr key={app._id}>
-                              <td style={{ fontWeight: 600 }}>{app.applicant?.name || 'Unknown applicant'}</td>
+                              <td style={{ fontWeight: 600 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                  <Avatar src={app.applicant?.profilePictureUrl} name={app.applicant?.name} size={28} />
+                                  {app.applicant?.name || 'Unknown applicant'}
+                                </div>
+                              </td>
                               <td>{app.job?.title || '—'}</td>
                               <td>{formatDate(app.createdAt)}</td>
                               <td>
@@ -293,9 +299,12 @@ export default function EmployerDashboard() {
                       {applications.map((app) => (
                         <div className="data-card" key={app._id}>
                           <div className="data-card__top">
-                            <div>
-                              <div className="data-card__title">{app.applicant?.name || 'Unknown applicant'}</div>
-                              <div className="data-card__sub">{app.job?.title || '—'}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <Avatar src={app.applicant?.profilePictureUrl} name={app.applicant?.name} size={36} />
+                              <div>
+                                <div className="data-card__title">{app.applicant?.name || 'Unknown applicant'}</div>
+                                <div className="data-card__sub">{app.job?.title || '—'}</div>
+                              </div>
                             </div>
                             <StatusPill status={app.status} />
                           </div>

@@ -56,6 +56,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    // Profile picture — Cloudinary URL. Used for both seekers and employers,
+    // shown in the navbar and (for seekers) in the employer's applicant list.
+    profilePictureUrl: {
+      type: String,
+      default: '',
+    },
     phone: {
       type: String,
       trim: true,

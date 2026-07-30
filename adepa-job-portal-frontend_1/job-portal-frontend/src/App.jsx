@@ -14,6 +14,7 @@ import EmployerDashboard from './pages/EmployerDashboard.jsx'
 import PostJob from './pages/PostJob.jsx'
 import EditJob from './pages/EditJob.jsx'
 import CompanyProfile from './pages/CompanyProfile.jsx'
+import MyProfile from './pages/MyProfile.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import NotFound from './pages/NotFound.jsx'
 
@@ -27,12 +28,23 @@ export default function App() {
       <Route path="/register" element={<Layout hideFooter><Register /></Layout>} />
       <Route path="/verify-email/:token" element={<Layout hideFooter><VerifyEmail /></Layout>} />
 
-      <Route
+     <Route
         path="/dashboard"
         element={
           <Layout>
             <ProtectedRoute role="seeker">
               <JobSeekerDashboard />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <Layout>
+            <ProtectedRoute role="seeker">
+              <MyProfile />
             </ProtectedRoute>
           </Layout>
         }
