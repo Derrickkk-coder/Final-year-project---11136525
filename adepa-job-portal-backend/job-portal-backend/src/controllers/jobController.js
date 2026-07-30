@@ -1,4 +1,5 @@
 import Job from '../models/Job.js'
+import Application from '../models/Application.js'
 
 // @route   POST /api/jobs
 // @access  Private (employer only)
@@ -103,6 +104,46 @@ export async function getJobById(req, res, next) {
 export async function getMyJobs(req, res, next) {
   try {
     const jobs = await Job.find({ postedBy: req.user._id }).sort({ createdAt: -1 })
+    res.json({ success: true, jobs })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// @route   GET /api/jobs/recommended/mine
+// @access  Private (seeker only)
+// Suggests open jobs in categories the seeker has previously applied to,
+// excluding jobs they've already applied for. Falls back to recent open
+// jobs for seekers with no application history yet, so the section is
+// never empty for new users.
+export async function getRecommendedJobs(req, res, next) {
+  try {
+    const myApplications = await Application.find({ applicant: req.user._id }).populate('job', 'category')
+
+    const appliedJobIds = myApplications.map((a) => a.job?._id).filter(Boolean)
+    const categories = [...new Set(myApplications.map((a) => a.job?.category).filter(Boolean))]
+
+    let jobs = []
+
+    if (categories.length > 0) {
+      jobs = await Job.find({
+        status: 'open',
+        category: { $in: categories },
+        _id: { $nin: appliedJobIds },
+      })
+        .sort({ createdAt: -1 })
+        .limit(6)
+    }
+
+    if (jobs.length === 0) {
+      jobs = await Job.find({
+        status: 'open',
+        _id: { $nin: appliedJobIds },
+      })
+        .sort({ createdAt: -1 })
+        .limit(6)
+    }
+
     res.json({ success: true, jobs })
   } catch (err) {
     next(err)

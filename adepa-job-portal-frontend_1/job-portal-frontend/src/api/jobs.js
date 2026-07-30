@@ -15,6 +15,11 @@ export async function fetchMyJobs() {
   return data // { success, jobs }
 }
 
+export async function fetchRecommendedJobs() {
+  const { data } = await client.get('/jobs/recommended/mine')
+  return data // { success, jobs }
+}
+
 export async function createJob(payload) {
   const { data } = await client.post('/jobs', payload)
   return data // { success, job }

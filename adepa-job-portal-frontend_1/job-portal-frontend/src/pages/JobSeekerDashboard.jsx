@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import StatusPill from '../components/StatusPill.jsx'
+import JobCard from '../components/JobCard.jsx'
 import { fetchMyApplications } from '../api/applications.js'
+import { fetchRecommendedJobs } from '../api/jobs.js'
 
 function formatDate(date) {
   return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -14,11 +16,19 @@ export default function JobSeekerDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const [recommended, setRecommended] = useState([])
+  const [recommendedLoading, setRecommendedLoading] = useState(true)
+
   useEffect(() => {
     fetchMyApplications()
       .then((data) => setApplications(data.applications))
       .catch(() => setError('Could not load your applications right now.'))
       .finally(() => setLoading(false))
+
+    fetchRecommendedJobs()
+      .then((data) => setRecommended(data.jobs))
+      .catch(() => setRecommended([]))
+      .finally(() => setRecommendedLoading(false))
   }, [])
 
   const counts = {
@@ -65,6 +75,18 @@ export default function JobSeekerDashboard() {
             <div className="stat-card__label">Accepted</div>
           </div>
         </div>
+
+        {!recommendedLoading && recommended.length > 0 && (
+          <div style={{ marginBottom: 32 }}>
+            <h2 style={{ fontSize: 18, marginBottom: 4 }}>Jobs you might like</h2>
+            <p style={{ color: 'var(--ink-soft)', fontSize: 13, marginBottom: 14 }}>
+              Based on the roles you've applied to before.
+            </p>
+            <div className="listings-grid">
+              {recommended.map((job) => <JobCard key={job._id} job={job} />)}
+            </div>
+          </div>
+        )}
 
         <h2 style={{ fontSize: 18, marginBottom: 14 }}>Application history</h2>
 
