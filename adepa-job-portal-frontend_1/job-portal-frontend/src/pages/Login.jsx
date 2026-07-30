@@ -1,9 +1,12 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { resendVerification } from '../api/auth.js'
 
 export default function Login() {
+  const [searchParams] = useSearchParams()
+  const wasDeactivated = searchParams.get('deactivated') === '1'
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -27,8 +30,8 @@ export default function Login() {
 
     setSubmitting(true)
     try {
-     const user = await login({ email, password })
-navigate(user.role === 'employer' ? '/employer' : user.role === 'admin' ? '/admin' : '/dashboard')
+      const user = await login({ email, password })
+      navigate(user.role === 'employer' ? '/employer' : '/dashboard')
     } catch (err) {
       if (!err.response) {
         setError("The server is taking longer than usual to respond — it may be waking up from being idle (this can take up to a minute on a free hosting tier). Please wait a few seconds and try again.")
@@ -62,7 +65,11 @@ navigate(user.role === 'employer' ? '/employer' : user.role === 'admin' ? '/admi
         <div>
           <span className="hero__eyebrow">Welcome back</span>
           <h2 style={{ fontSize: 34, marginTop: 12, maxWidth: '15ch' }}>Find a better way to work.</h2>
-          
+          <img
+            src="/images/login-illustration.svg"
+            alt="Illustration of a laptop with job listings"
+            style={{ width: '100%', maxWidth: 320, marginTop: 28 }}
+          />
         </div>
         <p style={{ color: 'rgba(238,241,236,0.65)', fontSize: 14 }}>
           NextLeap — built as a final year project for the Department of Computer Science,
@@ -72,6 +79,16 @@ navigate(user.role === 'employer' ? '/employer' : user.role === 'admin' ? '/admi
 
       <div className="auth-shell__form">
         <h1 style={{ fontSize: 28, marginBottom: 6 }}>Log in</h1>
+
+        {wasDeactivated && (
+          <div className="panel" style={{ background: '#FFE9E1', border: '1px solid #F5C4B0', marginBottom: 20, padding: 16 }}>
+            <strong style={{ color: 'var(--coral-dark)', fontSize: 14 }}>Your account has been deactivated.</strong>
+            <p style={{ color: 'var(--coral-dark)', fontSize: 13, marginTop: 4, marginBottom: 0 }}>
+              You've been signed out. Contact support if you believe this is a mistake.
+            </p>
+          </div>
+        )}
+
         <p style={{ color: 'var(--ink-soft)', marginBottom: 28, fontSize: 14 }}>
           New here? <Link to="/register" style={{ color: 'var(--pine)', fontWeight: 600 }}>Create an account</Link>
         </p>

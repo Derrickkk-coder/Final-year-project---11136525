@@ -23,6 +23,17 @@ export async function protect(req, res, next) {
       return res.status(401).json({ success: false, message: 'Not authorized — user no longer exists' })
     }
 
+    // Re-check on every request, not just at login — this way, an admin
+    // deactivating someone takes effect immediately, even if that person is
+    // already holding a valid, unexpired token from before the deactivation.
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        accountDeactivated: true,
+        message: 'This account has been deactivated.',
+      })
+    }
+
     req.user = user
     next()
   } catch (err) {
