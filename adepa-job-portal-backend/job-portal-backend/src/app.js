@@ -4,6 +4,7 @@ import { notFound, errorHandler } from './middleware/errorHandler.js'
 import authRoutes from './routes/authRoutes.js'
 import jobRoutes from './routes/jobRoutes.js'
 import applicationRoutes from './routes/applicationRoutes.js'
+import adminRoutes from './routes/adminRoutes.js'
 
 const app = express()
 
@@ -22,11 +23,9 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/jobs', jobRoutes)
 app.use('/api/applications', applicationRoutes)
+app.use('/api/admin', adminRoutes)
 
 // ---- Error handling (must be last) ----
 app.use(notFound)
 app.use(errorHandler)
-
-import adminRoutes from './routes/adminRoutes.js'
-app.use('/api/admin', adminRoutes)
 export default app
