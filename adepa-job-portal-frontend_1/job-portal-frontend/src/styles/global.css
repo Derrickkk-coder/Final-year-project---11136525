@@ -413,6 +413,11 @@
   .ticket__stub { align-items: flex-start; text-align: left; flex-direction: row; justify-content: space-between; width: 100%; }
   .testimonial-grid { grid-template-columns: 1fr; }
 
+  .dash-sidebar--admin {
+    flex-direction: column;
+    overflow-x: visible;
+  }
+
   /* Navbar: hide the desktop links/actions, show the hamburger */
   .nav__links--desktop,
   .nav__actions--desktop {

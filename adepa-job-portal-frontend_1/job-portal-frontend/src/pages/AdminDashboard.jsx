@@ -115,7 +115,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="dash-shell">
-      <aside className="dash-sidebar">
+      <aside className="dash-sidebar dash-sidebar--admin">
         <div className="dash-sidebar__group">
           <span className="dash-sidebar__label">Employers</span>
           {EMPLOYER_TABS.map((t) => (
