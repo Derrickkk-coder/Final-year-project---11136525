@@ -2,25 +2,30 @@ import client from './client.js'
 
 export async function applyToJob(jobId, resumeUrl, phone, contactEmail) {
   const { data } = await client.post('/applications', { jobId, resumeUrl, phone, contactEmail })
-  return data
+  return data // { success, application }
 }
 
 export async function fetchMyApplications() {
   const { data } = await client.get('/applications/mine')
-  return data
+  return data // { success, applications }
 }
 
 export async function fetchApplicationsForEmployer() {
   const { data } = await client.get('/applications/employer')
-  return data
+  return data // { success, applications }
 }
 
 export async function fetchApplicationsForJob(jobId) {
   const { data } = await client.get(`/applications/job/${jobId}`)
-  return data
+  return data // { success, applications }
 }
 
 export async function updateApplicationStatus(applicationId, status) {
   const { data } = await client.put(`/applications/${applicationId}/status`, { status })
-  return data
+  return data // { success, application }
+}
+
+export async function analyzeApplication(applicationId, force = false) {
+  const { data } = await client.post(`/applications/${applicationId}/analyze`, { force })
+  return data // { success, analysis, cached }
 }

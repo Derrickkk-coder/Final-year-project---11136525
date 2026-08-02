@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import Avatar from '../components/Avatar.jsx'
 import { fetchMyJobs, updateJob } from '../api/jobs.js'
-import { fetchApplicationsForEmployer, updateApplicationStatus } from '../api/applications.js'
+import { fetchApplicationsForEmployer, updateApplicationStatus, analyzeApplication } from '../api/applications.js'
 
 const STATUS_OPTIONS = ['pending', 'review', 'accepted', 'rejected']
 
@@ -21,6 +21,9 @@ export default function EmployerDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [updatingId, setUpdatingId] = useState(null)
+  const [analyzingId, setAnalyzingId] = useState(null)
+  const [analyzeErrorId, setAnalyzeErrorId] = useState(null)
+  const [expandedIds, setExpandedIds] = useState([])
 
   useEffect(() => {
     Promise.all([fetchMyJobs(), fetchApplicationsForEmployer()])
@@ -44,6 +47,28 @@ export default function EmployerDashboard() {
     } finally {
       setUpdatingId(null)
     }
+  }
+
+  const handleAnalyze = async (applicationId, force = false) => {
+    setAnalyzingId(applicationId)
+    setAnalyzeErrorId(null)
+    try {
+      const data = await analyzeApplication(applicationId, force)
+      setApplications((prev) =>
+        prev.map((a) => (a._id === applicationId ? { ...a, aiAnalysis: data.analysis } : a))
+      )
+      setExpandedIds((prev) => (prev.includes(applicationId) ? prev : [...prev, applicationId]))
+    } catch {
+      setAnalyzeErrorId(applicationId)
+    } finally {
+      setAnalyzingId(null)
+    }
+  }
+
+  const toggleExpanded = (applicationId) => {
+    setExpandedIds((prev) =>
+      prev.includes(applicationId) ? prev.filter((id) => id !== applicationId) : [...prev, applicationId]
+    )
   }
 
   const handleToggleJobStatus = async (jobId, currentStatus) => {
@@ -244,52 +269,100 @@ export default function EmployerDashboard() {
                             <th>Phone</th>
                             <th>Email</th>
                             <th>Resume</th>
+                            <th>AI Fit</th>
                             <th>Status</th>
                             <th>Update status</th>
                           </tr>
                         </thead>
                         <tbody>
                           {applications.map((app) => (
-                            <tr key={app._id}>
-                              <td style={{ fontWeight: 600 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                  <Avatar src={app.applicant?.profilePictureUrl} name={app.applicant?.name} size={28} />
-                                  {app.applicant?.name || 'Unknown applicant'}
-                                </div>
-                              </td>
-                              <td>{app.job?.title || '—'}</td>
-                              <td>{formatDate(app.createdAt)}</td>
-                              <td>
-                                {app.phone ? (
-                                  <a href={`tel:${app.phone}`} style={{ color: 'var(--teal-700)' }}>{app.phone}</a>
-                                ) : '—'}
-                              </td>
-                              <td>
-                                {app.contactEmail || app.applicant?.email ? (
-                                  <a href={`mailto:${app.contactEmail || app.applicant?.email}`} style={{ color: 'var(--teal-700)' }}>
-                                    {app.contactEmail || app.applicant?.email}
-                                  </a>
-                                ) : '—'}
-                              </td>
-                              <td>
-                                {app.resumeUrl ? (
-                                  <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer" className="btn btn--ghost btn--sm">
-                                    View
-                                  </a>
-                                ) : '—'}
-                              </td>
-                              <td><StatusPill status={app.status} /></td>
-                              <td>
-                                <select
-                                  value={app.status}
-                                  disabled={updatingId === app._id}
-                                  onChange={(e) => handleStatusChange(app._id, e.target.value)}
-                                  style={{ border: '1.5px solid var(--line)', borderRadius: 6, padding: '6px 8px', fontSize: 13 }}
-                                >
-                                  {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                              </td>
-                            </tr>
+                            <React.Fragment key={app._id}>
+                              <tr>
+                                <td style={{ fontWeight: 600 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <Avatar src={app.applicant?.profilePictureUrl} name={app.applicant?.name} size={28} />
+                                    {app.applicant?.name || 'Unknown applicant'}
+                                  </div>
+                                </td>
+                                <td>{app.job?.title || '—'}</td>
+                                <td>{formatDate(app.createdAt)}</td>
+                                <td>
+                                  {app.phone ? (
+                                    <a href={`tel:${app.phone}`} style={{ color: 'var(--teal-700)' }}>{app.phone}</a>
+                                  ) : '—'}
+                                </td>
+                                <td>
+                                  {app.contactEmail || app.applicant?.email ? (
+                                    <a href={`mailto:${app.contactEmail || app.applicant?.email}`} style={{ color: 'var(--teal-700)' }}>
+                                      {app.contactEmail || app.applicant?.email}
+                                    </a>
+                                  ) : '—'}
+                                </td>
+                                <td>
+                                  {app.resumeUrl ? (
+                                    <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer" className="btn btn--ghost btn--sm">
+                                      View
+                                    </a>
+                                  ) : '—'}
+                                </td>
+                                <td>
+                                  {app.aiAnalysis ? (
+                                    <button className="btn btn--outline-teal btn--sm" onClick={() => toggleExpanded(app._id)}>
+                                      {expandedIds.includes(app._id) ? 'Hide' : 'View'}
+                                    </button>
+                                  ) : (
+                                    <button
+                                      className="btn btn--outline-teal btn--sm"
+                                      disabled={analyzingId === app._id}
+                                      onClick={() => handleAnalyze(app._id)}
+                                    >
+                                      {analyzingId === app._id ? 'Analyzing…' : '✨ Analyze'}
+                                    </button>
+                                  )}
+                                </td>
+                                <td><StatusPill status={app.status} /></td>
+                                <td>
+                                  <select
+                                    value={app.status}
+                                    disabled={updatingId === app._id}
+                                    onChange={(e) => handleStatusChange(app._id, e.target.value)}
+                                    style={{ border: '1.5px solid var(--line)', borderRadius: 6, padding: '6px 8px', fontSize: 13 }}
+                                  >
+                                    {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                                  </select>
+                                </td>
+                              </tr>
+                              {analyzeErrorId === app._id && (
+                                <tr>
+                                  <td colSpan={9} style={{ background: '#FFE9E1' }}>
+                                    <span style={{ color: 'var(--coral-dark)', fontSize: 13 }}>
+                                      Could not generate an analysis right now. Please try again in a moment.
+                                    </span>
+                                  </td>
+                                </tr>
+                              )}
+                              {expandedIds.includes(app._id) && app.aiAnalysis && (
+                                <tr>
+                                  <td colSpan={9} style={{ background: 'var(--teal-100)' }}>
+                                    <div style={{ padding: '8px 4px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                        <strong style={{ fontSize: 13, color: 'var(--teal-700)' }}>✨ AI fit assessment</strong>
+                                        <button
+                                          className="btn btn--ghost btn--sm"
+                                          disabled={analyzingId === app._id}
+                                          onClick={() => handleAnalyze(app._id, true)}
+                                        >
+                                          {analyzingId === app._id ? 'Re-analyzing…' : 'Re-analyze'}
+                                        </button>
+                                      </div>
+                                      <p style={{ fontSize: 13.5, color: 'var(--ink)', whiteSpace: 'pre-line', lineHeight: 1.6, margin: 0 }}>
+                                        {app.aiAnalysis}
+                                      </p>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
                           ))}
                         </tbody>
                       </table>
@@ -334,6 +407,44 @@ export default function EmployerDashboard() {
                               </a>
                             ) : <span>—</span>}
                           </div>
+                          <div className="data-card__row" style={{ alignItems: 'center' }}>
+                            <span className="data-card__row-label">AI Fit</span>
+                            {app.aiAnalysis ? (
+                              <button className="btn btn--outline-teal btn--sm" onClick={() => toggleExpanded(app._id)}>
+                                {expandedIds.includes(app._id) ? 'Hide' : 'View'}
+                              </button>
+                            ) : (
+                              <button
+                                className="btn btn--outline-teal btn--sm"
+                                disabled={analyzingId === app._id}
+                                onClick={() => handleAnalyze(app._id)}
+                              >
+                                {analyzingId === app._id ? 'Analyzing…' : '✨ Analyze'}
+                              </button>
+                            )}
+                          </div>
+                          {analyzeErrorId === app._id && (
+                            <p style={{ color: 'var(--coral-dark)', fontSize: 12.5, marginTop: 6 }}>
+                              Could not generate an analysis right now. Please try again.
+                            </p>
+                          )}
+                          {expandedIds.includes(app._id) && app.aiAnalysis && (
+                            <div style={{ background: 'var(--teal-100)', borderRadius: 8, padding: 12, marginTop: 10 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                <strong style={{ fontSize: 12.5, color: 'var(--teal-700)' }}>✨ AI fit assessment</strong>
+                                <button
+                                  className="btn btn--ghost btn--sm"
+                                  disabled={analyzingId === app._id}
+                                  onClick={() => handleAnalyze(app._id, true)}
+                                >
+                                  {analyzingId === app._id ? '…' : 'Re-analyze'}
+                                </button>
+                              </div>
+                              <p style={{ fontSize: 13, color: 'var(--ink)', whiteSpace: 'pre-line', lineHeight: 1.6, margin: 0 }}>
+                                {app.aiAnalysis}
+                              </p>
+                            </div>
+                          )}
                           <div className="data-card__row" style={{ alignItems: 'center' }}>
                             <span className="data-card__row-label">Update status</span>
                             <select

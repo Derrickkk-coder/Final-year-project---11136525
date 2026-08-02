@@ -27,10 +27,19 @@ const applicationSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
-    status: {
+   status: {
       type: String,
       enum: ['pending', 'review', 'accepted', 'rejected'],
       default: 'pending',
+    },
+    // AI-generated fit assessment, cached so re-viewing an applicant doesn't
+    // re-trigger a paid API call. Employers can request a fresh one manually.
+    aiAnalysis: {
+      type: String,
+      default: '',
+    },
+    aiAnalyzedAt: {
+      type: Date,
     },
   },
   { timestamps: true }

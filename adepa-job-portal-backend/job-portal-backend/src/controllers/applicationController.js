@@ -1,6 +1,7 @@
 import Application from '../models/Application.js'
 import Job from '../models/Job.js'
 import { sendEmail, applicationStatusEmailTemplate } from '../utils/sendEmail.js'
+import { analyzeApplicationFit } from '../utils/analyzeApplication.js'
 
 // Fire-and-forget, same pattern as verification emails — a slow/failed email
 // should never block or break the status update itself.
@@ -181,5 +182,50 @@ export async function updateApplicationStatus(req, res, next) {
     res.json({ success: true, application })
   } catch (err) {
     next(err)
+  }
+}
+// @route   POST /api/applications/:id/analyze
+// @access  Private (employer who owns the related job)
+// Generates (or regenerates, on request) an AI fit assessment comparing the
+// applicant's resume against the job posting. Cached on the Application so
+// re-viewing it doesn't trigger a fresh paid API call every time.
+export async function analyzeApplication(req, res, next) {
+  try {
+    const { force } = req.body
+
+    const application = await Application.findById(req.params.id).populate('job')
+    if (!application) {
+      return res.status(404).json({ success: false, message: 'Application not found.' })
+    }
+
+    if (application.job.postedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only analyze applications for jobs you posted.',
+      })
+    }
+
+    // Return the cached result unless the employer explicitly asked for a
+    // fresh one — avoids re-billing the API on every page view.
+    if (application.aiAnalysis && !force) {
+      return res.json({ success: true, analysis: application.aiAnalysis, cached: true })
+    }
+
+    const analysis = await analyzeApplicationFit({
+      job: application.job,
+      resumeUrl: application.resumeUrl,
+    })
+
+    application.aiAnalysis = analysis
+    application.aiAnalyzedAt = new Date()
+    await application.save()
+
+    res.json({ success: true, analysis, cached: false })
+  } catch (err) {
+    console.error('[ai] Analysis failed:', err.message)
+    res.status(502).json({
+      success: false,
+      message: 'Could not generate an analysis right now. Please try again in a moment.',
+    })
   }
 }
