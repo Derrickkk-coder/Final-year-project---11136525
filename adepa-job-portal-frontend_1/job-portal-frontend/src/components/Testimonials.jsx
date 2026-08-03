@@ -2,17 +2,17 @@ import React from 'react'
 
 const TESTIMONIALS = [
   {
-    quote: "Adepa made it easy to apply for a role at a company that actually matched what I was looking for. Highly satisfied.",
+    quote: "NextLeap made it easy to apply for a role at a company that actually matched what I was looking for. Highly satisfied.",
     author: 'Ama Serwaa',
     role: 'Hired as Frontend Engineer, Zaya Health',
   },
   {
     quote: "As an employer, I could finally see every applicant in one dashboard instead of chasing emails. Worth it.",
-    author: 'Adepa Talent Team',
+    author: 'NextLeap Talent Team',
     role: 'Employer',
   },
   {
-    quote: "I preferred Adepa over scattered job boards — the listings felt current and the apply flow was fast.",
+    quote: "I preferred NextLeap over scattered job boards — the listings felt current and the apply flow was fast.",
     author: 'Kojo Mensah',
     role: 'Applied to Backend Developer, Paystack',
   },

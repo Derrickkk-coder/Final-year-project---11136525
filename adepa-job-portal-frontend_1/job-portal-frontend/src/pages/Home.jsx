@@ -130,7 +130,7 @@ export default function Home() {
       <section className="section" style={{ background: '#fff', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
         <div className="container">
           <span className="eyebrow">Why NextLeap</span>
-          <h2 className="section__title" style={{ marginTop: 8, marginBottom: 36 }}>How Adepa is different</h2>
+          <h2 className="section__title" style={{ marginTop: 8, marginBottom: 36 }}>How NextLeap is different</h2>
           <div className="features-grid">
             {FEATURES.map((f) => (
               <div key={f.title}>
