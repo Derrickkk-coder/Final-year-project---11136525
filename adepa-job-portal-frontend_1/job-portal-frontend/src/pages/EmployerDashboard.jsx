@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import Avatar from '../components/Avatar.jsx'
+import AiIcon from '../components/AiIcon.jsx'
 import { fetchMyJobs, updateJob } from '../api/jobs.js'
 import { fetchApplicationsForEmployer, updateApplicationStatus, analyzeApplication } from '../api/applications.js'
 
@@ -315,8 +316,9 @@ export default function EmployerDashboard() {
                                       className="btn btn--outline-teal btn--sm"
                                       disabled={analyzingId === app._id}
                                       onClick={() => handleAnalyze(app._id)}
+                                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                                     >
-                                      {analyzingId === app._id ? 'Analyzing…' : '✨ Analyze'}
+                                      {analyzingId === app._id ? 'Analyzing…' : (<><AiIcon size={13} /> Analyze</>)}
                                     </button>
                                   )}
                                 </td>
@@ -346,7 +348,9 @@ export default function EmployerDashboard() {
                                   <td colSpan={9} style={{ background: 'var(--teal-100)' }}>
                                     <div style={{ padding: '8px 4px' }}>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                                        <strong style={{ fontSize: 13, color: 'var(--teal-700)' }}>✨ AI fit assessment</strong>
+                                        <strong style={{ fontSize: 13, color: 'var(--teal-700)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                          <AiIcon size={14} /> AI fit assessment
+                                        </strong>
                                         <button
                                           className="btn btn--ghost btn--sm"
                                           disabled={analyzingId === app._id}
@@ -418,8 +422,9 @@ export default function EmployerDashboard() {
                                 className="btn btn--outline-teal btn--sm"
                                 disabled={analyzingId === app._id}
                                 onClick={() => handleAnalyze(app._id)}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                               >
-                                {analyzingId === app._id ? 'Analyzing…' : '✨ Analyze'}
+                                {analyzingId === app._id ? 'Analyzing…' : (<><AiIcon size={13} /> Analyze</>)}
                               </button>
                             )}
                           </div>
@@ -431,7 +436,9 @@ export default function EmployerDashboard() {
                           {expandedIds.includes(app._id) && app.aiAnalysis && (
                             <div style={{ background: 'var(--teal-100)', borderRadius: 8, padding: 12, marginTop: 10 }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                                <strong style={{ fontSize: 12.5, color: 'var(--teal-700)' }}>✨ AI fit assessment</strong>
+                                <strong style={{ fontSize: 12.5, color: 'var(--teal-700)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                  <AiIcon size={13} /> AI fit assessment
+                                </strong>
                                 <button
                                   className="btn btn--ghost btn--sm"
                                   disabled={analyzingId === app._id}
