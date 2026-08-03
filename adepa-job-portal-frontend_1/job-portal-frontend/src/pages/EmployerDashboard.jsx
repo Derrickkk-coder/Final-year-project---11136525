@@ -309,7 +309,7 @@ export default function EmployerDashboard() {
                                 <td>
                                   {app.aiAnalysis ? (
                                     <button className="btn btn--outline-teal btn--sm" onClick={() => toggleExpanded(app._id)}>
-                                      {expandedIds.includes(app._id) ? 'Hide' : 'View'}
+                                      <AiIcon size={13} /> {expandedIds.includes(app._id) ? 'Hide' : 'View'}
                                     </button>
                                   ) : (
                                     <button
@@ -415,7 +415,7 @@ export default function EmployerDashboard() {
                             <span className="data-card__row-label">AI Fit</span>
                             {app.aiAnalysis ? (
                               <button className="btn btn--outline-teal btn--sm" onClick={() => toggleExpanded(app._id)}>
-                                {expandedIds.includes(app._id) ? 'Hide' : 'View'}
+                                <AiIcon size={13} /> {expandedIds.includes(app._id) ? 'Hide' : 'View'}
                               </button>
                             ) : (
                               <button
