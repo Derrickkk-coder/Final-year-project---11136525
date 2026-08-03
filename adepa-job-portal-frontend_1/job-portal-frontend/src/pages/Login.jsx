@@ -67,11 +67,6 @@ export default function Login() {
         <div>
           <span className="hero__eyebrow">Welcome back</span>
           <h2 style={{ fontSize: 34, marginTop: 12, maxWidth: '15ch' }}>Find a better way to work.</h2>
-          <img
-            src="/images/login-illustration.svg"
-            alt="Illustration of a laptop with job listings"
-            style={{ width: '100%', maxWidth: 320, marginTop: 28 }}
-          />
         </div>
         <p style={{ color: 'rgba(238,241,236,0.65)', fontSize: 14 }}>
           NextLeap — built as a final year project for the Department of Computer Science,
