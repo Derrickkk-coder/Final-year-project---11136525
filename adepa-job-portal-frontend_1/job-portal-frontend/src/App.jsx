@@ -7,6 +7,8 @@ import Home from './pages/Home.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import VerifyEmail from './pages/VerifyEmail.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
 import JobListings from './pages/JobListings.jsx'
 import JobDetails from './pages/JobDetails.jsx'
 import JobSeekerDashboard from './pages/JobSeekerDashboard.jsx'
@@ -27,6 +29,8 @@ export default function App() {
       <Route path="/login" element={<Layout hideFooter><Login /></Layout>} />
       <Route path="/register" element={<Layout hideFooter><Register /></Layout>} />
       <Route path="/verify-email/:token" element={<Layout hideFooter><VerifyEmail /></Layout>} />
+      <Route path="/forgot-password" element={<Layout hideFooter><ForgotPassword /></Layout>} />
+      <Route path="/reset-password/:token" element={<Layout hideFooter><ResetPassword /></Layout>} />
 
      <Route
         path="/dashboard"

@@ -100,3 +100,29 @@ export function applicationStatusEmailTemplate({ name, jobTitle, company, status
   </div>
   `
 }
+export function passwordResetEmailTemplate({ name, resetUrl }) {
+  return `
+  <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; color: #16232B;">
+    <div style="background: #004F6D; padding: 20px 24px; border-radius: 10px 10px 0 0;">
+      <span style="color: #fff; font-size: 20px; font-weight: bold;">NextLeap</span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #E2E9EB; border-top: none; border-radius: 0 0 10px 10px; padding: 32px 24px;">
+      <h2 style="margin: 0 0 16px; font-size: 20px;">Reset your password</h2>
+      <p style="line-height: 1.6; color: #5A6D74;">
+        Hi ${name}, we received a request to reset your NextLeap password. Click the button below to choose a new one.
+      </p>
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${resetUrl}" style="background: #FF6A45; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-weight: bold; display: inline-block;">
+          Reset password
+        </a>
+      </p>
+      <p style="line-height: 1.6; color: #5A6D74; font-size: 13px;">
+        This link expires in 1 hour. If you didn't request this, you can safely ignore this email — your password will stay unchanged.
+      </p>
+      <p style="line-height: 1.6; color: #8FA1A7; font-size: 12px; word-break: break-all;">
+        Or paste this link into your browser: ${resetUrl}
+      </p>
+    </div>
+  </div>
+  `
+}

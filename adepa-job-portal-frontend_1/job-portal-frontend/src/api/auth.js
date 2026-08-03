@@ -29,3 +29,13 @@ export async function updateProfile(payload) {
   const { data } = await client.put('/auth/profile', payload)
   return data // { success, user }
 }
+
+export async function forgotPassword(email) {
+  const { data } = await client.post('/auth/forgot-password', { email })
+  return data // { success, message }
+}
+
+export async function resetPassword(token, password) {
+  const { data } = await client.post(`/auth/reset-password/${token}`, { password })
+  return data // { success, message }
+}

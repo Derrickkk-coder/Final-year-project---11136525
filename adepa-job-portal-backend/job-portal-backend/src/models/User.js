@@ -79,11 +79,20 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    verificationToken: {
+verificationToken: {
       type: String,
       select: false,
     },
     verificationTokenExpires: {
+      type: Date,
+      select: false,
+    },
+    // ---- Password reset ----
+    resetPasswordToken: {
+      type: String,
+      select: false,
+    },
+    resetPasswordExpires: {
       type: Date,
       select: false,
     },
@@ -108,6 +117,8 @@ userSchema.methods.toJSON = function () {
   delete obj.password
   delete obj.verificationToken
   delete obj.verificationTokenExpires
+  delete obj.resetPasswordToken
+  delete obj.resetPasswordExpires
   delete obj.__v
   return obj
 }

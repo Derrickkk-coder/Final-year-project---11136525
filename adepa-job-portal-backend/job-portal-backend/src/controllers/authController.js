@@ -1,6 +1,6 @@
 import User from '../models/User.js'
 import { generateToken } from '../utils/generateToken.js'
-import { sendEmail, verificationEmailTemplate } from '../utils/sendEmail.js'
+import { sendEmail, verificationEmailTemplate, passwordResetEmailTemplate } from '../utils/sendEmail.js'
 import { generateVerificationToken, hashToken } from '../utils/generateVerificationToken.js'
 
 const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
@@ -225,6 +225,93 @@ export async function updateProfile(req, res, next) {
     await req.user.save()
 
     res.json({ success: true, user: req.user })
+  } catch (err) {
+    next(err)
+  }
+}
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000 // 1 hour — shorter than email verification's 24h,
+// standard practice for password reset links since they grant account access.
+
+// Fire-and-forget, same reasoning as verification emails: a slow/failed send
+// should never block or crash the request. The response message is generic
+// either way (see forgotPassword below), so there's nothing to await here.
+async function issuePasswordResetEmail(user) {
+  try {
+    const { rawToken, hashedToken } = generateVerificationToken()
+    user.resetPasswordToken = hashedToken
+    user.resetPasswordExpires = Date.now() + RESET_TOKEN_TTL_MS
+    await user.save()
+
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${rawToken}`
+    await sendEmail({
+      to: user.email,
+      subject: 'Reset your NextLeap password',
+      html: passwordResetEmailTemplate({ name: user.name, resetUrl }),
+    })
+    console.log(`[email] Password reset email SENT to ${user.email}`)
+  } catch (err) {
+    console.error(`[email] FAILED to send password reset email to ${user.email}:`, err.message)
+  }
+}
+
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export async function forgotPassword(req, res, next) {
+  try {
+    const { email } = req.body
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required.' })
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() })
+
+    if (user) {
+      issuePasswordResetEmail(user)
+    } else {
+      console.log(`[email] Password reset requested for unknown email: ${email}`)
+    }
+
+    res.json({
+      success: true,
+      message: 'If an account exists with this email, a password reset link has been sent.',
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// @route   POST /api/auth/reset-password/:token
+// @access  Public
+export async function resetPassword(req, res, next) {
+  try {
+    const { token } = req.params
+    const { password } = req.body
+
+    if (!password || password.length < 8) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 8 characters.' })
+    }
+
+    const hashedToken = hashToken(token)
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() },
+    })
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'This password reset link is invalid or has expired. Please request a new one.',
+      })
+    }
+
+    user.password = password
+    user.resetPasswordToken = undefined
+    user.resetPasswordExpires = undefined
+    await user.save()
+
+    res.json({ success: true, message: 'Your password has been reset. You can now log in.' })
   } catch (err) {
     next(err)
   }
