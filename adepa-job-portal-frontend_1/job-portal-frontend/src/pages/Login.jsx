@@ -34,6 +34,8 @@ export default function Login() {
       navigate(user.role === 'employer' ? '/employer' : '/dashboard')
     } catch (err) {
       if (!err.response) {
+        // No response at all — most commonly a Render free-tier cold start
+        // taking longer than usual, not a genuine failure.
         setError("The server is taking longer than usual to respond — it may be waking up from being idle (this can take up to a minute on a free hosting tier). Please wait a few seconds and try again.")
       } else if (err.response.data?.notVerified) {
         setNotVerified(true)
@@ -65,6 +67,11 @@ export default function Login() {
         <div>
           <span className="hero__eyebrow">Welcome back</span>
           <h2 style={{ fontSize: 34, marginTop: 12, maxWidth: '15ch' }}>Find a better way to work.</h2>
+          <img
+            src="/images/login-illustration.svg"
+            alt="Illustration of a laptop with job listings"
+            style={{ width: '100%', maxWidth: 320, marginTop: 28 }}
+          />
         </div>
         <p style={{ color: 'rgba(238,241,236,0.65)', fontSize: 14 }}>
           NextLeap — built as a final year project for the Department of Computer Science,
@@ -94,7 +101,7 @@ export default function Login() {
             <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
           </div>
           <div className="form-field">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 4 }}>
               <label htmlFor="password">Password</label>
               <Link to="/forgot-password" style={{ fontSize: 12.5, color: 'var(--pine)', fontWeight: 600 }}>Forgot password?</Link>
             </div>
