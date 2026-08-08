@@ -39,6 +39,11 @@ export default function JobSeekerDashboard() {
       .finally(() => setRecommendedLoading(false))
   }, [])
 
+  // Only interviews still ahead of us, soonest first
+  const upcomingInterviews = applications
+    .filter((a) => a.interview?.scheduledAt && new Date(a.interview.scheduledAt) > new Date())
+    .sort((a, b) => new Date(a.interview.scheduledAt) - new Date(b.interview.scheduledAt))
+
   const counts = {
     total: applications.length,
     pending: applications.filter((a) => a.status === 'pending').length,
@@ -93,6 +98,37 @@ export default function JobSeekerDashboard() {
             already applied for matters more than a new suggestion. Renders
             nothing at all when there are no notifications. */}
         <NotificationsPanel />
+
+        {/* Upcoming interviews outrank everything else on this page — past ones
+            are filtered out rather than lingering as clutter. */}
+        {upcomingInterviews.length > 0 && (
+          <div className="panel interview-panel">
+            <h2 style={{ fontSize: 'var(--text-lg)', marginBottom: 'var(--space-4)' }}>
+              {upcomingInterviews.length === 1 ? 'Upcoming interview' : 'Upcoming interviews'}
+            </h2>
+            {upcomingInterviews.map((app) => (
+              <div className="interview-row" key={app._id}>
+                <div className="interview-row__when">
+                  <span className="interview-row__date">
+                    {new Date(app.interview.scheduledAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                  </span>
+                  <span className="interview-row__time">
+                    {new Date(app.interview.scheduledAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <div className="interview-row__body">
+                  <strong>{app.job?.title || 'Role no longer listed'}</strong>
+                  <span className="interview-row__company">{app.job?.company}</span>
+                  <span className="interview-row__mode">
+                    {app.interview.mode}
+                    {app.interview.details ? ` · ${app.interview.details}` : ''}
+                  </span>
+                  {app.interview.note && <p className="interview-row__note">{app.interview.note}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {recommendedLoading && (
           <div style={{ marginBottom: 32 }}>

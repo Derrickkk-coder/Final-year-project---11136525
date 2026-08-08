@@ -528,6 +528,8 @@
 .status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .status-pill--pending { background: #FFF3E0; color: #B5710F; }
 .status-pill--review { background: var(--teal-100); color: var(--teal-700); }
+/* A deeper teal than 'review' — further along the funnel, not yet accepted */
+.status-pill--shortlisted { background: #CFE6EC; color: var(--teal-900); }
 .status-pill--accepted { background: var(--success-bg); color: var(--success); }
 .status-pill--rejected { background: #FFE9E1; color: var(--coral-dark); }
 
@@ -742,6 +744,110 @@
 .match-badge.is-moderate .match-badge__score { background: var(--teal-100); color: var(--teal-700); }
 .match-badge.is-weak .match-badge__score { background: var(--paper); color: var(--ink-soft); border: 1px solid var(--line); }
 .match-badge__skills { font-size: 12px; color: var(--ink-faint); font-weight: 600; }
+
+/* ============ Ranked candidates (employer) ============ */
+.cand-list { display: flex; flex-direction: column; gap: var(--space-4); }
+.cand {
+  background: var(--paper-raised); border: 1px solid var(--line);
+  border-left: 4px solid var(--line);
+  border-radius: var(--radius-card); box-shadow: var(--shadow-card);
+  padding: var(--space-5) var(--space-6);
+}
+/* Left edge carries match strength, same thresholds as everywhere else */
+.cand.is-strong { border-left-color: var(--success); }
+.cand.is-moderate { border-left-color: var(--teal-500); }
+.cand.is-weak { border-left-color: var(--ink-faint); }
+.cand.is-unranked { border-left-color: var(--line); background: var(--paper); }
+
+.cand__head { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+.cand__rank { font-size: 22px; min-width: 34px; text-align: center; flex-shrink: 0; }
+.cand__ident { flex: 1; min-width: 140px; }
+.cand__name { font-size: var(--text-md); margin: 0; }
+.cand__meta { margin: 2px 0 0; font-size: var(--text-sm); color: var(--ink-soft); }
+.cand__score { text-align: right; flex-shrink: 0; }
+.cand__score-num {
+  display: block; font-family: var(--font-display); font-size: 24px; font-weight: 800; line-height: 1;
+}
+.cand.is-strong .cand__score-num { color: var(--success); }
+.cand.is-moderate .cand__score-num { color: var(--teal-500); }
+.cand.is-weak .cand__score-num { color: var(--ink-soft); }
+.cand__score-label {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--ink-faint);
+}
+.cand__score-none { font-size: var(--text-sm); font-weight: 600; color: var(--ink-faint); }
+
+.cand__skills { margin-top: var(--space-4); }
+.cand__skills-summary { margin: 0 0 var(--space-3); font-size: var(--text-sm); color: var(--ink-soft); }
+.cand__skills-summary strong { color: var(--ink); }
+.cand__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.cand__unranked-note {
+  margin: var(--space-4) 0 0; font-size: var(--text-sm);
+  color: var(--ink-soft); line-height: 1.55; max-width: 68ch;
+}
+
+.cand__interview {
+  margin-top: var(--space-4); padding: var(--space-3) var(--space-4);
+  background: var(--success-bg); border-radius: var(--radius-sm);
+  font-size: var(--text-sm); color: #14603C;
+}
+
+.cand__actions {
+  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+  margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--line);
+}
+.cand__status-select {
+  border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+  padding: 7px 9px; font-size: var(--text-sm);
+  background: var(--paper-raised); color: var(--ink); margin-left: auto;
+}
+
+.cand__detail { margin-top: var(--space-5); padding-top: var(--space-5); border-top: 1px solid var(--line); }
+.cand__detail-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-4); margin-bottom: var(--space-5);
+  font-size: var(--text-base);
+}
+.cand__detail-grid a { color: var(--teal-700); font-weight: 600; }
+.cand__detail-label {
+  display: block; font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--ink-faint); margin-bottom: 3px;
+}
+.cand__section { margin-bottom: var(--space-5); }
+.cand__section:last-child { margin-bottom: 0; }
+.cand__section h4 {
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--teal-500); margin-bottom: var(--space-3);
+}
+.cand__section p { margin: 0; font-size: var(--text-base); color: var(--ink-soft); line-height: var(--leading-normal); }
+.cand__entry { font-size: var(--text-base); margin-bottom: var(--space-3); }
+.cand__entry:last-child { margin-bottom: 0; }
+.cand__entry p { margin-top: 3px; font-size: var(--text-sm); }
+.cand__entry-years { color: var(--ink-faint); font-size: var(--text-sm); }
+
+/* ============ Upcoming interviews (seeker) ============ */
+.interview-panel { margin-bottom: 20px; }
+.interview-row {
+  display: flex; gap: var(--space-5); align-items: flex-start;
+  padding: var(--space-4) 0; border-top: 1px solid var(--line);
+}
+.interview-row:first-of-type { border-top: none; padding-top: 0; }
+.interview-row__when {
+  flex-shrink: 0; text-align: center; min-width: 62px;
+  background: var(--teal-700); color: #fff;
+  border-radius: var(--radius-sm); padding: var(--space-3) var(--space-2);
+}
+.interview-row__date {
+  display: block; font-family: var(--font-display); font-weight: 800; font-size: var(--text-base);
+}
+.interview-row__time { display: block; font-size: 11.5px; opacity: 0.85; margin-top: 2px; }
+.interview-row__body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.interview-row__company { font-size: var(--text-sm); color: var(--teal-700); font-weight: 600; }
+.interview-row__mode { font-size: var(--text-sm); color: var(--ink-soft); word-break: break-word; }
+.interview-row__note {
+  margin: var(--space-2) 0 0; font-size: var(--text-sm); color: var(--ink-soft);
+  background: var(--paper); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
+}
 
 /* ============ Skill match: breakdown + recommendation card ============ */
 .match-detail { margin-top: var(--space-3); }

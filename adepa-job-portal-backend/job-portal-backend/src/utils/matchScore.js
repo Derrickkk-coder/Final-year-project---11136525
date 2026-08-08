@@ -132,3 +132,42 @@ export function withMatch(job, seekerSkills) {
     matchInferred: match.inferred,
   }
 }
+
+// Employer-side ranking: the same comparison read from the other direction.
+// "How well does this candidate fit the role" and "how well does this role fit
+// the candidate" are the same two skill sets and the same division, so this
+// reuses scoreJobForSkills rather than growing a second scoring path that could
+// disagree with the seeker's own figure for the same pairing.
+//
+// Attaches the match to an application object. Unlike withMatch this never
+// returns null — an employer needs to see every applicant, including those who
+// can't be scored. `matchScore: null` means "not rankable" (the candidate has no
+// skills on their profile, or none of them overlap) and the UI says so rather
+// than implying a 0% assessment.
+export function withCandidateMatch(application, job, candidateSkills) {
+  const match = scoreJobForSkills(job, candidateSkills)
+
+  if (!match) {
+    return {
+      ...application,
+      matchScore: null,
+      matchedSkills: [],
+      missingSkills: [],
+      matchedCount: 0,
+      requiredCount: (job.skills || []).length || null,
+      matchInferred: false,
+      unrankedReason: (candidateSkills || []).length === 0 ? 'no-skills' : 'no-overlap',
+    }
+  }
+
+  return {
+    ...application,
+    matchScore: match.score,
+    matchedSkills: match.matchedSkills,
+    missingSkills: match.missingSkills,
+    matchedCount: match.matchedCount,
+    requiredCount: match.requiredCount,
+    matchInferred: match.inferred,
+    unrankedReason: null,
+  }
+}

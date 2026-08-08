@@ -74,6 +74,11 @@ const STATUS_COPY = {
     body: 'is now under review. The employer is taking a closer look — we\'ll let you know as soon as there\'s an update.',
     accent: '#0C7C92',
   },
+  shortlisted: {
+    heading: 'You\'ve been shortlisted',
+    body: 'has been shortlisted. The employer is considering you for the next stage and may be in touch to arrange an interview.',
+    accent: '#0C7C92',
+  },
   accepted: {
     heading: 'Good news about your application',
     body: 'has been accepted! The employer will be in touch with next steps.',
@@ -113,6 +118,67 @@ export function applicationStatusEmailTemplate({ name, jobTitle, company, status
   </div>
   `
 }
+export function interviewEmailTemplate({ name, jobTitle, company, interview }) {
+  const when = new Date(interview.scheduledAt).toLocaleString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+  // Label the location line for what it actually is, so a meeting link isn't
+  // captioned "Location" and an address isn't captioned "Link"
+  const detailsLabel =
+    interview.mode === 'Video' ? 'Joining link' : interview.mode === 'Phone' ? 'They will call' : 'Location'
+
+  return `
+  <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; color: #16232B;">
+    <div style="background: #004F6D; padding: 20px 24px; border-radius: 10px 10px 0 0;">
+      <span style="color: #fff; font-size: 20px; font-weight: bold;">NextLeap</span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #E2E9EB; border-top: none; border-radius: 0 0 10px 10px; padding: 32px 24px;">
+      <h2 style="margin: 0 0 16px; font-size: 20px; color: #1E8E5A;">You've been invited to an interview</h2>
+      <p style="line-height: 1.6; color: #5A6D74;">
+        Hi ${name}, <strong>${company}</strong> would like to interview you for
+        <strong>${jobTitle}</strong>.
+      </p>
+
+      <table style="width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 14px;">
+        <tr>
+          <td style="padding: 10px 0; color: #8FA1A7; border-bottom: 1px solid #E2E9EB;">When</td>
+          <td style="padding: 10px 0; font-weight: bold; border-bottom: 1px solid #E2E9EB;">${when}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; color: #8FA1A7; border-bottom: 1px solid #E2E9EB;">Format</td>
+          <td style="padding: 10px 0; font-weight: bold; border-bottom: 1px solid #E2E9EB;">${interview.mode}</td>
+        </tr>
+        ${interview.details ? `
+        <tr>
+          <td style="padding: 10px 0; color: #8FA1A7; border-bottom: 1px solid #E2E9EB;">${detailsLabel}</td>
+          <td style="padding: 10px 0; font-weight: bold; border-bottom: 1px solid #E2E9EB; word-break: break-all;">${interview.details}</td>
+        </tr>` : ''}
+      </table>
+
+      ${interview.note ? `
+      <p style="line-height: 1.6; color: #5A6D74; background: #F4F8F9; padding: 14px 16px; border-radius: 8px;">
+        ${interview.note}
+      </p>` : ''}
+
+      <p style="text-align: center; margin: 32px 0;">
+        <a href="${process.env.CLIENT_URL}/dashboard" style="background: #FF6A45; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-weight: bold; display: inline-block;">
+          View in your dashboard
+        </a>
+      </p>
+      <p style="line-height: 1.6; color: #8FA1A7; font-size: 12px;">
+        Reply to this email if you need to rearrange.
+      </p>
+    </div>
+  </div>
+  `
+}
+
 export function passwordResetEmailTemplate({ name, resetUrl }) {
   return `
   <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; color: #16232B;">

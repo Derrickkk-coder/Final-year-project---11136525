@@ -12,7 +12,7 @@ import { toDownloadUrl } from '../api/cloudinary.js'
 import { fetchMyJobs, updateJob } from '../api/jobs.js'
 import { fetchApplicationsForEmployer, updateApplicationStatus, analyzeApplication } from '../api/applications.js'
 
-const STATUS_OPTIONS = ['pending', 'review', 'accepted', 'rejected']
+const STATUS_OPTIONS = ['pending', 'review', 'shortlisted', 'accepted', 'rejected']
 
 function formatDate(date) {
   return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
@@ -231,6 +231,9 @@ export default function EmployerDashboard() {
                               <td><StatusPill status={job.status} /></td>
                               <td>
                                 <div style={{ display: 'flex', gap: 6 }}>
+                                  <Link to={`/employer/jobs/${job._id}/candidates`} className="btn btn--outline-teal btn--sm">
+                                    Candidates
+                                  </Link>
                                   <Link to={`/employer/jobs/${job._id}/edit`} className="btn btn--ghost btn--sm">Edit</Link>
                                   <button
                                     className="btn btn--ghost btn--sm"
@@ -271,7 +274,10 @@ export default function EmployerDashboard() {
                             <span className="data-card__row-label">Closes</span>
                             <span>{formatDate(job.closingAt)}</span>
                           </div>
-                          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                            <Link to={`/employer/jobs/${job._id}/candidates`} className="btn btn--outline-teal btn--sm" style={{ flex: '1 1 100%' }}>
+                              View ranked candidates
+                            </Link>
                             <Link to={`/employer/jobs/${job._id}/edit`} className="btn btn--ghost btn--sm" style={{ flex: 1 }}>Edit</Link>
                             <button
                               className="btn btn--ghost btn--sm"

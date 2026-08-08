@@ -15,6 +15,7 @@ import JobSeekerDashboard from './pages/JobSeekerDashboard.jsx'
 import EmployerDashboard from './pages/EmployerDashboard.jsx'
 import PostJob from './pages/PostJob.jsx'
 import EditJob from './pages/EditJob.jsx'
+import JobCandidates from './pages/JobCandidates.jsx'
 import CompanyProfile from './pages/CompanyProfile.jsx'
 import MyProfile from './pages/MyProfile.jsx'
 import CvReview from './pages/CvReview.jsx'
@@ -83,6 +84,17 @@ export default function App() {
           <Layout>
             <ProtectedRoute role="employer">
               <PostJob />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/employer/jobs/:id/candidates"
+        element={
+          <Layout>
+            <ProtectedRoute role="employer">
+              <JobCandidates />
             </ProtectedRoute>
           </Layout>
         }

@@ -25,6 +25,11 @@ export async function updateApplicationStatus(applicationId, status) {
   return data // { success, application }
 }
 
+export async function scheduleInterview(applicationId, payload) {
+  const { data } = await client.put(`/applications/${applicationId}/interview`, payload)
+  return data // { success, application }
+}
+
 export async function analyzeApplication(applicationId, force = false) {
   const { data } = await client.post(`/applications/${applicationId}/analyze`, { force })
   return data // { success, analysis, cached }

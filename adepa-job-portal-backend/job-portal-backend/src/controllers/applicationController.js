@@ -1,8 +1,9 @@
 import Application from '../models/Application.js'
 import Job from '../models/Job.js'
-import { sendEmail, applicationStatusEmailTemplate } from '../utils/sendEmail.js'
+import { sendEmail, applicationStatusEmailTemplate, interviewEmailTemplate } from '../utils/sendEmail.js'
 import { analyzeApplicationFit } from '../utils/analyzeApplication.js'
 import { notifyUser } from '../utils/notify.js'
+import { withCandidateMatch } from '../utils/matchScore.js'
 
 // In-app notification copy per status. Deliberately mirrors the wording
 // StatusPill renders ("In review", "Not selected", ...) so the notification and
@@ -12,10 +13,31 @@ const STATUS_NOTIFICATION = {
     `Your application for ${job.title} at ${job.company} is back to pending review.`,
   review: (job) =>
     `Your application status for ${job.title} has changed to "In review".`,
+  shortlisted: (job) =>
+    `You've been shortlisted for ${job.title} at ${job.company}.`,
   accepted: (job) =>
     `Good news — your application for ${job.title} at ${job.company} has been accepted.`,
   rejected: (job) =>
     `Your application for ${job.title} at ${job.company} was not selected this time.`,
+}
+
+// Fire-and-forget, same as the status-change mail
+async function notifyApplicantOfInterview(application) {
+  try {
+    await sendEmail({
+      to: application.applicant.email,
+      subject: `Interview invitation — ${application.job.title}`,
+      html: interviewEmailTemplate({
+        name: application.applicant.name,
+        jobTitle: application.job.title,
+        company: application.job.company,
+        interview: application.interview,
+      }),
+    })
+    console.log(`[email] Interview invitation SENT to ${application.applicant.email}`)
+  } catch (err) {
+    console.error('[email] FAILED to send interview invitation:', err.message)
+  }
 }
 
 // Fire-and-forget, same pattern as verification emails — a slow/failed email
@@ -137,12 +159,25 @@ export async function getApplicationsForEmployer(req, res, next) {
   }
 }
 
+// The candidate's profile, as an employer they applied to is allowed to see it.
+// Listed explicitly rather than returning the whole user document, so adding a
+// private field to the User schema later can't leak it here by default.
+const CANDIDATE_FIELDS =
+  'name email phone profilePictureUrl location bio skills education experience certifications resumeUrl'
+
 // @route   GET /api/applications/job/:jobId
 // @access  Private (employer who owns the job)
-// Returns applicants for one specific job posting.
+//
+// Applicants for one posting, ranked by how well their profile skills cover the
+// role's requirements — the seeker-side match read from the employer's side.
+//
+// Candidates who can't be scored (no skills listed, or no overlap) are still
+// returned, always after the ranked ones, with matchScore null. An employer
+// needs to see every applicant; silently hiding the unrankable would make the
+// list look wrong and the feature untrustworthy.
 export async function getApplicationsForJob(req, res, next) {
   try {
-    const job = await Job.findById(req.params.jobId)
+    const job = await Job.findById(req.params.jobId).lean()
     if (!job) {
       return res.status(404).json({ success: false, message: 'Job not found.' })
     }
@@ -151,10 +186,106 @@ export async function getApplicationsForJob(req, res, next) {
     }
 
     const applications = await Application.find({ job: req.params.jobId })
-      .populate('applicant', 'name email profilePictureUrl')
+      .populate('applicant', CANDIDATE_FIELDS)
       .sort({ createdAt: -1 })
+      .lean()
 
-    res.json({ success: true, applications })
+    const ranked = applications
+      .map((app) => withCandidateMatch(app, job, app.applicant?.skills))
+      .sort((a, b) => {
+        // Unrankable candidates sink to the bottom rather than being treated as 0%
+        if (a.matchScore === null && b.matchScore === null) return 0
+        if (a.matchScore === null) return 1
+        if (b.matchScore === null) return -1
+        // Same tie-break as the seeker side: more matched skills wins
+        return b.matchScore - a.matchScore || b.matchedCount - a.matchedCount
+      })
+
+    res.json({
+      success: true,
+      job: {
+        _id: job._id,
+        title: job.title,
+        company: job.company,
+        ref: job.ref,
+        status: job.status,
+        skills: job.skills || [],
+        applicantsCount: job.applicantsCount || 0,
+      },
+      applications: ranked,
+      // Untagged roles fall back to scanning the posting's text, which is less
+      // precise. Tell the employer, since they're the one who can fix it.
+      rankingBasis: (job.skills || []).length > 0 ? 'skills' : 'inferred',
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// @route   PUT /api/applications/:id/interview
+// @access  Private (employer who owns the related job)
+// Body: { scheduledAt, mode, details, note }
+export async function scheduleInterview(req, res, next) {
+  try {
+    const { scheduledAt, mode, details, note } = req.body
+
+    if (!scheduledAt) {
+      return res.status(400).json({ success: false, message: 'An interview date and time is required.' })
+    }
+
+    const when = new Date(scheduledAt)
+    if (Number.isNaN(when.getTime())) {
+      return res.status(400).json({ success: false, message: 'That interview date could not be understood.' })
+    }
+
+    const application = await Application.findById(req.params.id)
+      .populate('job', 'postedBy title company')
+      .populate('applicant', 'name email')
+
+    if (!application) {
+      return res.status(404).json({ success: false, message: 'Application not found.' })
+    }
+    if (!application.job) {
+      return res.status(404).json({
+        success: false,
+        message: 'The job for this application no longer exists.',
+      })
+    }
+    if (application.job.postedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only schedule interviews for jobs you posted.',
+      })
+    }
+
+    application.interview = {
+      scheduledAt: when,
+      mode: ['On-site', 'Phone', 'Video'].includes(mode) ? mode : 'Video',
+      details: details || '',
+      note: note || '',
+      setAt: new Date(),
+    }
+
+    // Scheduling an interview implies the candidate is shortlisted, so move them
+    // there rather than leaving the status contradicting the invitation.
+    if (['pending', 'review'].includes(application.status)) {
+      application.status = 'shortlisted'
+    }
+
+    await application.save()
+
+    // Both fire-and-forget, as elsewhere
+    notifyApplicantOfInterview(application)
+    notifyUser({
+      recipient: application.applicant._id,
+      type: 'interview_scheduled',
+      message: `${application.job.company} has invited you to an interview for ${application.job.title}.`,
+      link: '/dashboard',
+      job: application.job._id,
+      application: application._id,
+    })
+
+    res.json({ success: true, application })
   } catch (err) {
     next(err)
   }
@@ -165,7 +296,7 @@ export async function getApplicationsForJob(req, res, next) {
 export async function updateApplicationStatus(req, res, next) {
   try {
     const { status } = req.body
-    const validStatuses = ['pending', 'review', 'accepted', 'rejected']
+    const validStatuses = ['pending', 'review', 'shortlisted', 'accepted', 'rejected']
 
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
