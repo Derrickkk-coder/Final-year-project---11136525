@@ -6,6 +6,8 @@ import LogoStrip from '../components/LogoStrip.jsx'
 import Testimonials from '../components/Testimonials.jsx'
 import Reveal from '../components/Reveal.jsx'
 import CountUp from '../components/CountUp.jsx'
+import EmptyState from '../components/EmptyState.jsx'
+import { SkeletonJobList } from '../components/Skeleton.jsx'
 import { fetchJobs } from '../api/jobs.js'
 import { categories } from '../data/mockJobs.js' // static filter option list only, not job data
 
@@ -28,6 +30,7 @@ export default function Home() {
   const [query, setQuery] = useState('')
   const [featuredJobs, setFeaturedJobs] = useState([])
   const [totalOpenJobs, setTotalOpenJobs] = useState(0)
+  const [jobsLoading, setJobsLoading] = useState(true)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -40,6 +43,7 @@ export default function Home() {
         setFeaturedJobs([])
         setTotalOpenJobs(0)
       })
+      .finally(() => setJobsLoading(false))
   }, [])
 
   const handleSearch = (e) => {
@@ -116,7 +120,9 @@ export default function Home() {
             </a>
           </Reveal>
 
-          {featuredJobs.length > 0 ? (
+          {jobsLoading ? (
+            <SkeletonJobList count={3} />
+          ) : featuredJobs.length > 0 ? (
             <div className="listings-grid">
               {featuredJobs.map((job, i) => (
                 <Reveal key={job._id} delay={i * 90}>
@@ -125,10 +131,12 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="empty-state">
-              <h3>No roles posted yet</h3>
-              <p>Once employers start posting, their listings will show up here.</p>
-            </div>
+            <EmptyState
+              icon="📭"
+              title="No roles posted yet"
+              description="Once employers start posting, their listings will show up here."
+              action={<a href="/register" className="btn btn--coral">Post the first job</a>}
+            />
           )}
         </div>
       </section>

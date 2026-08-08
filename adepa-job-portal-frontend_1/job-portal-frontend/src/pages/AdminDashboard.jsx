@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useToast } from '../context/ToastContext.jsx'
+import { useConfirm } from '../context/ConfirmContext.jsx'
 import StatusPill from '../components/StatusPill.jsx'
+import EmptyState from '../components/EmptyState.jsx'
+import { SkeletonRows } from '../components/Skeleton.jsx'
 import {
   fetchEmployers, approveEmployer, rejectEmployer, fetchAdminStats,
   fetchAllUsers, setUserActiveStatus, fetchAllJobsAdmin, deleteJobAdmin,
@@ -19,6 +23,8 @@ const EMPLOYER_TABS = [
 
 export default function AdminDashboard() {
   const { user } = useAuth()
+  const toast = useToast()
+  const confirm = useConfirm()
   const [tab, setTab] = useState('pending')
 
   const [stats, setStats] = useState(null)
@@ -29,6 +35,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [actioningId, setActioningId] = useState(null)
+  // Bumped by "Try again" to re-run the tab's fetch without switching tabs
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     fetchAdminStats()
@@ -56,56 +64,96 @@ export default function AdminDashboard() {
         .catch(() => setError('Could not load employer accounts right now.'))
         .finally(() => setLoading(false))
     }
-  }, [tab])
+  }, [tab, reloadKey])
 
   const refreshStats = () => {
     fetchAdminStats().then((data) => setStats(data.stats)).catch(() => {})
   }
 
-  const handleApprove = async (id) => {
-    setActioningId(id)
+  // Every handler below used to swallow its error silently, so a failed action
+  // looked identical to a successful one — the row just didn't move. They now
+  // report both outcomes.
+  const handleApprove = async (employer) => {
+    setActioningId(employer._id)
     try {
-      await approveEmployer(id)
-      setEmployers((prev) => prev.filter((e) => e._id !== id))
+      await approveEmployer(employer._id)
+      setEmployers((prev) => prev.filter((e) => e._id !== employer._id))
       refreshStats()
-    } catch {
-      // could add a toast here later
+      toast.success(`${employer.company || employer.name} approved — they can now post jobs.`)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not approve that employer. Please try again.')
     } finally {
       setActioningId(null)
     }
   }
 
-  const handleReject = async (id) => {
-    setActioningId(id)
+  const handleReject = async (employer) => {
+    const ok = await confirm({
+      title: 'Reject this employer?',
+      body: `${employer.company || employer.name} will not be able to post jobs. You can approve them later from the Rejected tab.`,
+      confirmLabel: 'Reject employer',
+      danger: true,
+    })
+    if (!ok) return
+
+    setActioningId(employer._id)
     try {
-      await rejectEmployer(id)
-      setEmployers((prev) => prev.filter((e) => e._id !== id))
+      await rejectEmployer(employer._id)
+      setEmployers((prev) => prev.filter((e) => e._id !== employer._id))
       refreshStats()
-    } catch {
+      toast.success(`${employer.company || employer.name} rejected.`)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not reject that employer. Please try again.')
     } finally {
       setActioningId(null)
     }
   }
 
-  const handleToggleUserActive = async (id, currentIsActive) => {
-    setActioningId(id)
+  const handleToggleUserActive = async (target) => {
+    const deactivating = target.isActive
+
+    // Only confirm the destructive direction — reactivating needs no ceremony
+    if (deactivating) {
+      const ok = await confirm({
+        title: `Deactivate ${target.name}?`,
+        body: 'They will be signed out immediately and blocked from logging back in. You can reactivate the account at any time.',
+        confirmLabel: 'Deactivate account',
+        danger: true,
+      })
+      if (!ok) return
+    }
+
+    setActioningId(target._id)
     try {
-      await setUserActiveStatus(id, !currentIsActive)
-      setUsers((prev) => prev.map((u) => (u._id === id ? { ...u, isActive: !currentIsActive } : u)))
-    } catch {
+      await setUserActiveStatus(target._id, !target.isActive)
+      setUsers((prev) =>
+        prev.map((u) => (u._id === target._id ? { ...u, isActive: !target.isActive } : u))
+      )
+      toast.success(deactivating ? `${target.name} deactivated.` : `${target.name} reactivated.`)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not update that account. Please try again.')
     } finally {
       setActioningId(null)
     }
   }
 
-  const handleDeleteJob = async (id) => {
-    if (!window.confirm('Permanently remove this job posting? This cannot be undone.')) return
-    setActioningId(id)
+  const handleDeleteJob = async (job) => {
+    const ok = await confirm({
+      title: 'Remove this job posting?',
+      body: `"${job.title}" will be permanently deleted from the platform. This cannot be undone.`,
+      confirmLabel: 'Delete posting',
+      danger: true,
+    })
+    if (!ok) return
+
+    setActioningId(job._id)
     try {
-      await deleteJobAdmin(id)
-      setJobs((prev) => prev.filter((j) => j._id !== id))
+      await deleteJobAdmin(job._id)
+      setJobs((prev) => prev.filter((j) => j._id !== job._id))
       refreshStats()
-    } catch {
+      toast.success(`"${job.title}" removed.`)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not remove that posting. Please try again.')
     } finally {
       setActioningId(null)
     }
@@ -170,13 +218,20 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {loading && <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>Loading…</p>}
+        {loading && <SkeletonRows count={5} height={52} />}
 
-        {error && (
-          <div className="empty-state">
-            <h3>Something went wrong</h3>
-            <p>{error}</p>
-          </div>
+        {!loading && error && (
+          <EmptyState
+            icon="⚠️"
+            tone="error"
+            title="Couldn't load that"
+            description={error}
+            action={
+              <button className="btn btn--pine" onClick={() => setReloadKey((k) => k + 1)}>
+                Try again
+              </button>
+            }
+          />
         )}
 
         {!loading && !error && isEmployerTab && (
@@ -208,10 +263,10 @@ export default function AdminDashboard() {
                           {tab === 'pending' && (
                             <td>
                               <div style={{ display: 'flex', gap: 8 }}>
-                                <button className="btn btn--pine btn--sm" disabled={actioningId === emp._id} onClick={() => handleApprove(emp._id)}>
+                                <button className="btn btn--pine btn--sm" disabled={actioningId === emp._id} onClick={() => handleApprove(emp)}>
                                   Approve
                                 </button>
-                                <button className="btn btn--ghost btn--sm" disabled={actioningId === emp._id} onClick={() => handleReject(emp._id)}>
+                                <button className="btn btn--ghost btn--sm" disabled={actioningId === emp._id} onClick={() => handleReject(emp)}>
                                   Reject
                                 </button>
                               </div>
@@ -242,10 +297,10 @@ export default function AdminDashboard() {
                       </div>
                       {tab === 'pending' && (
                         <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                          <button className="btn btn--pine btn--sm" style={{ flex: 1 }} disabled={actioningId === emp._id} onClick={() => handleApprove(emp._id)}>
+                          <button className="btn btn--pine btn--sm" style={{ flex: 1 }} disabled={actioningId === emp._id} onClick={() => handleApprove(emp)}>
                             Approve
                           </button>
-                          <button className="btn btn--ghost btn--sm" style={{ flex: 1 }} disabled={actioningId === emp._id} onClick={() => handleReject(emp._id)}>
+                          <button className="btn btn--ghost btn--sm" style={{ flex: 1 }} disabled={actioningId === emp._id} onClick={() => handleReject(emp)}>
                             Reject
                           </button>
                         </div>
@@ -255,14 +310,15 @@ export default function AdminDashboard() {
                 </div>
               </>
             ) : (
-              <div className="empty-state">
-                <h3>No {tab} employers</h3>
-                <p>
-                  {tab === 'pending'
+              <EmptyState
+                icon={tab === 'pending' ? '✅' : '🏢'}
+                title={`No ${tab} employers`}
+                description={
+                  tab === 'pending'
                     ? "You're all caught up — no employer accounts are waiting on review."
-                    : `No employer accounts are currently marked as ${tab}.`}
-                </p>
-              </div>
+                    : `No employer accounts are currently marked as ${tab}.`
+                }
+              />
             )}
           </>
         )}
@@ -295,7 +351,7 @@ export default function AdminDashboard() {
                             <button
                               className="btn btn--ghost btn--sm"
                               disabled={actioningId === u._id}
-                              onClick={() => handleToggleUserActive(u._id, u.isActive)}
+                              onClick={() => handleToggleUserActive(u)}
                             >
                               {u.isActive ? 'Deactivate' : 'Reactivate'}
                             </button>
@@ -324,7 +380,7 @@ export default function AdminDashboard() {
                         className="btn btn--ghost btn--sm btn--block"
                         style={{ marginTop: 10 }}
                         disabled={actioningId === u._id}
-                        onClick={() => handleToggleUserActive(u._id, u.isActive)}
+                        onClick={() => handleToggleUserActive(u)}
                       >
                         {u.isActive ? 'Deactivate' : 'Reactivate'}
                       </button>
@@ -333,10 +389,11 @@ export default function AdminDashboard() {
                 </div>
               </>
             ) : (
-              <div className="empty-state">
-                <h3>No users yet</h3>
-                <p>Registered job seekers and employers will show up here.</p>
-              </div>
+              <EmptyState
+                icon="👥"
+                title="No users yet"
+                description="Registered job seekers and employers will show up here."
+              />
             )}
           </>
         )}
@@ -373,7 +430,7 @@ export default function AdminDashboard() {
                             <button
                               className="btn btn--ghost btn--sm"
                               disabled={actioningId === job._id}
-                              onClick={() => handleDeleteJob(job._id)}
+                              onClick={() => handleDeleteJob(job)}
                             >
                               Remove
                             </button>
@@ -408,7 +465,7 @@ export default function AdminDashboard() {
                         className="btn btn--ghost btn--sm btn--block"
                         style={{ marginTop: 10 }}
                         disabled={actioningId === job._id}
-                        onClick={() => handleDeleteJob(job._id)}
+                        onClick={() => handleDeleteJob(job)}
                       >
                         Remove
                       </button>
@@ -417,10 +474,11 @@ export default function AdminDashboard() {
                 </div>
               </>
             ) : (
-              <div className="empty-state">
-                <h3>No jobs yet</h3>
-                <p>Job postings from employers will show up here.</p>
-              </div>
+              <EmptyState
+                icon="📭"
+                title="No jobs yet"
+                description="Job postings from employers will show up here."
+              />
             )}
           </>
         )}

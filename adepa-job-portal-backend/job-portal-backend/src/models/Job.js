@@ -54,6 +54,14 @@ const jobSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    // Discrete skill tags ("Python", "SQL"), separate from the prose in
+    // `requirements`. These are what the seeker match score is computed
+    // against — see utils/matchScore.js. Optional: jobs posted before this
+    // field existed fall back to a text scan.
+    skills: {
+      type: [String],
+      default: [],
+    },
     closingAt: {
       type: Date,
       required: [true, 'Closing date is required'],

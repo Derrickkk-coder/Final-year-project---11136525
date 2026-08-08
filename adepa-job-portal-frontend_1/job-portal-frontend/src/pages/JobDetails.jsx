@@ -4,12 +4,15 @@ import { fetchJobById } from '../api/jobs.js'
 import { applyToJob } from '../api/applications.js'
 import { uploadResumeToCloudinary } from '../api/cloudinary.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useToast } from '../context/ToastContext.jsx'
+import EmptyState from '../components/EmptyState.jsx'
 
 const MAX_RESUME_SIZE = 5 * 1024 * 1024 // 5MB
 
 export default function JobDetails() {
   const { id } = useParams()
   const { user, updateUser } = useAuth()
+  const toast = useToast()
 
   const [job, setJob] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -100,12 +103,18 @@ export default function JobDetails() {
       await applyToJob(id, resumeUrlToSubmit, phone.trim(), contactEmail.trim())
       updateUser({ ...user, resumeUrl: resumeUrlToSubmit, phone: phone.trim() })
       setApplied(true)
+      toast.success(`Application sent for ${job?.title || 'this role'}. Track it from your dashboard.`)
     } catch (err) {
       const message = err.response?.data?.message
       if (err.response?.status === 409) {
+        // Already applied — not really a failure, so show it as the same
+        // "submitted" state rather than an error
         setApplied(true)
+        toast.info("You've already applied to this role.")
       } else {
-        setApplyError(message || 'Could not submit your application. Please try again.')
+        const text = message || 'Could not submit your application. Please try again.'
+        setApplyError(text)
+        toast.error(text)
       }
     } finally {
       setApplying(false)
@@ -123,11 +132,13 @@ export default function JobDetails() {
   if (serverError) {
     return (
       <div className="container" style={{ padding: '60px 24px' }}>
-        <div className="empty-state">
-          <h3>Something went wrong</h3>
-          <p>We couldn't load this job right now. Please try again in a moment.</p>
-          <Link to="/jobs" className="btn btn--outline-pine" style={{ marginTop: 16 }}>Back to jobs</Link>
-        </div>
+        <EmptyState
+          icon="⚠️"
+          tone="error"
+          title="Couldn't load this job"
+          description="Something went wrong at our end. Please try again in a moment."
+          action={<Link to="/jobs" className="btn btn--outline-pine">Back to jobs</Link>}
+        />
       </div>
     )
   }
@@ -135,11 +146,12 @@ export default function JobDetails() {
   if (notFoundError || !job) {
     return (
       <div className="container" style={{ padding: '60px 24px' }}>
-        <div className="empty-state">
-          <h3>Job not found</h3>
-          <p>This listing may have closed or been removed.</p>
-          <Link to="/jobs" className="btn btn--outline-pine" style={{ marginTop: 16 }}>Back to jobs</Link>
-        </div>
+        <EmptyState
+          icon="🔍"
+          title="Job not found"
+          description="This listing may have closed or been removed."
+          action={<Link to="/jobs" className="btn btn--outline-pine">Back to jobs</Link>}
+        />
       </div>
     )
   }

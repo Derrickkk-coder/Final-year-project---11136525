@@ -2,6 +2,7 @@ import User from '../models/User.js'
 import { generateToken } from '../utils/generateToken.js'
 import { sendEmail, verificationEmailTemplate, passwordResetEmailTemplate } from '../utils/sendEmail.js'
 import { generateVerificationToken, hashToken } from '../utils/generateVerificationToken.js'
+import { cleanSkills } from '../utils/cleanSkills.js'
 
 const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -207,9 +208,28 @@ export async function getMe(req, res, next) {
 // Lets the logged-in user update their own profile fields. Currently used by
 // the employer "Company profile" page, but written generically enough to
 // reuse for a job seeker profile page later.
+// Drops rows the user added but left completely blank, so an accidental "add
+// another" click doesn't persist an empty education entry.
+function cleanEntries(entries, fields) {
+  if (!Array.isArray(entries)) return []
+
+  return entries
+    .map((entry) => {
+      const cleaned = {}
+      fields.forEach((field) => {
+        cleaned[field] = String(entry?.[field] || '').trim()
+      })
+      return cleaned
+    })
+    .filter((entry) => fields.some((field) => entry[field]))
+}
+
 export async function updateProfile(req, res, next) {
   try {
-    const { name, company, companyDescription, companyWebsite, profilePictureUrl } = req.body
+    const {
+      name, company, companyDescription, companyWebsite, profilePictureUrl,
+      bio, location, phone, resumeUrl, skills, education, experience, certifications,
+    } = req.body
 
     if (name !== undefined) {
       if (!name.trim()) {
@@ -221,6 +241,23 @@ export async function updateProfile(req, res, next) {
     if (companyDescription !== undefined) req.user.companyDescription = companyDescription
     if (companyWebsite !== undefined) req.user.companyWebsite = companyWebsite
     if (profilePictureUrl !== undefined) req.user.profilePictureUrl = profilePictureUrl
+
+    // ---- Job seeker profile ----
+    if (bio !== undefined) req.user.bio = bio
+    if (location !== undefined) req.user.location = location
+    if (phone !== undefined) req.user.phone = phone
+    if (resumeUrl !== undefined) req.user.resumeUrl = resumeUrl
+    if (skills !== undefined) req.user.skills = cleanSkills(skills)
+
+    if (education !== undefined) {
+      req.user.education = cleanEntries(education, ['institution', 'qualification', 'startYear', 'endYear'])
+    }
+    if (experience !== undefined) {
+      req.user.experience = cleanEntries(experience, ['company', 'role', 'startYear', 'endYear', 'summary'])
+    }
+    if (certifications !== undefined) {
+      req.user.certifications = cleanEntries(certifications, ['name', 'issuer', 'year'])
+    }
 
     await req.user.save()
 

@@ -2,6 +2,22 @@ const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 const IMAGE_PRESET = import.meta.env.VITE_CLOUDINARY_IMAGE_PRESET
 
+// Turns a Cloudinary delivery URL into one that downloads instead of opening
+// in the browser's PDF viewer, by inserting the `fl_attachment` flag into the
+// transformation segment. Same asset, different Content-Disposition.
+//
+// Returns the URL untouched if it isn't a Cloudinary upload URL — a CV uploaded
+// before this existed, or stored elsewhere, still gets a working link.
+export function toDownloadUrl(url, filename) {
+  if (!url || !url.includes('/upload/')) return url
+
+  const flag = filename
+    ? `fl_attachment:${encodeURIComponent(filename.replace(/\.pdf$/i, ''))}`
+    : 'fl_attachment'
+
+  return url.replace('/upload/', `/upload/${flag}/`)
+}
+
 export async function uploadResumeToCloudinary(file) {
   const formData = new FormData()
   formData.append('file', file)

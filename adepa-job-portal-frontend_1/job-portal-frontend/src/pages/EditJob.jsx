@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { categories, jobTypes } from '../data/mockJobs.js' // static option lists only
 import { fetchJobById, updateJob } from '../api/jobs.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import SkillsInput from '../components/SkillsInput.jsx'
 
 export default function EditJob() {
   const { id } = useParams()
@@ -19,6 +20,7 @@ export default function EditJob() {
   const [form, setForm] = useState({
     title: '', location: '', type: 'Full-time', remote: 'On-site', category: 'Engineering',
     salary: '', closingAt: '', description: '', responsibilities: '', requirements: '',
+    skills: [],
   })
 
   useEffect(() => {
@@ -43,6 +45,7 @@ export default function EditJob() {
           description: job.description || '',
           responsibilities: (job.responsibilities || []).join('\n'),
           requirements: (job.requirements || []).join('\n'),
+          skills: job.skills || [],
         })
       })
       .catch((err) => {
@@ -53,6 +56,7 @@ export default function EditJob() {
   }, [id, user])
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
+  const setSkills = (skills) => setForm((f) => ({ ...f, skills }))
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -76,6 +80,7 @@ export default function EditJob() {
         description: form.description,
         responsibilities: form.responsibilities.split('\n').map((s) => s.trim()).filter(Boolean),
         requirements: form.requirements.split('\n').map((s) => s.trim()).filter(Boolean),
+        skills: form.skills,
       })
       setSaved(true)
     } catch (err) {
@@ -193,6 +198,16 @@ export default function EditJob() {
           <label htmlFor="requirements">Requirements</label>
           <textarea id="requirements" value={form.requirements} onChange={update('requirements')} placeholder={'One per line'} />
           <span className="hint">One requirement per line.</span>
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="job-skills">Required skills</label>
+          <SkillsInput
+            id="job-skills"
+            skills={form.skills}
+            onChange={setSkills}
+            hint="Press Enter or comma after each skill. Job seekers are matched against these."
+          />
         </div>
 
         {error && <p style={{ color: 'var(--rust)', fontSize: 13, marginBottom: 14 }}>{error}</p>}

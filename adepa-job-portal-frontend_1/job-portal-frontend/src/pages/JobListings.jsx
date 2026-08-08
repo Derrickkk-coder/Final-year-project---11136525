@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import JobCard from '../components/JobCard.jsx'
+import EmptyState from '../components/EmptyState.jsx'
+import { SkeletonJobList } from '../components/Skeleton.jsx'
 import { fetchJobs } from '../api/jobs.js'
 import { categories, jobTypes, locations } from '../data/mockJobs.js' // static filter option lists only
 
@@ -14,6 +16,9 @@ export default function JobListings() {
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  // Bumped by the "Try again" button to re-run the fetch effect without
+  // needing to touch any of the filter values
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -27,7 +32,7 @@ export default function JobListings() {
     }, 300)
 
     return () => clearTimeout(timeout)
-  }, [query, category, type, location])
+  }, [query, category, type, location, reloadKey])
 
   const clearFilters = () => {
     setQuery('')
@@ -69,18 +74,25 @@ export default function JobListings() {
         </button>
       </div>
 
-      {loading && <p style={{ color: 'var(--ink-soft)', fontSize: 13, marginBottom: 18 }}>Loading jobs…</p>}
+      {loading && <SkeletonJobList count={4} />}
 
-      {error && (
-        <div className="empty-state">
-          <h3>Something went wrong</h3>
-          <p>{error}</p>
-        </div>
+      {!loading && error && (
+        <EmptyState
+          icon="⚠️"
+          tone="error"
+          title="Couldn't load jobs"
+          description={error}
+          action={
+            <button className="btn btn--pine" onClick={() => setReloadKey((k) => k + 1)}>
+              Try again
+            </button>
+          }
+        />
       )}
 
       {!loading && !error && (
         <>
-          <p style={{ color: 'var(--ink-soft)', fontSize: 13, marginBottom: 18 }}>
+          <p style={{ color: 'var(--ink-soft)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-5)' }}>
             {jobs.length} {jobs.length === 1 ? 'role' : 'roles'} found
           </p>
 
@@ -89,10 +101,16 @@ export default function JobListings() {
               {jobs.map((job) => <JobCard key={job._id} job={job} />)}
             </div>
           ) : (
-            <div className="empty-state">
-              <h3>No roles match those filters</h3>
-              <p>Try clearing a filter or searching a different keyword.</p>
-            </div>
+            <EmptyState
+              icon="🔍"
+              title="No roles match those filters"
+              description="Nothing open fits that combination right now. Try a different keyword, or widen one of the filters."
+              action={
+                <button className="btn btn--outline-teal" onClick={clearFilters}>
+                  Clear all filters
+                </button>
+              }
+            />
           )}
         </>
       )}

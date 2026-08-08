@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { categories, jobTypes } from '../data/mockJobs.js' // static option lists only
 import { createJob } from '../api/jobs.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import SkillsInput from '../components/SkillsInput.jsx'
 
 export default function PostJob() {
   const navigate = useNavigate()
@@ -13,9 +14,11 @@ export default function PostJob() {
   const [form, setForm] = useState({
     title: '', location: '', type: 'Full-time', remote: 'On-site', category: 'Engineering',
     salary: '', closingAt: '', description: '', responsibilities: '', requirements: '',
+    skills: [],
   })
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
+  const setSkills = (skills) => setForm((f) => ({ ...f, skills }))
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -39,6 +42,7 @@ export default function PostJob() {
         description: form.description,
         responsibilities: form.responsibilities.split('\n').map((s) => s.trim()).filter(Boolean),
         requirements: form.requirements.split('\n').map((s) => s.trim()).filter(Boolean),
+        skills: form.skills,
       })
       setSubmitted(true)
     } catch (err) {
@@ -149,6 +153,16 @@ export default function PostJob() {
           <label htmlFor="requirements">Requirements</label>
           <textarea id="requirements" value={form.requirements} onChange={update('requirements')} placeholder={'One per line, e.g.\n2+ years experience\nStrong communication skills'} />
           <span className="hint">One requirement per line.</span>
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="job-skills">Required skills</label>
+          <SkillsInput
+            id="job-skills"
+            skills={form.skills}
+            onChange={setSkills}
+            hint="Press Enter or comma after each skill. Job seekers are matched against these, so a tagged role reaches the right candidates."
+          />
         </div>
 
         {error && <p style={{ color: 'var(--rust)', fontSize: 13, marginBottom: 14 }}>{error}</p>}

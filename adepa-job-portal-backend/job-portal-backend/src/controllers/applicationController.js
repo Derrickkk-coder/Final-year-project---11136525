@@ -2,6 +2,21 @@ import Application from '../models/Application.js'
 import Job from '../models/Job.js'
 import { sendEmail, applicationStatusEmailTemplate } from '../utils/sendEmail.js'
 import { analyzeApplicationFit } from '../utils/analyzeApplication.js'
+import { notifyUser } from '../utils/notify.js'
+
+// In-app notification copy per status. Deliberately mirrors the wording
+// StatusPill renders ("In review", "Not selected", ...) so the notification and
+// the badge next to it never describe the same state differently.
+const STATUS_NOTIFICATION = {
+  pending: (job) =>
+    `Your application for ${job.title} at ${job.company} is back to pending review.`,
+  review: (job) =>
+    `Your application status for ${job.title} has changed to "In review".`,
+  accepted: (job) =>
+    `Good news — your application for ${job.title} at ${job.company} has been accepted.`,
+  rejected: (job) =>
+    `Your application for ${job.title} at ${job.company} was not selected this time.`,
+}
 
 // Fire-and-forget, same pattern as verification emails — a slow/failed email
 // should never block or break the status update itself.
@@ -166,6 +181,17 @@ export async function updateApplicationStatus(req, res, next) {
       return res.status(404).json({ success: false, message: 'Application not found.' })
     }
 
+    // Deleting a job doesn't cascade to its applications, so `job` can populate
+    // as null on an orphaned record. Without this guard every line below that
+    // touches application.job throws a TypeError and the caller gets a 500
+    // instead of an explanation.
+    if (!application.job) {
+      return res.status(404).json({
+        success: false,
+        message: 'The job for this application no longer exists.',
+      })
+    }
+
     if (application.job.postedBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
@@ -176,8 +202,20 @@ export async function updateApplicationStatus(req, res, next) {
     application.status = status
     await application.save()
 
-    // Fire-and-forget — does not delay or affect this response either way.
+    // Both fire-and-forget — neither delays nor affects this response.
     notifyApplicantOfStatusChange(application)
+
+    const buildMessage = STATUS_NOTIFICATION[status]
+    if (buildMessage) {
+      notifyUser({
+        recipient: application.applicant._id,
+        type: 'application_status',
+        message: buildMessage(application.job),
+        link: '/dashboard',
+        job: application.job._id,
+        application: application._id,
+      })
+    }
 
     res.json({ success: true, application })
   } catch (err) {
@@ -196,6 +234,14 @@ export async function analyzeApplication(req, res, next) {
     const application = await Application.findById(req.params.id).populate('job')
     if (!application) {
       return res.status(404).json({ success: false, message: 'Application not found.' })
+    }
+
+    // Same orphaned-job guard as updateApplicationStatus above
+    if (!application.job) {
+      return res.status(404).json({
+        success: false,
+        message: 'The job for this application no longer exists.',
+      })
     }
 
     if (application.job.postedBy.toString() !== req.user._id.toString()) {

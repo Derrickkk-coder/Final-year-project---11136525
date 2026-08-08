@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useToast } from '../context/ToastContext.jsx'
+import { useConfirm } from '../context/ConfirmContext.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import Avatar from '../components/Avatar.jsx'
 import AiIcon from '../components/AiIcon.jsx'
+import EmptyState from '../components/EmptyState.jsx'
+import { SkeletonStatCards, SkeletonRows } from '../components/Skeleton.jsx'
+import { toDownloadUrl } from '../api/cloudinary.js'
 import { fetchMyJobs, updateJob } from '../api/jobs.js'
 import { fetchApplicationsForEmployer, updateApplicationStatus, analyzeApplication } from '../api/applications.js'
 
@@ -15,6 +20,8 @@ function formatDate(date) {
 
 export default function EmployerDashboard() {
   const { user } = useAuth()
+  const toast = useToast()
+  const confirm = useConfirm()
   const [tab, setTab] = useState('jobs')
 
   const [jobs, setJobs] = useState([])
@@ -36,15 +43,22 @@ export default function EmployerDashboard() {
       .finally(() => setLoading(false))
   }, [])
 
-  const handleStatusChange = async (applicationId, newStatus) => {
-    setUpdatingId(applicationId)
+  const handleStatusChange = async (application, newStatus) => {
+    setUpdatingId(application._id)
     try {
-      const data = await updateApplicationStatus(applicationId, newStatus)
+      const data = await updateApplicationStatus(application._id, newStatus)
       setApplications((prev) =>
-        prev.map((a) => (a._id === applicationId ? { ...a, status: data.application.status } : a))
+        prev.map((a) => (a._id === application._id ? { ...a, status: data.application.status } : a))
       )
-    } catch {
-      // Silently ignore for now — could add a toast/error banner here later
+      // Worth confirming explicitly: this also emails the applicant and puts a
+      // notification in their dashboard, which isn't obvious from the dropdown.
+      toast.success(
+        `${application.applicant?.name || 'Applicant'} moved to "${newStatus}" — they've been notified by email.`
+      )
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || 'Could not update that application. Please try again.'
+      )
     } finally {
       setUpdatingId(null)
     }
@@ -72,13 +86,28 @@ export default function EmployerDashboard() {
     )
   }
 
-  const handleToggleJobStatus = async (jobId, currentStatus) => {
-    const newStatus = currentStatus === 'open' ? 'closed' : 'open'
-    setUpdatingId(jobId)
+  const handleToggleJobStatus = async (job) => {
+    const closing = job.status === 'open'
+    const newStatus = closing ? 'closed' : 'open'
+
+    // Closing stops new applications arriving, so it's worth a check. Reopening
+    // isn't destructive and goes straight through.
+    if (closing) {
+      const ok = await confirm({
+        title: 'Close this posting?',
+        body: `"${job.title}" will stop accepting applications and disappear from the public jobs board. You can reopen it at any time.`,
+        confirmLabel: 'Close posting',
+      })
+      if (!ok) return
+    }
+
+    setUpdatingId(job._id)
     try {
-      const data = await updateJob(jobId, { status: newStatus })
-      setJobs((prev) => prev.map((j) => (j._id === jobId ? { ...j, status: data.job.status } : j)))
-    } catch {
+      const data = await updateJob(job._id, { status: newStatus })
+      setJobs((prev) => prev.map((j) => (j._id === job._id ? { ...j, status: data.job.status } : j)))
+      toast.success(closing ? `"${job.title}" is now closed.` : `"${job.title}" is open again.`)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not update that posting. Please try again.')
     } finally {
       setUpdatingId(null)
     }
@@ -129,13 +158,25 @@ export default function EmployerDashboard() {
           </div>
         )}
 
-        {loading && <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>Loading your dashboard…</p>}
+        {loading && (
+          <>
+            <SkeletonStatCards count={4} />
+            <SkeletonRows count={5} height={52} />
+          </>
+        )}
 
-        {error && (
-          <div className="empty-state">
-            <h3>Something went wrong</h3>
-            <p>{error}</p>
-          </div>
+        {!loading && error && (
+          <EmptyState
+            icon="⚠️"
+            tone="error"
+            title="Couldn't load your dashboard"
+            description={error}
+            action={
+              <button className="btn btn--pine" onClick={() => window.location.reload()}>
+                Reload
+              </button>
+            }
+          />
         )}
 
         {!loading && !error && (
@@ -194,7 +235,7 @@ export default function EmployerDashboard() {
                                   <button
                                     className="btn btn--ghost btn--sm"
                                     disabled={updatingId === job._id}
-                                    onClick={() => handleToggleJobStatus(job._id, job.status)}
+                                    onClick={() => handleToggleJobStatus(job)}
                                   >
                                     {job.status === 'open' ? 'Close' : 'Reopen'}
                                   </button>
@@ -236,7 +277,7 @@ export default function EmployerDashboard() {
                               className="btn btn--ghost btn--sm"
                               style={{ flex: 1 }}
                               disabled={updatingId === job._id}
-                              onClick={() => handleToggleJobStatus(job._id, job.status)}
+                              onClick={() => handleToggleJobStatus(job)}
                             >
                               {job.status === 'open' ? 'Close' : 'Reopen'}
                             </button>
@@ -246,11 +287,12 @@ export default function EmployerDashboard() {
                     </div>
                   </>
                 ) : (
-                  <div className="empty-state">
-                    <h3>No jobs posted yet</h3>
-                    <p>Post your first vacancy to start receiving applicants.</p>
-                    <Link to="/employer/post" className="btn btn--coral" style={{ marginTop: 16 }}>+ Post a new job</Link>
-                  </div>
+                  <EmptyState
+                    icon="📋"
+                    title="No jobs posted yet"
+                    description="Post your first vacancy to start receiving applicants."
+                    action={<Link to="/employer/post" className="btn btn--coral">+ Post a new job</Link>}
+                  />
                 )}
               </>
             )}
@@ -301,9 +343,17 @@ export default function EmployerDashboard() {
                                 </td>
                                 <td>
                                   {app.resumeUrl ? (
-                                    <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer" className="btn btn--ghost btn--sm">
-                                      View
-                                    </a>
+                                    <div style={{ display: 'flex', gap: 6 }}>
+                                      <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer" className="btn btn--ghost btn--sm">
+                                        View
+                                      </a>
+                                      <a
+                                        href={toDownloadUrl(app.resumeUrl, `${app.applicant?.name || 'applicant'}-CV`)}
+                                        className="btn btn--ghost btn--sm"
+                                      >
+                                        Download
+                                      </a>
+                                    </div>
                                   ) : '—'}
                                 </td>
                                 <td>
@@ -327,7 +377,7 @@ export default function EmployerDashboard() {
                                   <select
                                     value={app.status}
                                     disabled={updatingId === app._id}
-                                    onChange={(e) => handleStatusChange(app._id, e.target.value)}
+                                    onChange={(e) => handleStatusChange(app, e.target.value)}
                                     style={{ border: '1.5px solid var(--line)', borderRadius: 6, padding: '6px 8px', fontSize: 13 }}
                                   >
                                     {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -406,9 +456,17 @@ export default function EmployerDashboard() {
                           <div className="data-card__row">
                             <span className="data-card__row-label">Resume</span>
                             {app.resumeUrl ? (
-                              <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--teal-700)', fontWeight: 600 }}>
-                                View
-                              </a>
+                              <span style={{ display: 'flex', gap: 12 }}>
+                                <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--teal-700)', fontWeight: 600 }}>
+                                  View
+                                </a>
+                                <a
+                                  href={toDownloadUrl(app.resumeUrl, `${app.applicant?.name || 'applicant'}-CV`)}
+                                  style={{ color: 'var(--teal-700)', fontWeight: 600 }}
+                                >
+                                  Download
+                                </a>
+                              </span>
                             ) : <span>—</span>}
                           </div>
                           <div className="data-card__row" style={{ alignItems: 'center' }}>
@@ -457,7 +515,7 @@ export default function EmployerDashboard() {
                             <select
                               value={app.status}
                               disabled={updatingId === app._id}
-                              onChange={(e) => handleStatusChange(app._id, e.target.value)}
+                              onChange={(e) => handleStatusChange(app, e.target.value)}
                             >
                               {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
                             </select>
@@ -467,10 +525,11 @@ export default function EmployerDashboard() {
                     </div>
                   </>
                 ) : (
-                  <div className="empty-state">
-                    <h3>No applicants yet</h3>
-                    <p>Once job seekers apply to your postings, they'll show up here.</p>
-                  </div>
+                  <EmptyState
+                    icon="🔔"
+                    title="No applicants yet"
+                    description="Once job seekers apply to your postings, they'll show up here — with their CV and an AI fit summary."
+                  />
                 )}
               </>
             )}

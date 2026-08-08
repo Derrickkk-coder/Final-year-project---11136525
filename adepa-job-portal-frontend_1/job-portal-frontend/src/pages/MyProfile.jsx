@@ -1,14 +1,52 @@
 import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useToast } from '../context/ToastContext.jsx'
 import { updateProfile } from '../api/auth.js'
 import { uploadImageToCloudinary } from '../api/cloudinary.js'
 import Avatar from '../components/Avatar.jsx'
+import ProfileCompletion from '../components/ProfileCompletion.jsx'
+import CvCard from '../components/CvCard.jsx'
+import EntryList from '../components/EntryList.jsx'
+import SkillsInput from '../components/SkillsInput.jsx'
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2MB
 
+const EDUCATION_FIELDS = [
+  { key: 'institution', label: 'Institution', placeholder: 'e.g. University of Ghana' },
+  { key: 'qualification', label: 'Qualification', placeholder: 'e.g. BSc Information Technology' },
+  { key: 'startYear', label: 'From', placeholder: '2021', width: 'sm' },
+  { key: 'endYear', label: 'To', placeholder: '2025', width: 'sm' },
+]
+
+const EXPERIENCE_FIELDS = [
+  { key: 'company', label: 'Company', placeholder: 'e.g. Zaya Health' },
+  { key: 'role', label: 'Role', placeholder: 'e.g. Frontend Developer' },
+  { key: 'startYear', label: 'From', placeholder: '2023', width: 'sm' },
+  { key: 'endYear', label: 'To', placeholder: 'Present', width: 'sm' },
+  { key: 'summary', label: 'What you did', placeholder: 'A line or two on your work there.', textarea: true },
+]
+
+const CERTIFICATION_FIELDS = [
+  { key: 'name', label: 'Certification', placeholder: 'e.g. AWS Cloud Practitioner' },
+  { key: 'issuer', label: 'Issued by', placeholder: 'e.g. Amazon Web Services' },
+  { key: 'year', label: 'Year', placeholder: '2024', width: 'sm' },
+]
+
 export default function MyProfile() {
   const { user, updateUser } = useAuth()
-  const [name, setName] = useState(user?.name || '')
+  const toast = useToast()
+
+  const [form, setForm] = useState({
+    name: user?.name || '',
+    bio: user?.bio || '',
+    location: user?.location || '',
+    phone: user?.phone || '',
+    skills: user?.skills || [],
+    education: user?.education || [],
+    experience: user?.experience || [],
+    certifications: user?.certifications || [],
+  })
+
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(user?.profilePictureUrl || '')
   const [imageError, setImageError] = useState('')
@@ -16,6 +54,13 @@ export default function MyProfile() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+
+  // Any edit invalidates the "saved" confirmation
+  const set = (key) => (value) => {
+    setForm((f) => ({ ...f, [key]: value }))
+    setSaved(false)
+  }
+  const setField = (key) => (e) => set(key)(e.target.value)
 
   const handleImageChange = (e) => {
     const file = e.target.files[0]
@@ -41,7 +86,7 @@ export default function MyProfile() {
     setError('')
     setSaved(false)
 
-    if (!name.trim()) {
+    if (!form.name.trim()) {
       setError('Name cannot be empty.')
       return
     }
@@ -62,12 +107,15 @@ export default function MyProfile() {
 
     setSaving(true)
     try {
-      const data = await updateProfile({ name, profilePictureUrl })
+      const data = await updateProfile({ ...form, profilePictureUrl })
       updateUser(data.user)
       setImageFile(null)
       setSaved(true)
+      toast.success('Profile updated.')
     } catch (err) {
-      setError(err.response?.data?.message || 'Could not save your changes. Please try again.')
+      const message = err.response?.data?.message || 'Could not save your changes. Please try again.'
+      setError(message)
+      toast.error(message)
     } finally {
       setSaving(false)
     }
@@ -95,13 +143,27 @@ export default function MyProfile() {
           </div>
         </div>
 
-        <form className="panel" style={{ maxWidth: 480 }} onSubmit={handleSubmit}>
+        {/* Reads from `user`, not `form`, so the percentage reflects what is
+            actually saved rather than what's currently typed. */}
+        <ProfileCompletion user={user} />
+
+        {/* Outside the form: it saves on upload, and a nested submit would
+            otherwise be ambiguous. */}
+        <CvCard user={user} onChange={updateUser} />
+
+        <form className="panel profile-form" onSubmit={handleSubmit}>
+          <h2 className="profile-form__section">Basics</h2>
+
           <div className="form-field">
-            <label>Profile picture</label>
+            <label>Profile photo</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <Avatar src={imagePreview} name={name} size={64} />
+              <Avatar src={imagePreview} name={form.name} size={64} />
               <div>
-                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} />
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageChange}
+                />
                 {imageError && <div className="hint" style={{ color: 'var(--rust)' }}>{imageError}</div>}
               </div>
             </div>
@@ -109,8 +171,71 @@ export default function MyProfile() {
 
           <div className="form-field">
             <label htmlFor="name">Full name</label>
-            <input id="name" value={name} onChange={(e) => { setName(e.target.value); setSaved(false) }} placeholder="e.g. Ama Serwaa" />
+            <input id="name" value={form.name} onChange={setField('name')} placeholder="e.g. Ama Serwaa" />
           </div>
+
+          <div className="form-field">
+            <label htmlFor="bio">Short bio</label>
+            <textarea
+              id="bio"
+              value={form.bio}
+              onChange={setField('bio')}
+              maxLength={800}
+              placeholder="A few lines on who you are and the kind of work you're looking for."
+            />
+            <span className="hint">{form.bio.length}/800 characters</span>
+          </div>
+
+          <div className="form-row">
+            <div className="form-field">
+              <label htmlFor="location">Location</label>
+              <input id="location" value={form.location} onChange={setField('location')} placeholder="e.g. Accra, Ghana" />
+            </div>
+            <div className="form-field">
+              <label htmlFor="phone">Phone number</label>
+              <input id="phone" type="tel" value={form.phone} onChange={setField('phone')} placeholder="e.g. 059 208 1217" />
+            </div>
+          </div>
+
+          <div className="form-field">
+            <label>Email address</label>
+            <input value={user?.email || ''} disabled readOnly />
+            <span className="hint">
+              Your login email can't be changed here — it's what your account is verified against.
+            </span>
+          </div>
+
+          <h2 className="profile-form__section">Skills</h2>
+          <div className="form-field">
+            <label htmlFor="skills">Your skills</label>
+            <SkillsInput skills={form.skills} onChange={set('skills')} />
+          </div>
+
+          <h2 className="profile-form__section">Background</h2>
+
+          <EntryList
+            label="Education"
+            entries={form.education}
+            fields={EDUCATION_FIELDS}
+            onChange={set('education')}
+            addLabel="Add education"
+          />
+
+          <EntryList
+            label="Work experience"
+            entries={form.experience}
+            fields={EXPERIENCE_FIELDS}
+            onChange={set('experience')}
+            addLabel="Add experience"
+          />
+
+          <EntryList
+            label="Certifications"
+            entries={form.certifications}
+            fields={CERTIFICATION_FIELDS}
+            onChange={set('certifications')}
+            addLabel="Add certification"
+          />
 
           {error && <p style={{ color: 'var(--rust)', fontSize: 13, marginBottom: 14 }}>{error}</p>}
           {saved && <p style={{ color: 'var(--success)', fontSize: 13, marginBottom: 14 }}>Profile updated successfully.</p>}

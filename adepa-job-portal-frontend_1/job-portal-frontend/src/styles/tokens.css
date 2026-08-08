@@ -22,9 +22,49 @@
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "Inter", sans-serif;
 
+  --radius-sm: 6px;
   --radius-card: 10px;
+  --radius-lg: 14px;
   --radius-pill: 999px;
   --container: 1180px;
+
+  /* ---- Spacing scale ----
+     4px base. Use these instead of ad-hoc pixel values so vertical rhythm is
+     consistent between pages that were built at different times. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Section rhythm — one value to change the page cadence everywhere */
+  --section-y: 68px;
+
+  /* ---- Type scale ----
+     The two largest steps are fluid, so headings shrink on a phone without
+     needing a breakpoint each. */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14.5px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 26px;
+  --text-3xl: clamp(24px, 3.4vw, 32px);
+  --text-4xl: clamp(30px, 4.6vw, 44px);
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.35;
+  --leading-normal: 1.6;
+
+  /* ---- Elevation ---- */
+  --shadow-pop: 0 12px 28px rgba(1, 58, 80, 0.16), 0 32px 64px rgba(1, 58, 80, 0.14);
+  --focus-ring: 0 0 0 3px var(--teal-100);
 
   /* ---- Motion ---- */
   /* Soft, overshoot-free easing shared by global.css and animations.css */
@@ -52,12 +92,20 @@ html, body {
 
 #root { min-height: 100vh; display: flex; flex-direction: column; }
 
+/* Baseline type hierarchy. Individual pages still override where they need to,
+   but an unstyled heading now lands somewhere sensible instead of inheriting the
+   browser default. */
 h1, h2, h3, h4 {
   font-family: var(--font-display);
   color: var(--ink);
   margin: 0;
   letter-spacing: -0.01em;
 }
+h1 { font-size: var(--text-3xl); line-height: var(--leading-tight); font-weight: 800; }
+h2 { font-size: var(--text-xl); line-height: var(--leading-snug); font-weight: 700; }
+h3 { font-size: var(--text-lg); line-height: var(--leading-snug); font-weight: 700; }
+h4 { font-size: var(--text-md); line-height: var(--leading-snug); font-weight: 700; }
+p { line-height: var(--leading-normal); }
 
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font-family: inherit; }

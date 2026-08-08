@@ -56,6 +56,49 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    // ---- Job seeker profile ----
+    // Sub-documents keep their default _id, which gives React a stable key for
+    // each row in the repeatable editors on the profile page.
+    bio: {
+      type: String,
+      trim: true,
+      default: '',
+      maxlength: [800, 'Bio cannot exceed 800 characters'],
+    },
+    location: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    // Drives the job match score — see utils/matchScore.js
+    skills: {
+      type: [String],
+      default: [],
+    },
+    education: [
+      {
+        institution: { type: String, trim: true, default: '' },
+        qualification: { type: String, trim: true, default: '' },
+        startYear: { type: String, trim: true, default: '' },
+        endYear: { type: String, trim: true, default: '' },
+      },
+    ],
+    experience: [
+      {
+        company: { type: String, trim: true, default: '' },
+        role: { type: String, trim: true, default: '' },
+        startYear: { type: String, trim: true, default: '' },
+        endYear: { type: String, trim: true, default: '' },
+        summary: { type: String, trim: true, default: '' },
+      },
+    ],
+    certifications: [
+      {
+        name: { type: String, trim: true, default: '' },
+        issuer: { type: String, trim: true, default: '' },
+        year: { type: String, trim: true, default: '' },
+      },
+    ],
     // Profile picture — Cloudinary URL. Used for both seekers and employers,
     // shown in the navbar and (for seekers) in the employer's applicant list.
     profilePictureUrl: {

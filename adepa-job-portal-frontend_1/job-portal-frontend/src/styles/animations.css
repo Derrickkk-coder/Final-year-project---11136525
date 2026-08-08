@@ -22,6 +22,29 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Sweeps a highlight across skeleton blocks. The gradient is 200% wide, so
+   moving it one full width passes the bright band across once per cycle. */
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* Toasts come in from the side they're anchored to */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(16px) scale(0.98); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes dialogIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 @keyframes slideInFromRight {
   from { opacity: 0; transform: translateX(28px); }
   to   { opacity: 1; transform: translateX(0); }
@@ -226,6 +249,14 @@
   transform: translateY(-2px);
 }
 
+/* ============ Notifications ============
+   Rows arrive in sequence, so a freshly loaded list reads as arriving rather
+   than as having always been there. `--i` is set inline per row. */
+.notif-list li {
+  animation: riseIn 0.45s var(--ease-out-soft) both;
+  animation-delay: calc(min(var(--i, 0), 8) * 55ms);
+}
+
 /* ============ Mobile menu ============
    The drawer's own open/close animation lives in global.css, next to the rest
    of the panel's layout. This is just the contents arriving after it: each row
@@ -257,6 +288,12 @@
   .flap--status {
     animation: none;
     opacity: 1;
+  }
+  /* A shimmer that can't move is just a coloured block — stop it rather than
+     freeze the gradient mid-sweep */
+  .skeleton {
+    animation: none;
+    background: var(--line);
   }
   /* Guarantee revealed content is legible even if the observer never runs */
   .reveal {

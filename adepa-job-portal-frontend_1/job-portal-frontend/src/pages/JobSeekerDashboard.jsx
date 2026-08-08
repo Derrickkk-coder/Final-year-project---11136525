@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import JobCard from '../components/JobCard.jsx'
+import NotificationsPanel from '../components/NotificationsPanel.jsx'
+import EmptyState from '../components/EmptyState.jsx'
+import { SkeletonJobList, SkeletonRows } from '../components/Skeleton.jsx'
 import { fetchMyApplications } from '../api/applications.js'
 import { fetchRecommendedJobs } from '../api/jobs.js'
 
@@ -17,6 +20,7 @@ export default function JobSeekerDashboard() {
   const [error, setError] = useState('')
 
   const [recommended, setRecommended] = useState([])
+  const [recommendedBasis, setRecommendedBasis] = useState('recent')
   const [recommendedLoading, setRecommendedLoading] = useState(true)
 
   useEffect(() => {
@@ -26,7 +30,10 @@ export default function JobSeekerDashboard() {
       .finally(() => setLoading(false))
 
     fetchRecommendedJobs()
-      .then((data) => setRecommended(data.jobs))
+      .then((data) => {
+        setRecommended(data.jobs)
+        setRecommendedBasis(data.basis || 'recent')
+      })
       .catch(() => setRecommended([]))
       .finally(() => setRecommendedLoading(false))
   }, [])
@@ -80,11 +87,45 @@ export default function JobSeekerDashboard() {
           </div>
         </div>
 
+        {/* Above "Jobs you might like" — a status change on something you've
+            already applied for matters more than a new suggestion. Renders
+            nothing at all when there are no notifications. */}
+        <NotificationsPanel />
+
+        {recommendedLoading && (
+          <div style={{ marginBottom: 32 }}>
+            <h2 style={{ fontSize: 18, marginBottom: 14 }}>Finding roles for you…</h2>
+            <SkeletonJobList count={2} />
+          </div>
+        )}
+
         {!recommendedLoading && recommended.length > 0 && (
           <div style={{ marginBottom: 32 }}>
-            <h2 style={{ fontSize: 18, marginBottom: 4 }}>Jobs you might like</h2>
+            <h2 style={{ fontSize: 18, marginBottom: 4 }}>
+              {recommendedBasis === 'skills' ? 'Recommended jobs for you' : 'Jobs you might like'}
+            </h2>
+            {/* Captioned from the basis the API reports, so the heading never
+                implies a skill match when the list is really just recent roles. */}
             <p style={{ color: 'var(--ink-soft)', fontSize: 13, marginBottom: 14 }}>
-              Based on the roles you've applied to before.
+              {recommendedBasis === 'skills' && (
+                <>
+                  Matched against the skills on your profile.{' '}
+                  <Link to="/profile" style={{ color: 'var(--teal-700)', fontWeight: 600 }}>
+                    Update your skills
+                  </Link>{' '}
+                  to change these.
+                </>
+              )}
+              {recommendedBasis === 'category' && "Based on the roles you've applied to before."}
+              {recommendedBasis === 'recent' && (
+                <>
+                  The latest open roles.{' '}
+                  <Link to="/profile" style={{ color: 'var(--teal-700)', fontWeight: 600 }}>
+                    Add your skills
+                  </Link>{' '}
+                  to get matched recommendations instead.
+                </>
+              )}
             </p>
             <div className="listings-grid">
               {recommended.map((job) => <JobCard key={job._id} job={job} />)}
@@ -94,13 +135,15 @@ export default function JobSeekerDashboard() {
 
         <h2 style={{ fontSize: 18, marginBottom: 14 }}>Application history</h2>
 
-        {loading && <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>Loading your applications…</p>}
+        {loading && <SkeletonRows count={4} height={52} />}
 
-        {error && (
-          <div className="empty-state">
-            <h3>Something went wrong</h3>
-            <p>{error}</p>
-          </div>
+        {!loading && error && (
+          <EmptyState
+            icon="⚠️"
+            tone="error"
+            title="Couldn't load your applications"
+            description={error}
+          />
         )}
 
         {!loading && !error && (
@@ -170,11 +213,12 @@ export default function JobSeekerDashboard() {
               </div>
             </>
           ) : (
-            <div className="empty-state">
-              <h3>No applications yet</h3>
-              <p>Once you apply for a role, you'll be able to track its status here.</p>
-              <Link to="/jobs" className="btn btn--pine" style={{ marginTop: 16 }}>Browse jobs</Link>
-            </div>
+            <EmptyState
+              icon="📄"
+              title="No applications yet"
+              description="Once you apply for a role, you'll be able to track its status here — and we'll email you whenever an employer moves it forward."
+              action={<Link to="/jobs" className="btn btn--coral">Browse open roles</Link>}
+            />
           )
         )}
       </div>
