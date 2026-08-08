@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { resendVerification } from '../api/auth.js'
+import roleHome from '../utils/roleHome.js'
 
 export default function Login() {
   const [searchParams] = useSearchParams()
@@ -31,7 +32,8 @@ export default function Login() {
     setSubmitting(true)
     try {
       const user = await login({ email, password })
-      navigate(user.role === 'employer' ? '/employer' : '/dashboard')
+      // Admins previously fell into the seeker branch and got bounced to '/'
+      navigate(roleHome(user.role))
     } catch (err) {
       if (!err.response) {
         // No response at all — most commonly a Render free-tier cold start

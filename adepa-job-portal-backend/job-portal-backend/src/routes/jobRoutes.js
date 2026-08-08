@@ -2,7 +2,7 @@ import express from 'express'
 import {
   createJob, getJobs, getJobById, getMyJobs, updateJob, deleteJob, getRecommendedJobs,
 } from '../controllers/jobController.js'
-import { protect, authorize } from '../middleware/auth.js'
+import { protect, authorize, requireApprovedEmployer } from '../middleware/auth.js'
 
 const router = express.Router()
 
@@ -14,7 +14,8 @@ router.get('/recommended/mine', protect, authorize('seeker'), getRecommendedJobs
 router.get('/', getJobs)
 router.get('/:id', getJobById)
 
-router.post('/', protect, authorize('employer'), createJob)
+// Approval is enforced here, not just in the UI — see requireApprovedEmployer
+router.post('/', protect, authorize('employer'), requireApprovedEmployer, createJob)
 router.put('/:id', protect, authorize('employer'), updateJob)
 router.delete('/:id', protect, authorize('employer'), deleteJob)
 

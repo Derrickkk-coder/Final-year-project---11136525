@@ -5,6 +5,19 @@
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email'
 
 export async function sendEmail({ to, subject, html }) {
+  // Fail with the actual cause rather than letting Brevo reject a request with
+  // `sender.email: undefined` and a generic 400. Every caller is
+  // fire-and-forget, so this message in the log is the only signal anyone gets
+  // that email is misconfigured — it needs to name the missing variable.
+  if (!process.env.EMAIL_USER) {
+    throw new Error(
+      'EMAIL_USER is not set. It must be an email address verified as a Sender in Brevo.'
+    )
+  }
+  if (!process.env.BREVO_API_KEY) {
+    throw new Error('BREVO_API_KEY is not set, so no email can be sent.')
+  }
+
   const response = await fetch(BREVO_API_URL, {
     method: 'POST',
     headers: {

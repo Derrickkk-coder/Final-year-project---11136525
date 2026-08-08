@@ -150,8 +150,19 @@ export async function verifyEmail(req, res, next) {
   }
 }
 
+// Don't send another verification email if one went out in the last minute.
+// Without this, holding down the Resend button floods the inbox and burns the
+// Brevo free-tier quota. The response is identical either way, so a caller
+// can't tell a throttled request from a sent one.
+const RESEND_THROTTLE_MS = 60 * 1000
+
 // @route   POST /api/auth/resend-verification
 // @access  Public
+//
+// This previously contained a copy of the login handler: it returned 403
+// "please verify your email" for unverified accounts — the exact case it exists
+// to serve — and for verified accounts it minted an unused token and claimed to
+// have sent a mail without calling the mailer at all. It now actually resends.
 export async function resendVerification(req, res, next) {
   try {
     const { email } = req.body
@@ -160,21 +171,18 @@ export async function resendVerification(req, res, next) {
       return res.status(400).json({ success: false, message: 'Email is required.' })
     }
 
+    // verificationTokenExpires is select:false on the schema, so ask for it
+    // explicitly — the throttle below reads it.
     const user = await User.findOne({ email: email.toLowerCase() })
+      .select('+verificationTokenExpires')
 
+    // Same generic reply as forgot-password, so this endpoint can't be used to
+    // discover which email addresses have accounts.
     if (!user) {
       console.log(`[email] Resend requested for unknown email: ${email}`)
       return res.json({
         success: true,
         message: 'If an account exists with this email, a verification link has been sent.',
-      })
-    }
-
-    if (!user.isVerified) {
-      return res.status(403).json({
-        success: false,
-        notVerified: true,
-        message: 'Please verify your email before logging in. Check your inbox for the verification link.',
       })
     }
 
@@ -185,9 +193,37 @@ export async function resendVerification(req, res, next) {
       })
     }
 
-    const token = generateToken(user)
+    // Nothing to verify. Worth saying plainly rather than sending a pointless
+    // email — and it reveals nothing, since the caller reached this button by
+    // failing a login with this very address.
+    if (user.isVerified) {
+      return res.json({
+        success: true,
+        alreadyVerified: true,
+        message: 'This account is already verified — you can log in.',
+      })
+    }
 
-    res.json({ success: true, message: 'Verification email sent. Please check your inbox.' })
+    const issuedAt = user.verificationTokenExpires
+      ? new Date(user.verificationTokenExpires).getTime() - VERIFICATION_TOKEN_TTL_MS
+      : 0
+
+    if (Date.now() - issuedAt < RESEND_THROTTLE_MS) {
+      console.log(`[email] Resend throttled for ${user.email}`)
+      return res.json({
+        success: true,
+        message: 'Verification email sent. Please check your inbox, including spam.',
+      })
+    }
+
+    // Fire-and-forget, like registration: a slow mail provider shouldn't hold
+    // up the response, and the message is the same either way.
+    issueVerificationEmail(user)
+
+    res.json({
+      success: true,
+      message: 'Verification email sent. Please check your inbox, including spam.',
+    })
   } catch (err) {
     next(err)
   }
