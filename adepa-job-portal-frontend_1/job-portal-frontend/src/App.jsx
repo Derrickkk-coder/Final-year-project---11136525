@@ -19,6 +19,7 @@ import JobCandidates from './pages/JobCandidates.jsx'
 import CompanyProfile from './pages/CompanyProfile.jsx'
 import MyProfile from './pages/MyProfile.jsx'
 import CvReview from './pages/CvReview.jsx'
+import Interviews from './pages/Interviews.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import NotFound from './pages/NotFound.jsx'
 
@@ -51,6 +52,18 @@ export default function App() {
           <Layout>
             <ProtectedRoute role="seeker">
               <MyProfile />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+
+      {/* Shared page — both sides of an interview read the same calendar */}
+      <Route
+        path="/interviews"
+        element={
+          <Layout>
+            <ProtectedRoute role={['seeker', 'employer']}>
+              <Interviews />
             </ProtectedRoute>
           </Layout>
         }

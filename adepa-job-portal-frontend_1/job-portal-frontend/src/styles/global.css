@@ -844,6 +844,92 @@
 .cand__entry p { margin-top: 3px; font-size: var(--text-sm); }
 .cand__entry-years { color: var(--ink-faint); font-size: var(--text-sm); }
 
+/* ============ Interview calendar ============ */
+/* Calendar beside the selected day's detail on desktop; stacked on narrow
+   screens, where the day list is the part people actually read. */
+.cal-layout {
+  display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: var(--space-5); align-items: start;
+}
+
+.cal__head {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: var(--space-3); margin-bottom: var(--space-4); flex-wrap: wrap;
+}
+.cal__month { font-size: var(--text-lg); }
+.cal__nav { display: flex; gap: var(--space-2); }
+.cal__nav .btn { min-width: 38px; }
+
+.cal__weekdays,
+.cal__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal__weekdays {
+  margin-bottom: 6px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--ink-faint); text-align: center;
+}
+
+.cal__day {
+  /* A button, so days are keyboard reachable and announce their interview count */
+  display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+  min-height: 62px; padding: 6px 7px;
+  background: var(--paper); border: 1.5px solid transparent;
+  border-radius: var(--radius-sm); cursor: pointer;
+  font: inherit; text-align: left; color: var(--ink);
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+.cal__day:hover { background: var(--teal-100); }
+.cal__day.is-outside { opacity: 0.38; }
+.cal__day.is-today .cal__daynum {
+  background: var(--teal-700); color: #fff;
+  width: 22px; height: 22px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.cal__day.is-selected { border-color: var(--teal-700); background: var(--paper-raised); }
+/* Days with interviews get a filled ground, so the month reads at a glance */
+.cal__day.has-items { background: var(--success-bg); }
+.cal__day.has-items:hover { background: #D3EFDE; }
+.cal__day.has-items.is-selected { background: var(--success-bg); }
+
+.cal__daynum { font-size: var(--text-sm); font-weight: 700; line-height: 22px; }
+.cal__count {
+  font-size: 10.5px; font-weight: 700; line-height: 1.25;
+  color: var(--success); word-break: break-word;
+}
+
+/* ---- Selected day's detail ---- */
+.cal-day__title { font-size: var(--text-md); margin-bottom: var(--space-4); }
+.cal-day__empty { color: var(--ink-faint); font-size: var(--text-base); margin: 0; }
+.cal-item {
+  display: flex; gap: var(--space-4); align-items: flex-start;
+  padding: var(--space-4) 0; border-top: 1px solid var(--line);
+}
+.cal-item:first-of-type { border-top: none; padding-top: 0; }
+.cal-item.is-past { opacity: 0.6; }
+.cal-item__time {
+  flex-shrink: 0; min-width: 52px;
+  font-family: var(--font-display); font-weight: 800; font-size: var(--text-base);
+  color: var(--teal-700);
+}
+.cal-item__body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cal-item__role { font-size: var(--text-base); }
+.cal-item__who {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--text-sm); font-weight: 600; color: var(--teal-700);
+}
+.cal-item__mode { font-size: var(--text-sm); color: var(--ink-soft); }
+.cal-item__details { font-size: var(--text-sm); color: var(--ink-soft); word-break: break-all; }
+.cal-item__details a { color: var(--teal-500); font-weight: 600; }
+.cal-item__note {
+  margin: var(--space-2) 0 0; font-size: var(--text-sm); color: var(--ink-soft);
+  background: var(--paper); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
+}
+.cal-item__past-tag {
+  margin-left: auto; flex-shrink: 0;
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--ink-faint); background: var(--paper);
+  padding: 3px 8px; border-radius: var(--radius-pill);
+}
+
 /* ============ Upcoming interviews (seeker) ============ */
 .interview-panel { margin-bottom: 20px; }
 .interview-row {
@@ -1071,6 +1157,14 @@
   .rec-card__head { flex-direction: column; gap: var(--space-3); }
   .rec-card__score { flex-direction: row; align-items: baseline; gap: 6px; text-align: left; min-width: 0; }
   .rec-card__foot .btn { flex: 1 1 auto; }
+
+  /* Calendar stacks above the day detail. Cells shrink and drop the word
+     "interview" — at this width a bare count is all that fits legibly. */
+  .cal-layout { grid-template-columns: minmax(0, 1fr); }
+  .cal__day { min-height: 48px; padding: 5px; align-items: center; }
+  .cal__daynum { font-size: var(--text-xs); }
+  .cal__count-word { display: none; }
+  .cal__count { font-size: 10px; }
 
   .dash-sidebar--admin {
     flex-direction: column;

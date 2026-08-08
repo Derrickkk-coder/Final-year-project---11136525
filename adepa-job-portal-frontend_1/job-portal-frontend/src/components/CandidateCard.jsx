@@ -3,6 +3,7 @@ import Avatar from './Avatar.jsx'
 import StatusPill from './StatusPill.jsx'
 import AiIcon from './AiIcon.jsx'
 import { toDownloadUrl } from '../api/cloudinary.js'
+import interviewFormat from '../utils/interviewFormat.js'
 
 // Medals for the top three, plain rank after that. Only applied to candidates
 // that could actually be scored — an unranked candidate has no position.
@@ -23,6 +24,7 @@ function formatWhen(date) {
     weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
   })
 }
+
 
 const STATUS_OPTIONS = ['pending', 'review', 'shortlisted', 'accepted', 'rejected']
 
@@ -97,7 +99,7 @@ export default function CandidateCard({
       {application.interview && (
         <div className="cand__interview">
           <strong>Interview {formatWhen(application.interview.scheduledAt)}</strong>
-          <span> · {application.interview.mode}</span>
+          <span> · {interviewFormat(application.interview)}</span>
           {application.interview.details && <span> · {application.interview.details}</span>}
         </div>
       )}

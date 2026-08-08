@@ -118,20 +118,36 @@ export function applicationStatusEmailTemplate({ name, jobTitle, company, status
   </div>
   `
 }
-export function interviewEmailTemplate({ name, jobTitle, company, interview }) {
-  const when = new Date(interview.scheduledAt).toLocaleString('en-GB', {
-    weekday: 'long',
+// Interview times are rendered on the server, so they must not depend on the
+// server's own timezone — Render runs UTC while the people reading these emails
+// are in Ghana. Pinning the zone means the time in the email is always the time
+// the employer picked, wherever the API happens to be deployed.
+export const DISPLAY_TIME_ZONE = 'Africa/Accra'
+
+export function formatInterviewWhen(date, { withWeekday = false } = {}) {
+  return new Date(date).toLocaleString('en-GB', {
+    ...(withWeekday ? { weekday: 'long' } : {}),
     day: 'numeric',
     month: 'long',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: DISPLAY_TIME_ZONE,
   })
+}
+
+export function interviewEmailTemplate({ name, jobTitle, company, interview }) {
+  const when = formatInterviewWhen(interview.scheduledAt, { withWeekday: true })
 
   // Label the location line for what it actually is, so a meeting link isn't
   // captioned "Location" and an address isn't captioned "Link"
   const detailsLabel =
     interview.mode === 'Video' ? 'Joining link' : interview.mode === 'Phone' ? 'They will call' : 'Location'
+
+  // "Video" alone doesn't tell someone what to install or open
+  const format = interview.mode === 'Video' && interview.platform
+    ? `${interview.platform} (video)`
+    : interview.mode
 
   return `
   <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; color: #16232B;">
@@ -152,7 +168,7 @@ export function interviewEmailTemplate({ name, jobTitle, company, interview }) {
         </tr>
         <tr>
           <td style="padding: 10px 0; color: #8FA1A7; border-bottom: 1px solid #E2E9EB;">Format</td>
-          <td style="padding: 10px 0; font-weight: bold; border-bottom: 1px solid #E2E9EB;">${interview.mode}</td>
+          <td style="padding: 10px 0; font-weight: bold; border-bottom: 1px solid #E2E9EB;">${format}</td>
         </tr>
         ${interview.details ? `
         <tr>

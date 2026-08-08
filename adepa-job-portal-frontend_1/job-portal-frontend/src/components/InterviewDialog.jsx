@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 
 const MODES = ['Video', 'Phone', 'On-site']
+const PLATFORMS = ['Google Meet', 'Zoom', 'Microsoft Teams', 'Other']
 
 // Caption the details field for what it actually is, so a meeting link isn't
 // labelled "Location" and an address isn't labelled "Link".
@@ -31,6 +32,7 @@ export default function InterviewDialog({ candidateName, existing, onCancel, onS
     existing?.scheduledAt ? toLocalInput(existing.scheduledAt) : ''
   )
   const [mode, setMode] = useState(existing?.mode || 'Video')
+  const [platform, setPlatform] = useState(existing?.platform || 'Google Meet')
   const [details, setDetails] = useState(existing?.details || '')
   const [note, setNote] = useState(existing?.note || '')
   const [error, setError] = useState('')
@@ -48,7 +50,15 @@ export default function InterviewDialog({ candidateName, existing, onCancel, onS
       return
     }
 
-    onSubmit({ scheduledAt: new Date(scheduledAt).toISOString(), mode, details, note })
+    onSubmit({
+      scheduledAt: new Date(scheduledAt).toISOString(),
+      mode,
+      // Server ignores this unless mode is Video, but don't send it at all for
+      // the other formats
+      platform: mode === 'Video' ? platform : undefined,
+      details,
+      note,
+    })
   }
 
   return (
@@ -88,6 +98,21 @@ export default function InterviewDialog({ candidateName, existing, onCancel, onS
             </select>
           </div>
         </div>
+
+        {/* Only for video — a platform on a phone call or an on-site meeting
+            would be noise, and the server discards it anyway */}
+        {mode === 'Video' && (
+          <div className="form-field">
+            <label htmlFor="interview-platform">Platform</label>
+            <select
+              id="interview-platform"
+              value={platform}
+              onChange={(e) => setPlatform(e.target.value)}
+            >
+              {PLATFORMS.map((p) => <option key={p}>{p}</option>)}
+            </select>
+          </div>
+        )}
 
         <div className="form-field">
           <label htmlFor="interview-details">{DETAIL_LABEL[mode]}</label>

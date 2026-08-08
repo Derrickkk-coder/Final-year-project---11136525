@@ -7,6 +7,13 @@ const interviewSchema = new mongoose.Schema(
   {
     scheduledAt: { type: Date, required: true },
     mode: { type: String, enum: ['On-site', 'Phone', 'Video'], default: 'Video' },
+    // Which service a video interview runs on. Only meaningful when mode is
+    // Video; 'Other' exists so an unusual platform is named in `details` rather
+    // than being rejected by the enum.
+    platform: {
+      type: String,
+      enum: ['Google Meet', 'Zoom', 'Microsoft Teams', 'Other'],
+    },
     // Address, phone number, or meeting link, depending on mode
     details: { type: String, trim: true, default: '' },
     note: { type: String, trim: true, default: '' },

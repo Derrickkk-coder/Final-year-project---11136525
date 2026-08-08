@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import JobCard from '../components/JobCard.jsx'
 import RecommendedJobCard from '../components/RecommendedJobCard.jsx'
+import interviewFormat from '../utils/interviewFormat.js'
 import NotificationsPanel from '../components/NotificationsPanel.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import { SkeletonJobList, SkeletonRows } from '../components/Skeleton.jsx'
@@ -58,6 +59,7 @@ export default function JobSeekerDashboard() {
           <span className="dash-sidebar__label">Job seeker</span>
           <a href="/dashboard" className="active">My applications</a>
           <a href="/jobs">Browse jobs</a>
+          <a href="/interviews">Interviews</a>
         </div>
         <div className="dash-sidebar__group">
           <span className="dash-sidebar__label">Account</span>
@@ -120,7 +122,7 @@ export default function JobSeekerDashboard() {
                   <strong>{app.job?.title || 'Role no longer listed'}</strong>
                   <span className="interview-row__company">{app.job?.company}</span>
                   <span className="interview-row__mode">
-                    {app.interview.mode}
+                    {interviewFormat(app.interview)}
                     {app.interview.details ? ` · ${app.interview.details}` : ''}
                   </span>
                   {app.interview.note && <p className="interview-row__note">{app.interview.note}</p>}

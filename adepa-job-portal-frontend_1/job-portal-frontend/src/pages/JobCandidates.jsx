@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useToast } from '../context/ToastContext.jsx'
+import { useConfirm } from '../context/ConfirmContext.jsx'
 import CandidateCard from '../components/CandidateCard.jsx'
 import InterviewDialog from '../components/InterviewDialog.jsx'
 import EmptyState from '../components/EmptyState.jsx'
@@ -15,6 +16,7 @@ import {
 export default function JobCandidates() {
   const { id } = useParams()
   const toast = useToast()
+  const confirm = useConfirm()
 
   const [job, setJob] = useState(null)
   const [applications, setApplications] = useState([])
@@ -57,6 +59,24 @@ export default function JobCandidates() {
     } finally {
       setBusyId(null)
     }
+  }
+
+  // Shortlisting and interviewing are the same decision a beat apart, so offer
+  // the next step instead of making the employer find the button again. Only
+  // when they don't already have an interview booked.
+  const shortlistThenOffer = async (application) => {
+    await changeStatus(application, 'shortlisted')
+
+    if (application.interview) return
+
+    const scheduleNow = await confirm({
+      title: `Schedule an interview with ${application.applicant?.name || 'this candidate'}?`,
+      body: "They've been shortlisted and notified. You can set up the interview now, or come back to it later.",
+      confirmLabel: 'Schedule now',
+      cancelLabel: 'Later',
+    })
+
+    if (scheduleNow) setInterviewFor(application)
   }
 
   const handleScheduleInterview = async (payload) => {
@@ -155,7 +175,7 @@ export default function JobCandidates() {
                 busy={busyId === application._id}
                 analyzing={analyzingId === application._id}
                 onStatusChange={(status) => changeStatus(application, status)}
-                onShortlist={() => changeStatus(application, 'shortlisted')}
+                onShortlist={() => shortlistThenOffer(application)}
                 onScheduleInterview={() => setInterviewFor(application)}
                 onAnalyze={() => runAnalysis(application)}
               />

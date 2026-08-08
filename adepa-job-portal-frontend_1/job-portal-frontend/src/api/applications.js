@@ -25,6 +25,12 @@ export async function updateApplicationStatus(applicationId, status) {
   return data // { success, application }
 }
 
+// Works for both roles — the server decides whose interviews these are
+export async function fetchMyInterviews() {
+  const { data } = await client.get('/applications/interviews')
+  return data // { success, interviews }
+}
+
 export async function scheduleInterview(applicationId, payload) {
   const { data } = await client.put(`/applications/${applicationId}/interview`, payload)
   return data // { success, application }

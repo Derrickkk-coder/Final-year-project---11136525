@@ -16,7 +16,13 @@ export default function ProtectedRoute({ role, children }) {
   }
 
   if (!user) return <Navigate to="/login" replace />
-  if (role && user.role !== role) return <Navigate to="/" replace />
+
+  // `role` takes a single role or a list of them, for pages shared between roles
+  // (the interview calendar serves seekers and employers alike).
+  if (role) {
+    const allowed = Array.isArray(role) ? role : [role]
+    if (!allowed.includes(user.role)) return <Navigate to="/" replace />
+  }
 
   return children
 }

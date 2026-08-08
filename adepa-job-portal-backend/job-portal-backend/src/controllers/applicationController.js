@@ -1,6 +1,11 @@
 import Application from '../models/Application.js'
 import Job from '../models/Job.js'
-import { sendEmail, applicationStatusEmailTemplate, interviewEmailTemplate } from '../utils/sendEmail.js'
+import {
+  sendEmail,
+  applicationStatusEmailTemplate,
+  interviewEmailTemplate,
+  formatInterviewWhen,
+} from '../utils/sendEmail.js'
 import { analyzeApplicationFit } from '../utils/analyzeApplication.js'
 import { notifyUser } from '../utils/notify.js'
 import { withCandidateMatch } from '../utils/matchScore.js'
@@ -222,12 +227,46 @@ export async function getApplicationsForJob(req, res, next) {
   }
 }
 
+// @route   GET /api/applications/interviews
+// @access  Private (seeker or employer)
+//
+// Every scheduled interview the caller is party to. One endpoint for both sides
+// because it's the same question asked from two positions — an employer's
+// interviews are the ones on their postings, a seeker's are their own — and the
+// calendar rendering it is identical either way.
+export async function getMyInterviews(req, res, next) {
+  try {
+    let filter
+
+    if (req.user.role === 'employer') {
+      const myJobs = await Job.find({ postedBy: req.user._id }).select('_id')
+      filter = { job: { $in: myJobs.map((j) => j._id) } }
+    } else {
+      filter = { applicant: req.user._id }
+    }
+
+    const interviews = await Application.find({
+      ...filter,
+      interview: { $exists: true, $ne: null },
+    })
+      .populate('job', 'title company ref')
+      .populate('applicant', 'name email phone profilePictureUrl')
+      .sort({ 'interview.scheduledAt': 1 })
+      .lean()
+
+    // Orphaned applications (job deleted) would render as a blank calendar entry
+    res.json({ success: true, interviews: interviews.filter((a) => a.job) })
+  } catch (err) {
+    next(err)
+  }
+}
+
 // @route   PUT /api/applications/:id/interview
 // @access  Private (employer who owns the related job)
 // Body: { scheduledAt, mode, details, note }
 export async function scheduleInterview(req, res, next) {
   try {
-    const { scheduledAt, mode, details, note } = req.body
+    const { scheduledAt, mode, platform, details, note } = req.body
 
     if (!scheduledAt) {
       return res.status(400).json({ success: false, message: 'An interview date and time is required.' })
@@ -258,9 +297,15 @@ export async function scheduleInterview(req, res, next) {
       })
     }
 
+    const resolvedMode = ['On-site', 'Phone', 'Video'].includes(mode) ? mode : 'Video'
+    const PLATFORMS = ['Google Meet', 'Zoom', 'Microsoft Teams', 'Other']
+
     application.interview = {
       scheduledAt: when,
-      mode: ['On-site', 'Phone', 'Video'].includes(mode) ? mode : 'Video',
+      mode: resolvedMode,
+      // Only stored for video interviews — a platform on a phone call or an
+      // on-site meeting would be meaningless and would show up in the email
+      platform: resolvedMode === 'Video' && PLATFORMS.includes(platform) ? platform : undefined,
       details: details || '',
       note: note || '',
       setAt: new Date(),
@@ -279,7 +324,10 @@ export async function scheduleInterview(req, res, next) {
     notifyUser({
       recipient: application.applicant._id,
       type: 'interview_scheduled',
-      message: `${application.job.company} has invited you to an interview for ${application.job.title}.`,
+      // The date belongs in the message itself. A notification that only says
+      // an interview exists forces the reader to open the dashboard to learn
+      // the one thing they actually need — when it is.
+      message: `Interview for ${application.job.title} at ${application.job.company} — ${formatInterviewWhen(when)}.`,
       link: '/dashboard',
       job: application.job._id,
       application: application._id,

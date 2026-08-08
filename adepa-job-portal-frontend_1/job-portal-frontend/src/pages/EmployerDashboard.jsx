@@ -128,6 +128,7 @@ export default function EmployerDashboard() {
           <a href="#applicants" className={tab === 'applicants' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('applicants') }}>
             Applicants
           </a>
+          <a href="/interviews">Interviews</a>
         </div>
       </aside>
 
