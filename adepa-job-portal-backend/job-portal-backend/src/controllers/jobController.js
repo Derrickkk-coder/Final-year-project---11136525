@@ -1,7 +1,7 @@
 import Job from '../models/Job.js'
 import Application from '../models/Application.js'
 import { notifyManyUsers } from '../utils/notify.js'
-import { scoreJobForSkills } from '../utils/matchScore.js'
+import { withMatch } from '../utils/matchScore.js'
 import { cleanSkills } from '../utils/cleanSkills.js'
 
 // Tells seekers who've applied in this category before that a new role landed.
@@ -123,16 +123,26 @@ export async function getJobs(req, res, next) {
 }
 
 // @route   GET /api/jobs/:id
-// @access  Public
+// @access  Public (personalised for a signed-in seeker via optionalAuth)
+//
+// A seeker with skills on their profile gets the match attached, so the job page
+// can show why the role fits at the moment they're deciding whether to apply.
+// Anonymous callers, employers, and seekers with no skills listed get the plain
+// job — the match fields are simply absent and the UI omits that section.
 export async function getJobById(req, res, next) {
   try {
-    const job = await Job.findById(req.params.id)
+    const job = await Job.findById(req.params.id).lean()
 
     if (!job) {
       return res.status(404).json({ success: false, message: 'Job not found.' })
     }
 
-    res.json({ success: true, job })
+    const skills = req.user?.role === 'seeker' ? req.user.skills : null
+
+    res.json({
+      success: true,
+      job: (skills?.length ? withMatch(job, skills) : null) || job,
+    })
   } catch (err) {
     next(err)
   }
@@ -183,12 +193,12 @@ export async function getRecommendedJobs(req, res, next) {
       }).lean()
 
       const scored = openJobs
-        .map((job) => {
-          const match = scoreJobForSkills(job, skills)
-          return match ? { ...job, matchScore: match.score, matchedSkills: match.matchedSkills } : null
-        })
+        .map((job) => withMatch(job, skills))
         .filter(Boolean)
-        .sort((a, b) => b.matchScore - a.matchScore)
+        // Ties break on how many skills actually matched, so an 8-of-9 role
+        // ranks above a 4-of-5 at the same percentage. See the note in
+        // matchScore.js about small denominators.
+        .sort((a, b) => b.matchScore - a.matchScore || b.matchedCount - a.matchedCount)
         .slice(0, RECOMMENDATION_LIMIT)
 
       if (scored.length > 0) {

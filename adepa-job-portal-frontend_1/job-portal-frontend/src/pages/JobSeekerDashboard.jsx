@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import JobCard from '../components/JobCard.jsx'
+import RecommendedJobCard from '../components/RecommendedJobCard.jsx'
 import NotificationsPanel from '../components/NotificationsPanel.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import { SkeletonJobList, SkeletonRows } from '../components/Skeleton.jsx'
@@ -127,8 +128,15 @@ export default function JobSeekerDashboard() {
                 </>
               )}
             </p>
+            {/* Skill-matched results get the explanatory card; the weaker
+                fallbacks (category, recency) have no match to justify, so they
+                use the ordinary job card. */}
             <div className="listings-grid">
-              {recommended.map((job) => <JobCard key={job._id} job={job} />)}
+              {recommended.map((job) =>
+                recommendedBasis === 'skills'
+                  ? <RecommendedJobCard key={job._id} job={job} />
+                  : <JobCard key={job._id} job={job} />
+              )}
             </div>
           </div>
         )}

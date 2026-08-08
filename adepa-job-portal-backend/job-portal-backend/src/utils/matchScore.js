@@ -1,32 +1,27 @@
 // Skill-based job matching.
 //
-// Deliberately transparent rather than clever: the score is arithmetic over two
-// skill sets, so any number the UI shows can be explained and audited. No model,
-// no embeddings, no training data.
+//     Match % = matching skills ÷ required skills × 100
 //
-// Two signals go into a match:
+// Deliberately transparent rather than clever: one division over two skill
+// sets, so every number the UI shows can be explained and checked by hand. No
+// model, no embeddings, no training data.
 //
-//   coverage — of the skills this role asks for, what fraction does the seeker
-//              have? This is the question a recruiter actually asks, so it
-//              carries most of the weight.
-//   breadth  — of the seeker's skills, what fraction does this role use? It
-//              separates two roles with equal coverage, favouring the one that
-//              uses more of what the candidate actually knows.
+// A seeker with [Python, Java, SQL, HTML, CSS] against a role requiring
+// [Python, SQL, REST API, ... 9 total] of which they have 8 scores 8/9 = 89%,
+// and the UI reports both the percentage and the fraction it came from.
 //
-// score = 100 * (0.75 * coverage + 0.25 * breadth)
-//
-// A role tagged [Python, SQL] against a seeker who knows [Python, SQL, Java]
-// scores 0.75*1.0 + 0.25*0.67 = 92%. Full coverage, but not everything the
-// candidate brings is relevant — which is honest, and why it isn't 100%.
-
-const COVERAGE_WEIGHT = 0.75
-const BREADTH_WEIGHT = 0.25
+// Known limitation, worth being ready to answer: a role tagged with a single
+// skill the seeker happens to have scores 100%, outranking a thoroughly
+// specified 8-of-9 role at 89%. The denominator is what makes the difference,
+// which is exactly why `requiredCount` is returned and shown — "1/1" reads very
+// differently from "8/9" even though the percentage is higher. Ranking breaks
+// ties on matched count for the same reason.
 
 // Jobs posted before `skills` existed have nothing to compare against, so we
 // look for the seeker's skills in the posting's own words instead. That can't
 // produce a real coverage figure — we don't know the full requirement set — so
 // the result is capped below a properly tagged match rather than presented with
-// equal confidence.
+// equal confidence, and no fraction or missing-skill list is claimed.
 const INFERRED_MATCH_CEILING = 85
 
 function normalise(skill) {
@@ -39,6 +34,23 @@ function normalise(skill) {
 
 function toSkillSet(skills) {
   return new Set((skills || []).map(normalise).filter(Boolean))
+}
+
+// Keeps each skill's original spelling for display alongside the normalised key
+// used for comparison, de-duplicated so a job tagged ["SQL", "sql"] counts once
+// and can't inflate its own denominator.
+function toComparableList(skills) {
+  const seen = new Set()
+  const out = []
+
+  for (const raw of skills || []) {
+    const key = normalise(raw)
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    out.push({ key, label: String(raw).trim().replace(/\s+/g, ' ') })
+  }
+
+  return out
 }
 
 // Whole-token test, so "Java" doesn't match inside "JavaScript". `+` and `#`
@@ -60,61 +72,63 @@ function jobText(job) {
     .toLowerCase()
 }
 
-// Returns { score, matchedSkills, inferred } — or null when nothing matches, so
-// callers can filter irrelevant roles out entirely rather than showing a 0%.
+// Returns null when nothing matches, so callers can drop irrelevant roles
+// entirely rather than listing them at 0%.
 export function scoreJobForSkills(job, seekerSkills) {
   const seekerSet = toSkillSet(seekerSkills)
   if (seekerSet.size === 0) return null
 
-  const requiredSet = toSkillSet(job.skills)
+  const required = toComparableList(job.skills)
 
   // ---- Preferred path: the employer tagged the role's skills ----
-  if (requiredSet.size > 0) {
-    const matched = [...requiredSet].filter((skill) => seekerSet.has(skill))
+  if (required.length > 0) {
+    const matched = required.filter((s) => seekerSet.has(s.key))
     if (matched.length === 0) return null
 
-    const coverage = matched.length / requiredSet.size
-    const breadth = matched.length / seekerSet.size
-    const score = Math.round(100 * (COVERAGE_WEIGHT * coverage + BREADTH_WEIGHT * breadth))
-
     return {
-      score: Math.min(score, 100),
-      matchedSkills: matchedOriginalCasing(job.skills, matched),
+      score: Math.round((matched.length / required.length) * 100),
+      matchedSkills: matched.map((s) => s.label),
+      missingSkills: required.filter((s) => !seekerSet.has(s.key)).map((s) => s.label),
+      matchedCount: matched.length,
+      requiredCount: required.length,
       inferred: false,
     }
   }
 
   // ---- Fallback: infer from the posting's text ----
   const haystack = jobText(job)
-  const matched = [...seekerSet].filter((skill) => appearsIn(haystack, skill))
+  const matched = toComparableList(seekerSkills).filter((s) => appearsIn(haystack, s.key))
   if (matched.length === 0) return null
 
   const proportion = matched.length / seekerSet.size
-  const score = Math.round(INFERRED_MATCH_CEILING * proportion)
 
   return {
-    score: Math.max(score, 1),
-    matchedSkills: matchedOriginalCasing(seekerSkills, matched),
+    score: Math.max(Math.round(INFERRED_MATCH_CEILING * proportion), 1),
+    matchedSkills: matched.map((s) => s.label),
+    // Unknowable without tagged requirements — deliberately empty rather than
+    // guessed, so the UI can say so instead of implying a complete picture.
+    missingSkills: [],
+    matchedCount: matched.length,
+    requiredCount: null,
     inferred: true,
   }
 }
 
-// Report skills back the way they were written ("JavaScript", not "javascript"),
-// since these strings get shown to the user. Trimmed on the way out as well:
-// cleanSkills normalises everything written through the API, but data that
-// predates it shouldn't render as " python ".
-function matchedOriginalCasing(originals, normalisedMatches) {
-  const wanted = new Set(normalisedMatches)
-  const seen = new Set()
-  const out = []
+// Attaches the match to a job under consistent field names, so the
+// recommendations list and the job details page hand the client the same shape.
+// Returns null when there's no match, letting callers decide between filtering
+// the job out (recommendations) and serving it unannotated (job details).
+export function withMatch(job, seekerSkills) {
+  const match = scoreJobForSkills(job, seekerSkills)
+  if (!match) return null
 
-  for (const original of originals || []) {
-    const key = normalise(original)
-    if (wanted.has(key) && !seen.has(key)) {
-      seen.add(key)
-      out.push(String(original).trim().replace(/\s+/g, ' '))
-    }
+  return {
+    ...job,
+    matchScore: match.score,
+    matchedSkills: match.matchedSkills,
+    missingSkills: match.missingSkills,
+    matchedCount: match.matchedCount,
+    requiredCount: match.requiredCount,
+    matchInferred: match.inferred,
   }
-
-  return out
 }

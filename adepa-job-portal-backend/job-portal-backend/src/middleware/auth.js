@@ -41,6 +41,28 @@ export async function protect(req, res, next) {
   }
 }
 
+// Like `protect`, but does not reject anonymous callers. For public routes that
+// show extra, personalised detail to a signed-in user — the job details endpoint
+// attaches a skill match for a logged-in seeker and simply omits it otherwise.
+//
+// A missing, invalid, or expired token is not an error here: the caller just
+// doesn't get the personalised extras. Deactivated accounts are treated as
+// anonymous rather than blocked, since the page itself is public anyway.
+export async function optionalAuth(req, res, next) {
+  const authHeader = req.headers.authorization
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return next()
+
+  try {
+    const decoded = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET)
+    const user = await User.findById(decoded.id)
+    if (user && user.isActive) req.user = user
+  } catch {
+    // Fall through as anonymous
+  }
+
+  next()
+}
+
 // Requires an employer account to have been approved by an admin. Use after
 // `authorize('employer')`.
 //

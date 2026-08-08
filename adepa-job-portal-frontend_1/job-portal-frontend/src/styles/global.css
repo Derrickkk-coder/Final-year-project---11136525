@@ -679,6 +679,85 @@
 .match-badge.is-weak .match-badge__score { background: var(--paper); color: var(--ink-soft); border: 1px solid var(--line); }
 .match-badge__skills { font-size: 12px; color: var(--ink-faint); font-weight: 600; }
 
+/* ============ Skill match: breakdown + recommendation card ============ */
+.match-detail { margin-top: var(--space-3); }
+.match-detail__summary {
+  margin: 0 0 var(--space-3); font-size: var(--text-base); color: var(--ink-soft);
+}
+.match-detail__summary strong { color: var(--ink); }
+.match-detail__list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: var(--space-2);
+}
+.match-skill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--text-sm); font-weight: 600;
+  padding: 5px 11px; border-radius: var(--radius-pill);
+}
+.match-skill.is-have { background: var(--success-bg); color: var(--success); }
+.match-skill.is-missing { background: #FFF3E0; color: #8A5A0F; }
+.match-skill__note { font-weight: 500; opacity: 0.75; }
+.match-detail__caveat {
+  margin: var(--space-3) 0 0; font-size: var(--text-xs); color: var(--ink-faint);
+}
+/* Tighter inside the job-page sidebar, where width is scarce */
+.match-detail.is-compact .match-detail__summary { font-size: var(--text-sm); margin-bottom: var(--space-2); }
+.match-detail.is-compact .match-skill { font-size: var(--text-xs); padding: 4px 9px; }
+
+.rec-card {
+  background: var(--paper-raised); border: 1px solid var(--line);
+  border-left: 4px solid var(--line);
+  border-radius: var(--radius-card); box-shadow: var(--shadow-card);
+  padding: var(--space-5) var(--space-6);
+  transition: box-shadow 0.18s var(--ease-out-soft), transform 0.18s var(--ease-out-soft);
+}
+.rec-card:hover { box-shadow: var(--shadow-lift); transform: translateY(-2px); }
+/* The left edge carries the match strength, so a strong fit is visible before
+   reading a single word */
+.rec-card.is-strong { border-left-color: var(--success); }
+.rec-card.is-moderate { border-left-color: var(--teal-500); }
+.rec-card.is-weak { border-left-color: var(--ink-faint); }
+
+.rec-card__head { display: flex; align-items: flex-start; gap: var(--space-5); }
+.rec-card__score {
+  flex-shrink: 0; text-align: center; min-width: 68px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.rec-card__score-num {
+  font-family: var(--font-display); font-size: 26px; font-weight: 800; line-height: 1;
+}
+.rec-card.is-strong .rec-card__score-num { color: var(--success); }
+.rec-card.is-moderate .rec-card__score-num { color: var(--teal-500); }
+.rec-card.is-weak .rec-card__score-num { color: var(--ink-soft); }
+.rec-card__score-label {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--ink-faint); margin-top: 3px;
+}
+.rec-card__ident { min-width: 0; }
+.rec-card__title {
+  font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; color: var(--ink);
+}
+.rec-card__title:hover { color: var(--teal-700); }
+.rec-card__company {
+  margin: 2px 0 0; font-size: var(--text-sm); font-weight: 600; color: var(--teal-700);
+}
+.rec-card__meta { margin: 4px 0 0; font-size: var(--text-sm); color: var(--ink-soft); }
+.rec-card__foot {
+  display: flex; gap: var(--space-2); flex-wrap: wrap;
+  margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--line);
+}
+
+/* Match summary in the job-details sidebar */
+.aside-match {
+  padding-bottom: var(--space-5); margin-bottom: var(--space-5);
+  border-bottom: 1px solid var(--line);
+}
+.aside-match__head { display: flex; align-items: baseline; gap: var(--space-2); }
+.aside-match__score {
+  font-family: var(--font-display); font-size: 26px; font-weight: 800; color: var(--teal-700);
+}
+.aside-match__label { font-size: var(--text-xs); font-weight: 600; color: var(--ink-soft); }
+
 /* ============ Notifications panel (dashboard) ============ */
 .notif-panel { margin-bottom: 32px; padding: 20px 22px; }
 .notif-panel__head {
@@ -796,6 +875,13 @@
   /* Tags wrap rather than squeezing the row into a horizontal scroll */
   .ticket__tags { gap: var(--space-1) var(--space-2); }
   .match-badge { margin-top: var(--space-2); }
+
+  /* Recommendation card: score above the title rather than beside it, so the
+     job title gets the full width instead of ~200px */
+  .rec-card { padding: var(--space-4) var(--space-5); }
+  .rec-card__head { flex-direction: column; gap: var(--space-3); }
+  .rec-card__score { flex-direction: row; align-items: baseline; gap: 6px; text-align: left; min-width: 0; }
+  .rec-card__foot .btn { flex: 1 1 auto; }
 
   .dash-sidebar--admin {
     flex-direction: column;

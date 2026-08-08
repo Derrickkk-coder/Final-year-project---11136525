@@ -6,6 +6,7 @@ import { uploadResumeToCloudinary } from '../api/cloudinary.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import EmptyState from '../components/EmptyState.jsx'
+import MatchBreakdown from '../components/MatchBreakdown.jsx'
 
 const MAX_RESUME_SIZE = 5 * 1024 * 1024 // 5MB
 
@@ -216,6 +217,25 @@ export default function JobDetails() {
 
         <aside>
           <div className="panel job-detail-aside">
+            {/* Only present when a signed-in seeker has skills to compare —
+                see optionalAuth on GET /api/jobs/:id */}
+            {typeof job.matchScore === 'number' && (
+              <div className="aside-match">
+                <div className="aside-match__head">
+                  <span className="aside-match__score">{job.matchScore}%</span>
+                  <span className="aside-match__label">match with your profile</span>
+                </div>
+                <MatchBreakdown
+                  matchedSkills={job.matchedSkills}
+                  missingSkills={job.missingSkills}
+                  matchedCount={job.matchedCount}
+                  requiredCount={job.requiredCount}
+                  inferred={job.matchInferred}
+                  compact
+                />
+              </div>
+            )}
+
             <div className="hero__stat-label" style={{ marginBottom: 4 }}>Applicants so far</div>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'var(--pine)', marginBottom: 20 }}>
               {job.applicantsCount || 0}

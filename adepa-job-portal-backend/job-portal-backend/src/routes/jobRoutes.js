@@ -2,7 +2,7 @@ import express from 'express'
 import {
   createJob, getJobs, getJobById, getMyJobs, updateJob, deleteJob, getRecommendedJobs,
 } from '../controllers/jobController.js'
-import { protect, authorize, requireApprovedEmployer } from '../middleware/auth.js'
+import { protect, authorize, requireApprovedEmployer, optionalAuth } from '../middleware/auth.js'
 
 const router = express.Router()
 
@@ -12,7 +12,9 @@ router.get('/mine/list', protect, authorize('employer'), getMyJobs)
 router.get('/recommended/mine', protect, authorize('seeker'), getRecommendedJobs)
 
 router.get('/', getJobs)
-router.get('/:id', getJobById)
+// Public, but reads the token when one is sent so a signed-in seeker gets their
+// skill match attached to the job
+router.get('/:id', optionalAuth, getJobById)
 
 // Approval is enforced here, not just in the UI — see requireApprovedEmployer
 router.post('/', protect, authorize('employer'), requireApprovedEmployer, createJob)
