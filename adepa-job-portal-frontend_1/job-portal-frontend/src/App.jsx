@@ -17,6 +17,7 @@ import PostJob from './pages/PostJob.jsx'
 import EditJob from './pages/EditJob.jsx'
 import CompanyProfile from './pages/CompanyProfile.jsx'
 import MyProfile from './pages/MyProfile.jsx'
+import CvReview from './pages/CvReview.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import NotFound from './pages/NotFound.jsx'
 
@@ -49,6 +50,17 @@ export default function App() {
           <Layout>
             <ProtectedRoute role="seeker">
               <MyProfile />
+            </ProtectedRoute>
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/cv-review"
+        element={
+          <Layout>
+            <ProtectedRoute role="seeker">
+              <CvReview />
             </ProtectedRoute>
           </Layout>
         }

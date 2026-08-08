@@ -40,6 +40,13 @@
   to   { opacity: 1; transform: translateX(0) scale(1); }
 }
 
+/* Score bars fill from empty, so a CV breakdown lands rather than just being
+   there. Width is set inline, so this only animates the transform origin point. */
+@keyframes barGrow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
 @keyframes dialogIn {
   from { opacity: 0; transform: translateY(8px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0) scale(1); }

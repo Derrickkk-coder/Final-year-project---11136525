@@ -557,6 +557,82 @@
   background: var(--paper-raised); color: var(--ink);
 }
 
+/* ============ Score ring (profile completion, CV score) ============ */
+.score-ring {
+  border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.score-ring__hole {
+  border-radius: 50%; background: var(--paper-raised);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  line-height: 1.1;
+}
+.score-ring__num { font-family: var(--font-display); font-weight: 800; color: var(--ink); }
+.score-ring__label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--ink-faint); margin-top: 2px;
+}
+
+/* ============ CV review ============ */
+.cv-start {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-5); flex-wrap: wrap;
+}
+.cv-score { display: flex; align-items: center; gap: var(--space-6); margin-bottom: 20px; flex-wrap: wrap; }
+.cv-score__body { min-width: 0; flex: 1; }
+.cv-score__title { font-size: var(--text-xl); margin-bottom: 6px; }
+.cv-score__text {
+  color: var(--ink-soft); font-size: var(--text-base); margin: 0 0 var(--space-4); max-width: 58ch;
+}
+
+.score-bar { margin-bottom: var(--space-5); }
+.score-bar:last-child { margin-bottom: 0; }
+.score-bar__top {
+  display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;
+}
+.score-bar__name { font-size: var(--text-base); font-weight: 700; color: var(--ink); }
+.score-bar__value { font-family: var(--font-display); font-size: var(--text-base); font-weight: 800; color: var(--ink-soft); }
+.score-bar__track {
+  height: 8px; border-radius: var(--radius-pill); background: var(--line); overflow: hidden;
+}
+.score-bar__fill {
+  height: 100%; border-radius: var(--radius-pill);
+  /* Grows from empty when the panel first renders, so the numbers land rather
+     than simply being there. transform-origin matters — without it scaleX
+     expands outwards from the centre instead of filling from the left. */
+  transform-origin: left center;
+  animation: barGrow 0.7s var(--ease-out-soft) both;
+}
+.score-bar__comment {
+  margin: 6px 0 0; font-size: var(--text-sm); color: var(--ink-soft); line-height: 1.5;
+}
+
+.cv-list__items { list-style: none; margin: 0; padding: 0; }
+.cv-list__item {
+  display: flex; gap: var(--space-3); align-items: flex-start;
+  font-size: var(--text-base); line-height: 1.55; color: var(--ink);
+  padding: var(--space-3) 0; border-top: 1px solid var(--line);
+}
+.cv-list__item:first-child { border-top: none; padding-top: 0; }
+.cv-list__item > span:first-child {
+  flex-shrink: 0; font-weight: 800; width: 18px; text-align: center;
+}
+.cv-list__item.is-todo > span:first-child { color: var(--coral); }
+.cv-list__item.is-good > span:first-child { color: var(--success); }
+
+.cv-compare {
+  display: flex; align-items: flex-end; gap: var(--space-3);
+  flex-wrap: wrap; margin-top: var(--space-4);
+}
+.cv-compare__result {
+  margin-top: var(--space-5); padding-top: var(--space-5); border-top: 1px solid var(--line);
+}
+.cv-compare__head { display: flex; align-items: center; gap: var(--space-5); flex-wrap: wrap; }
+.cv-compare__notes {
+  margin: var(--space-4) 0 0; font-size: var(--text-base);
+  color: var(--ink-soft); line-height: var(--leading-normal);
+}
+
 /* ============ Profile completion ============ */
 .completion { display: flex; align-items: center; gap: 22px; margin-bottom: 20px; }
 .completion__body { min-width: 0; }
@@ -572,20 +648,8 @@
   border: 1px solid var(--line); color: var(--ink-soft);
 }
 
-/* Conic-gradient ring: one element, and the sweep is set inline from the
-   percentage. The inner circle masks out the middle to leave a ring. */
-.completion-ring {
-  width: 76px; height: 76px; border-radius: 50%; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-}
-.completion-ring__hole {
-  width: 60px; height: 60px; border-radius: 50%;
-  background: var(--paper-raised);
-  display: flex; align-items: center; justify-content: center;
-}
-.completion-ring__num {
-  font-family: var(--font-display); font-size: 16px; font-weight: 800; color: var(--ink);
-}
+/* The ring itself now lives in the Score ring section above — ProfileCompletion
+   and the CV score share one <ScoreRing> component. */
 
 /* ============ My CV card ============ */
 .cv-card { margin-bottom: 20px; }

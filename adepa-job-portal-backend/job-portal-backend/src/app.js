@@ -6,6 +6,7 @@ import jobRoutes from './routes/jobRoutes.js'
 import applicationRoutes from './routes/applicationRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import notificationRoutes from './routes/notificationRoutes.js'
+import cvRoutes from './routes/cvRoutes.js'
 
 const app = express()
 
@@ -26,6 +27,7 @@ app.use('/api/jobs', jobRoutes)
 app.use('/api/applications', applicationRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/cv', cvRoutes)
 
 // ---- Error handling (must be last) ----
 app.use(notFound)

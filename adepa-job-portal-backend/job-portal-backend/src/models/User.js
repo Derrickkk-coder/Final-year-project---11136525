@@ -99,6 +99,24 @@ const userSchema = new mongoose.Schema(
         year: { type: String, trim: true, default: '' },
       },
     ],
+    // Cached AI CV review. select:false so it doesn't ride along on every
+    // /auth/me response — the CV endpoints ask for it explicitly.
+    //
+    // analyzedResumeUrl records which CV produced this. Replacing the CV makes
+    // the stored review stale, and comparing the two is how we know: a review of
+    // a document the user has since replaced is worse than no review at all.
+    cvAnalysis: {
+      type: {
+        overallScore: Number,
+        areas: [{ name: String, score: Number, comment: String }],
+        suggestions: [String],
+        strengths: [String],
+        analyzedResumeUrl: String,
+        analyzedAt: Date,
+      },
+      select: false,
+      default: undefined,
+    },
     // Profile picture — Cloudinary URL. Used for both seekers and employers,
     // shown in the navbar and (for seekers) in the employer's applicant list.
     profilePictureUrl: {

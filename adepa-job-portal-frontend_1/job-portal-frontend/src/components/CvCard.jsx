@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { uploadResumeToCloudinary, toDownloadUrl } from '../api/cloudinary.js'
 import { updateProfile } from '../api/auth.js'
 
@@ -102,6 +103,9 @@ export default function CvCard({ user, onChange }) {
             >
               Download CV
             </a>
+            <Link to="/cv-review" className="btn btn--pine btn--sm">
+              Get an AI review
+            </Link>
           </>
         )}
       </div>

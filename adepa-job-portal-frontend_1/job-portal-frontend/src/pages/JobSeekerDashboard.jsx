@@ -57,6 +57,7 @@ export default function JobSeekerDashboard() {
         <div className="dash-sidebar__group">
           <span className="dash-sidebar__label">Account</span>
           <a href="/profile">My profile</a>
+          <a href="/cv-review">CV review</a>
         </div>
       </aside>
 

@@ -132,6 +132,7 @@ export default function MyProfile() {
         <div className="dash-sidebar__group">
           <span className="dash-sidebar__label">Account</span>
           <a href="/profile" className="active">My profile</a>
+          <a href="/cv-review">CV review</a>
         </div>
       </aside>
 
