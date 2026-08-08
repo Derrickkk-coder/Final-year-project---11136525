@@ -429,11 +429,19 @@
   /* Collapsible drawer. The 0fr -> 1fr grid row is what animates open; same
      technique as .collapsible on the register form.
 
-     `overflow: hidden` has to sit on the panel, NOT on __inner. Overflow clips
-     to the *padding* box, and __inner carries the drawer's padding — so
-     clipping there leaves a ~40px strip of padding still painting the first
-     link after the row has collapsed to 0fr. The panel has no padding, so its
-     box really is zero when closed. The opacity fade is belt-and-braces on top.
+     Both elements need `overflow: hidden`, for two different reasons, and
+     removing either one breaks the drawer in its own way:
+
+       - on __inner, because a grid item only lets its track shrink below its
+         content size when it's a scroll container. Without it, `min-height: 0`
+         zeroes only the content box and __inner's 16px+24px padding sets a
+         ~40px floor on the track — a permanent gap under the header.
+       - on the panel, because overflow clips to the *padding* box. Clipping at
+         __inner would leave that same 40px of padding painting the first link
+         for a moment after the row has collapsed. The panel has no padding of
+         its own, so its box really is zero when closed.
+
+     The opacity fade is belt-and-braces on top of that.
 
      The border starts transparent rather than absent so fading it in costs no
      layout shift. Link stagger lives in animations.css. */
@@ -458,6 +466,7 @@
     visibility: visible;
   }
   .nav__mobile-panel__inner {
+    overflow: hidden;
     min-height: 0;
     padding: 16px 24px 24px;
   }
@@ -489,8 +498,34 @@
 
   /* Tighter spacing on smaller viewports */
   .section { padding: 48px 0; }
-  .hero { padding: 48px 0 40px; }
   .dash-main { padding: 24px 20px; }
+
+  /* ---- Hero on mobile ----
+     Desktop's 100deg gradient sweeps white -> tint left-to-right, which works
+     when the copy sits in the left column. On a single-column phone layout the
+     text spans the full width and runs straight over the exposed photo, so the
+     right-hand half of every line loses contrast. Re-angle it vertically and
+     hold it more opaque behind the text instead. */
+  .hero {
+    padding: 28px 0 36px;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.96) 0%,
+        rgba(255, 255, 255, 0.92) 50%,
+        rgba(228, 241, 244, 0.74) 100%
+      ),
+      url('/images/hero-bg.png');
+    background-size: cover;
+    background-position: center;
+  }
+  .hero__eyebrow { margin-bottom: 10px; }
+  .hero__sub {
+    margin-top: 14px;
+    font-size: 15.5px;
+  }
+  .hero__form { margin-top: 22px; }
+  .hero__stats { margin-top: 26px; }
 
   /* Reusable grids: stack on mobile */
   .form-row { grid-template-columns: 1fr; gap: 0; }
