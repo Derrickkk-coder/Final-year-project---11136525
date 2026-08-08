@@ -320,7 +320,6 @@ export default function EmployerDashboard() {
                             <th>Resume</th>
                             <th>AI Fit</th>
                             <th>Status</th>
-                            <th>Update status</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -340,7 +339,7 @@ export default function EmployerDashboard() {
                                     <a href={`tel:${app.phone}`} style={{ color: 'var(--teal-700)' }}>{app.phone}</a>
                                   ) : '—'}
                                 </td>
-                                <td>
+                                <td className="cell-email">
                                   {app.contactEmail || app.applicant?.email ? (
                                     <a href={`mailto:${app.contactEmail || app.applicant?.email}`} style={{ color: 'var(--teal-700)' }}>
                                       {app.contactEmail || app.applicant?.email}
@@ -378,21 +377,23 @@ export default function EmployerDashboard() {
                                     </button>
                                   )}
                                 </td>
-                                <td><StatusPill status={app.status} /></td>
                                 <td>
-                                  <select
-                                    value={app.status}
-                                    disabled={updatingId === app._id}
-                                    onChange={(e) => handleStatusChange(app, e.target.value)}
-                                    style={{ border: '1.5px solid var(--line)', borderRadius: 6, padding: '6px 8px', fontSize: 13 }}
-                                  >
-                                    {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-                                  </select>
+                                  <div className="cell-status">
+                                    <StatusPill status={app.status} />
+                                    <select
+                                      value={app.status}
+                                      disabled={updatingId === app._id}
+                                      onChange={(e) => handleStatusChange(app, e.target.value)}
+                                      aria-label={`Update status for ${app.applicant?.name || 'applicant'}`}
+                                    >
+                                      {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                                    </select>
+                                  </div>
                                 </td>
                               </tr>
                               {analyzeErrorId === app._id && (
                                 <tr>
-                                  <td colSpan={9} style={{ background: '#FFE9E1' }}>
+                                  <td colSpan={8} style={{ background: '#FFE9E1' }}>
                                     <span style={{ color: 'var(--coral-dark)', fontSize: 13 }}>
                                       Could not generate an analysis right now. Please try again in a moment.
                                     </span>
@@ -401,7 +402,7 @@ export default function EmployerDashboard() {
                               )}
                               {expandedIds.includes(app._id) && app.aiAnalysis && (
                                 <tr>
-                                  <td colSpan={9} style={{ background: 'var(--teal-100)' }}>
+                                  <td colSpan={8} style={{ background: 'var(--teal-100)' }}>
                                     <div style={{ padding: '8px 4px' }}>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                                         <strong style={{ fontSize: 13, color: 'var(--teal-700)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>

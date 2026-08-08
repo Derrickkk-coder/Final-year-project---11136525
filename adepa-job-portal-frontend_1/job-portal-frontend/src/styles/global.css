@@ -520,8 +520,20 @@
 .stat-card__label { font-size: 12.5px; color: var(--ink-soft); margin-top: 4px; font-weight: 600; }
 
 .table { width: 100%; border-collapse: collapse; background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--shadow-card); }
-.table th { text-align: left; font-size: 11.5px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-soft); padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--paper); }
+.table th { text-align: left; font-size: 11.5px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-soft); padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--paper); white-space: nowrap; }
 .table td { padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: 14px; }
+
+/* Long email addresses were the biggest single source of width pressure in the
+   applicants table — they'd push the last column out rather than wrapping. */
+.table .cell-email { max-width: 190px; word-break: break-word; }
+/* Status pill and its dropdown share one column; two columns for one piece of
+   information was a whole column of width for nothing. */
+.cell-status { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.cell-status select {
+  border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+  padding: 6px 8px; font-size: var(--text-sm);
+  background: var(--paper-raised); color: var(--ink);
+}
 .table tr:last-child td { border-bottom: none; }
 
 .status-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 4px 11px; border-radius: var(--radius-pill); }
@@ -537,7 +549,14 @@
 /* Desktop: show the table, hide the card list. Below the breakpoint (see media
    query), this flips — table hides, cards show. Keeps one JSX render with two
    markups rather than JS-based viewport detection. */
-.table-wrap { display: block; }
+/* Scrolls the table itself when it can't fit. Without this the overflow spills
+   out of .dash-main and is then clipped by `body { overflow-x: hidden }`, which
+   makes the rightmost column unreachable rather than merely off-screen. */
+.table-wrap {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
 .card-list { display: none; flex-direction: column; gap: 12px; }
 .data-card {
   background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-card);
