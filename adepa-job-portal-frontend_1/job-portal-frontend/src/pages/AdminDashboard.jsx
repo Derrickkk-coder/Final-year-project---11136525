@@ -9,6 +9,7 @@ import { SkeletonRows } from '../components/Skeleton.jsx'
 import {
   fetchEmployers, approveEmployer, rejectEmployer, fetchAdminStats,
   fetchAllUsers, setUserActiveStatus, fetchAllJobsAdmin, deleteJobAdmin,
+  fetchTestimonialsAdmin, setTestimonialStatus,
 } from '../api/admin.js'
 
 function formatDate(date) {
@@ -31,6 +32,7 @@ export default function AdminDashboard() {
   const [employers, setEmployers] = useState([])
   const [users, setUsers] = useState([])
   const [jobs, setJobs] = useState([])
+  const [testimonials, setTestimonials] = useState([])
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -57,6 +59,11 @@ export default function AdminDashboard() {
       fetchAllJobsAdmin()
         .then((data) => setJobs(data.jobs))
         .catch(() => setError('Could not load jobs right now.'))
+        .finally(() => setLoading(false))
+    } else if (tab === 'comments') {
+      fetchTestimonialsAdmin()
+        .then((data) => setTestimonials(data.testimonials))
+        .catch(() => setError('Could not load comments right now.'))
         .finally(() => setLoading(false))
     } else {
       fetchEmployers(tab)
@@ -137,6 +144,27 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleModerate = async (testimonial, status) => {
+    // Rejecting is reversible — it stays in the list and can be approved later —
+    // so it doesn't warrant a confirmation dialog
+    setActioningId(testimonial._id)
+    try {
+      await setTestimonialStatus(testimonial._id, status)
+      setTestimonials((prev) =>
+        prev.map((t) => (t._id === testimonial._id ? { ...t, status } : t))
+      )
+      toast.success(
+        status === 'approved'
+          ? `${testimonial.name}'s comment is now on the landing page.`
+          : `${testimonial.name}'s comment has been ${status === 'rejected' ? 'rejected' : 'reset to pending'}.`
+      )
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not update that comment.')
+    } finally {
+      setActioningId(null)
+    }
+  }
+
   const handleDeleteJob = async (job) => {
     const ok = await confirm({
       title: 'Remove this job posting?',
@@ -177,6 +205,9 @@ export default function AdminDashboard() {
           </a>
           <a href="#jobs" className={tab === 'jobs' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('jobs') }}>
             All jobs
+          </a>
+          <a href="#comments" className={tab === 'comments' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('comments') }}>
+            Comments
           </a>
         </div>
       </aside>
@@ -478,6 +509,79 @@ export default function AdminDashboard() {
                 icon="📭"
                 title="No jobs yet"
                 description="Job postings from employers will show up here."
+              />
+            )}
+          </>
+        )}
+
+        {!loading && !error && tab === 'comments' && (
+          <>
+            <h2 style={{ fontSize: 18, marginBottom: 4 }}>Landing page comments</h2>
+            <p style={{ color: 'var(--ink-soft)', fontSize: 'var(--text-sm)', marginTop: 0, marginBottom: 'var(--space-5)' }}>
+              Left by visitors without an account, so nothing appears on the site until you approve
+              it. Pending ones are at the top.
+            </p>
+
+            {testimonials.length > 0 ? (
+              <div className="mod-list">
+                {/* Pending first — that's the queue, the rest is history */}
+                {[...testimonials]
+                  .sort((a, b) => (a.status === 'pending' ? -1 : 0) - (b.status === 'pending' ? -1 : 0))
+                  .map((t) => (
+                    <div className={`mod-item is-${t.status}`} key={t._id}>
+                      <div className="mod-item__head">
+                        <div>
+                          <strong>{t.name}</strong>
+                          <span className="mod-item__meta">
+                            {t.authorType === 'employer' ? 'Employer' : 'Job seeker'}
+                            {t.role ? ` · ${t.role}` : ''}
+                            {t.company ? ` · ${t.company}` : ''}
+                            {` · ${'★'.repeat(t.rating || 5)}`}
+                            {` · ${formatDate(t.createdAt)}`}
+                          </span>
+                        </div>
+                        <StatusPill status={t.status === 'pending' ? 'pending' : t.status} />
+                      </div>
+
+                      <p className="mod-item__quote">&ldquo;{t.quote}&rdquo;</p>
+
+                      <div className="mod-item__actions">
+                        {t.status !== 'approved' && (
+                          <button
+                            className="btn btn--pine btn--sm"
+                            disabled={actioningId === t._id}
+                            onClick={() => handleModerate(t, 'approved')}
+                          >
+                            Approve
+                          </button>
+                        )}
+                        {t.status !== 'rejected' && (
+                          <button
+                            className="btn btn--danger-quiet btn--sm"
+                            disabled={actioningId === t._id}
+                            onClick={() => handleModerate(t, 'rejected')}
+                          >
+                            Reject
+                          </button>
+                        )}
+                        {t.status !== 'pending' && (
+                          <button
+                            className="btn btn--ghost btn--sm"
+                            disabled={actioningId === t._id}
+                            onClick={() => handleModerate(t, 'pending')}
+                          >
+                            Back to pending
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon="💬"
+                title="No comments yet"
+                description="When someone leaves a comment from the landing page, it'll appear here for review."
               />
             )}
           </>

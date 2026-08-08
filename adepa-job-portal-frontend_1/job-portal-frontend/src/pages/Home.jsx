@@ -5,6 +5,7 @@ import DepartureBoard from '../components/DepartureBoard.jsx'
 import JobCard from '../components/JobCard.jsx'
 import LogoStrip from '../components/LogoStrip.jsx'
 import Testimonials from '../components/Testimonials.jsx'
+import TestimonialForm from '../components/TestimonialForm.jsx'
 import Reveal from '../components/Reveal.jsx'
 import CountUp from '../components/CountUp.jsx'
 import EmptyState from '../components/EmptyState.jsx'
@@ -301,6 +302,9 @@ export default function Home() {
             <h2 className="section__title" style={{ marginTop: 8, marginBottom: 32 }}>Trusted by job seekers and employers</h2>
           </Reveal>
           <Testimonials />
+          <Reveal>
+            <TestimonialForm />
+          </Reveal>
         </div>
       </section>
 

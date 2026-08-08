@@ -35,6 +35,16 @@ export async function fetchAllJobsAdmin() {
   return data // { success, jobs }
 }
 
+export async function fetchTestimonialsAdmin(status) {
+  const { data } = await client.get('/admin/testimonials', { params: status ? { status } : {} })
+  return data // { success, testimonials }
+}
+
+export async function setTestimonialStatus(id, status) {
+  const { data } = await client.put(`/admin/testimonials/${id}/status`, { status })
+  return data // { success, testimonial }
+}
+
 export async function deleteJobAdmin(id) {
   const { data } = await client.delete(`/admin/jobs/${id}`)
   return data // { success, message }

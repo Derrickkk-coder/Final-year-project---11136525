@@ -448,12 +448,114 @@
 .section__desc { color: var(--ink-soft); margin-top: var(--space-2); max-width: 52ch; line-height: var(--leading-normal); }
 
 /* ============ Testimonials ============ */
+/* Scrolling row rather than a fixed 3-up grid, matching the employer logo
+   strip — real comments are appended to the seeded three, so the count grows
+   and a grid would eventually reflow into ragged rows. */
+.testimonial-marquee {
+  overflow: hidden;
+  /* Feather both edges so cards slide in and out instead of being chopped */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+}
+.testimonial-marquee__track {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-5);
+  width: max-content;
+  padding: var(--space-1) 0;
+  /* Slower than the logo strip: these have to be readable as they pass */
+  animation: marquee 60s linear infinite;
+}
+/* Stop it so a visitor can actually finish reading one */
+.testimonial-marquee:hover .testimonial-marquee__track,
+.testimonial-marquee:focus-within .testimonial-marquee__track {
+  animation-play-state: paused;
+}
+
 .testimonial-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .testimonial-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-card); padding: 22px; box-shadow: var(--shadow-card); }
+/* Fixed width inside the marquee, so the -50% loop distance is predictable and
+   cards don't stretch to fill the track */
+.testimonial-marquee__track .testimonial-card {
+  width: 330px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+.testimonial-marquee__track .testimonial-card__quote { flex: 1; }
 .testimonial-card__stars { color: var(--coral); font-size: 14px; margin-bottom: 12px; letter-spacing: 2px; }
 .testimonial-card__quote { font-size: 14.5px; line-height: 1.6; color: var(--ink); margin-bottom: 16px; }
 .testimonial-card__author { font-size: 13px; font-weight: 700; color: var(--teal-700); }
 .testimonial-card__role { font-size: 12px; color: var(--ink-soft); }
+
+/* ============ Comment moderation (admin) ============ */
+.mod-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.mod-item {
+  background: var(--paper-raised); border: 1px solid var(--line);
+  border-left: 4px solid var(--line);
+  border-radius: var(--radius-card); box-shadow: var(--shadow-card);
+  padding: var(--space-4) var(--space-5);
+}
+/* Left edge shows where each comment stands, so the queue is scannable */
+.mod-item.is-pending { border-left-color: #B5710F; }
+.mod-item.is-approved { border-left-color: var(--success); }
+.mod-item.is-rejected { border-left-color: var(--coral-dark); opacity: 0.72; }
+.mod-item__head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: var(--space-3); margin-bottom: var(--space-3); flex-wrap: wrap;
+}
+.mod-item__meta {
+  display: block; font-size: var(--text-xs); color: var(--ink-faint);
+  font-weight: 600; margin-top: 2px;
+}
+.mod-item__quote {
+  margin: 0 0 var(--space-4); font-size: var(--text-base);
+  color: var(--ink); line-height: var(--leading-normal);
+}
+.mod-item__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+/* ============ Public comment form (landing page) ============ */
+.comment-box {
+  margin-top: var(--space-8);
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-6);
+}
+/* Collapsed state: a prompt with the button beside it */
+.comment-box--prompt {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-5); flex-wrap: wrap;
+}
+.comment-box--prompt strong { font-size: var(--text-md); }
+.comment-box--prompt p {
+  margin: 4px 0 0; color: var(--ink-soft); font-size: var(--text-base); max-width: 52ch;
+}
+.comment-box__title { font-size: var(--text-lg); margin-bottom: var(--space-5); }
+.comment-box__optional { font-weight: 400; color: var(--ink-faint); }
+.comment-box__actions {
+  display: flex; justify-content: flex-end; gap: var(--space-2); flex-wrap: wrap;
+}
+.comment-box__note {
+  margin: var(--space-4) 0 0; font-size: var(--text-xs); color: var(--ink-faint); text-align: right;
+}
+.comment-box--done {
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  background: var(--success-bg); border-color: transparent;
+  animation: riseIn 0.4s var(--ease-out-soft) both;
+}
+.comment-box__thanks {
+  display: block; font-family: var(--font-display); font-size: var(--text-lg);
+  color: #14603C; margin-bottom: 4px;
+}
+.comment-box--done p { margin: 0 0 var(--space-4); color: #14603C; font-size: var(--text-base); line-height: 1.55; }
+.comment-box--done p:last-child { margin-bottom: 0; }
+.comment-box__tick {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--success); color: #fff; font-weight: 800; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+}
 
 /* ============ Category pills (stats section) ============ */
 .category-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }

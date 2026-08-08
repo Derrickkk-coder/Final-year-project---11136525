@@ -296,7 +296,8 @@
    switched off as well, not merely sped up: an infinite marquee and an
    infinite pulse would otherwise sit frozen at an arbitrary frame. */
 @media (prefers-reduced-motion: reduce) {
-  .logo-marquee__track {
+  .logo-marquee__track,
+  .testimonial-marquee__track {
     animation: none;
     transform: none;
   }

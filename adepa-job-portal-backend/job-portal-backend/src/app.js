@@ -8,8 +8,15 @@ import adminRoutes from './routes/adminRoutes.js'
 import notificationRoutes from './routes/notificationRoutes.js'
 import cvRoutes from './routes/cvRoutes.js'
 import statsRoutes from './routes/statsRoutes.js'
+import testimonialRoutes from './routes/testimonialRoutes.js'
 
 const app = express()
+
+// Render (and most hosts) put a proxy in front of the app, so without this
+// req.ip is the proxy's address for every request. The testimonial endpoint
+// throttles anonymous submissions per IP, and would otherwise see one shared
+// address and lock out everyone after the first submission.
+app.set('trust proxy', 1)
 
 // ---- Core middleware ----
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }))
@@ -30,6 +37,7 @@ app.use('/api/admin', adminRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/cv', cvRoutes)
 app.use('/api/stats', statsRoutes)
+app.use('/api/testimonials', testimonialRoutes)
 
 // ---- Error handling (must be last) ----
 app.use(notFound)
