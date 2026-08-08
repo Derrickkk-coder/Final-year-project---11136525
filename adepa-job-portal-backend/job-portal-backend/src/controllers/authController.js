@@ -3,6 +3,7 @@ import { generateToken } from '../utils/generateToken.js'
 import { sendEmail, verificationEmailTemplate, passwordResetEmailTemplate } from '../utils/sendEmail.js'
 import { generateVerificationToken, hashToken } from '../utils/generateVerificationToken.js'
 import { cleanSkills } from '../utils/cleanSkills.js'
+import { STUDENT_LEVELS } from '../utils/studentFriendly.js'
 
 const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -265,6 +266,7 @@ export async function updateProfile(req, res, next) {
     const {
       name, company, companyDescription, companyWebsite, profilePictureUrl,
       bio, location, phone, resumeUrl, skills, education, experience, certifications,
+      student,
     } = req.body
 
     if (name !== undefined) {
@@ -293,6 +295,18 @@ export async function updateProfile(req, res, next) {
     }
     if (certifications !== undefined) {
       req.user.certifications = cleanEntries(certifications, ['name', 'issuer', 'year'])
+    }
+
+    if (student !== undefined) {
+      // Level is validated by the schema enum, so pass undefined rather than ''
+      // for "not chosen" — an empty string would fail validation.
+      req.user.student = {
+        isStudent: Boolean(student?.isStudent),
+        institution: String(student?.institution || '').trim(),
+        level: STUDENT_LEVELS.includes(student?.level) ? student.level : undefined,
+        fieldOfStudy: String(student?.fieldOfStudy || '').trim(),
+        graduationYear: String(student?.graduationYear || '').trim(),
+      }
     }
 
     await req.user.save()

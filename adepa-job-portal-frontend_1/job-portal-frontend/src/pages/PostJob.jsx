@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { categories, jobTypes } from '../data/mockJobs.js' // static option lists only
+import { categories, jobTypes, experienceLevels } from '../data/mockJobs.js' // static option lists only
 import { createJob } from '../api/jobs.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import SkillsInput from '../components/SkillsInput.jsx'
@@ -14,7 +14,7 @@ export default function PostJob() {
   const [form, setForm] = useState({
     title: '', location: '', type: 'Full-time', remote: 'On-site', category: 'Engineering',
     salary: '', closingAt: '', description: '', responsibilities: '', requirements: '',
-    skills: [],
+    skills: [], experienceLevel: '',
   })
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
@@ -43,6 +43,7 @@ export default function PostJob() {
         responsibilities: form.responsibilities.split('\n').map((s) => s.trim()).filter(Boolean),
         requirements: form.requirements.split('\n').map((s) => s.trim()).filter(Boolean),
         skills: form.skills,
+        experienceLevel: form.experienceLevel,
       })
       setSubmitted(true)
     } catch (err) {
@@ -125,6 +126,18 @@ export default function PostJob() {
               <option>Remote</option>
             </select>
           </div>
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="experienceLevel">Experience level</label>
+          <select id="experienceLevel" value={form.experienceLevel} onChange={update('experienceLevel')}>
+            <option value="">Not specified</option>
+            {experienceLevels.map((l) => <option key={l}>{l}</option>)}
+          </select>
+          <span className="hint">
+            Marking a role Entry level puts it in the students &amp; graduates feed, alongside
+            internships, national service and graduate trainee posts.
+          </span>
         </div>
 
         <div className="form-row">

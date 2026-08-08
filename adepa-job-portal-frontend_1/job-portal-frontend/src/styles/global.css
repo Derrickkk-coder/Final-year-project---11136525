@@ -360,6 +360,34 @@
 }
 .tag--gold { background: #FFE9E1; color: var(--coral-dark); }
 .tag--rust { background: #FFE9E1; color: var(--coral-dark); }
+.tag--student { background: var(--success-bg); color: var(--success); }
+
+/* ============ Student & graduate mode ============ */
+/* Distinct ground so the section reads as a separate shelf from the listings
+   above it, without needing its own heavy border */
+.student-section { background: var(--teal-100); }
+
+/* Checkbox filter on the jobs board, aligned with the select-based filters
+   beside it rather than sitting on the baseline */
+.filter-check {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-size: var(--text-base); font-weight: 600; color: var(--ink);
+  padding-bottom: 11px; cursor: pointer; white-space: nowrap;
+}
+.filter-check input { width: 16px; height: 16px; accent-color: var(--teal-700); cursor: pointer; }
+
+/* Profile toggle: the label wraps the control so the whole block is clickable */
+.student-toggle {
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  cursor: pointer; padding: var(--space-4);
+  background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-card);
+}
+.student-toggle input {
+  width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0;
+  accent-color: var(--teal-700); cursor: pointer;
+}
+.student-toggle > span { display: flex; flex-direction: column; gap: 3px; }
+.student-toggle strong { font-size: var(--text-base); }
 
 .ticket__stub {
   background: transparent; color: var(--ink); padding: 0; display: flex; flex-direction: column;

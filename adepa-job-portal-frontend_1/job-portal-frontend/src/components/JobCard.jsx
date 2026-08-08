@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { isStudentFriendly } from '../utils/studentFriendly.js'
 
 function daysLeft(closingAt) {
   const diff = Math.ceil((new Date(closingAt) - new Date()) / (1000 * 60 * 60 * 24))
@@ -49,6 +50,9 @@ export default function JobCard({ job }) {
         <div className="ticket__tags">
           <span className="tag">{job.type}</span>
           <span className="tag">{job.category}</span>
+          {/* Why this role is in the students & graduates feed — shown so the
+              feed is self-explanatory rather than looking arbitrary */}
+          {isStudentFriendly(job) && <span className="tag tag--student">Student &amp; graduate</span>}
           {closingSoon && <span className="tag tag--rust">Closes in {left}d</span>}
           {!closingSoon && <span className="tag tag--gold">{job.applicantsCount || 0} applicants</span>}
         </div>

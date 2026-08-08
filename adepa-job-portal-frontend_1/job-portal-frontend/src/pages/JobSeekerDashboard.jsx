@@ -23,6 +23,7 @@ export default function JobSeekerDashboard() {
 
   const [recommended, setRecommended] = useState([])
   const [recommendedBasis, setRecommendedBasis] = useState('recent')
+  const [studentMode, setStudentMode] = useState(false)
   const [recommendedLoading, setRecommendedLoading] = useState(true)
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function JobSeekerDashboard() {
       .then((data) => {
         setRecommended(data.jobs)
         setRecommendedBasis(data.basis || 'recent')
+        setStudentMode(Boolean(data.studentMode))
       })
       .catch(() => setRecommended([]))
       .finally(() => setRecommendedLoading(false))
@@ -142,8 +144,19 @@ export default function JobSeekerDashboard() {
         {!recommendedLoading && recommended.length > 0 && (
           <div style={{ marginBottom: 32 }}>
             <h2 style={{ fontSize: 18, marginBottom: 4 }}>
-              {recommendedBasis === 'skills' ? 'Recommended jobs for you' : 'Jobs you might like'}
+              {recommendedBasis === 'student'
+                ? 'Opportunities for students & graduates'
+                : recommendedBasis === 'skills'
+                  ? 'Recommended jobs for you'
+                  : 'Jobs you might like'}
             </h2>
+            {/* Say so when student mode is reordering the list, so a lower match
+                appearing above a higher one is explained rather than puzzling */}
+            {studentMode && recommendedBasis !== 'student' && (
+              <p style={{ color: 'var(--success)', fontSize: 'var(--text-sm)', margin: '0 0 4px', fontWeight: 600 }}>
+                Student mode on — internships, national service and entry-level roles come first.
+              </p>
+            )}
             {/* Captioned from the basis the API reports, so the heading never
                 implies a skill match when the list is really just recent roles. */}
             <p style={{ color: 'var(--ink-soft)', fontSize: 13, marginBottom: 14 }}>
@@ -157,6 +170,15 @@ export default function JobSeekerDashboard() {
                 </>
               )}
               {recommendedBasis === 'category' && "Based on the roles you've applied to before."}
+              {recommendedBasis === 'student' && (
+                <>
+                  Internships, national service and entry-level roles.{' '}
+                  <Link to="/profile" style={{ color: 'var(--teal-700)', fontWeight: 600 }}>
+                    Add your skills
+                  </Link>{' '}
+                  to get these matched to you.
+                </>
+              )}
               {recommendedBasis === 'recent' && (
                 <>
                   The latest open roles.{' '}

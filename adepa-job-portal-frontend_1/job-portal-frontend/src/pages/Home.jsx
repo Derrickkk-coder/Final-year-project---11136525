@@ -31,6 +31,7 @@ export default function Home() {
   const [featuredJobs, setFeaturedJobs] = useState([])
   const [totalOpenJobs, setTotalOpenJobs] = useState(0)
   const [jobsLoading, setJobsLoading] = useState(true)
+  const [studentJobs, setStudentJobs] = useState([])
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -44,6 +45,13 @@ export default function Home() {
         setTotalOpenJobs(0)
       })
       .finally(() => setJobsLoading(false))
+
+    // Public — no login needed, so a student landing here sees relevant
+    // opportunities before deciding whether to sign up. The section hides itself
+    // when there are none rather than showing an empty shelf.
+    fetchJobs({ studentFriendly: true, limit: 3 })
+      .then((data) => setStudentJobs(data.jobs))
+      .catch(() => setStudentJobs([]))
   }, [])
 
   const handleSearch = (e) => {
@@ -140,6 +148,34 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {studentJobs.length > 0 && (
+        <section className="section student-section">
+          <div className="container">
+            <Reveal className="section__head">
+              <div>
+                <span className="eyebrow">Just starting out</span>
+                <h2 className="section__title">Opportunities for students &amp; graduates</h2>
+                <p className="section__desc">
+                  Internships, national service placements, graduate trainee programmes and
+                  entry-level roles — the openings that don't ask for five years' experience.
+                </p>
+              </div>
+              <a href="/jobs?studentFriendly=true" className="btn btn--outline-teal">
+                See all
+              </a>
+            </Reveal>
+
+            <div className="listings-grid">
+              {studentJobs.map((job, i) => (
+                <Reveal key={job._id} delay={i * 90}>
+                  <JobCard job={job} />
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="section" style={{ background: '#fff', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
         <div className="container">

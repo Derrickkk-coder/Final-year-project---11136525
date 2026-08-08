@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { categories, jobTypes } from '../data/mockJobs.js' // static option lists only
+import { categories, jobTypes, experienceLevels } from '../data/mockJobs.js' // static option lists only
 import { fetchJobById, updateJob } from '../api/jobs.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import SkillsInput from '../components/SkillsInput.jsx'
@@ -20,7 +20,7 @@ export default function EditJob() {
   const [form, setForm] = useState({
     title: '', location: '', type: 'Full-time', remote: 'On-site', category: 'Engineering',
     salary: '', closingAt: '', description: '', responsibilities: '', requirements: '',
-    skills: [],
+    skills: [], experienceLevel: '',
   })
 
   useEffect(() => {
@@ -46,6 +46,7 @@ export default function EditJob() {
           responsibilities: (job.responsibilities || []).join('\n'),
           requirements: (job.requirements || []).join('\n'),
           skills: job.skills || [],
+          experienceLevel: job.experienceLevel || '',
         })
       })
       .catch((err) => {
@@ -81,6 +82,7 @@ export default function EditJob() {
         responsibilities: form.responsibilities.split('\n').map((s) => s.trim()).filter(Boolean),
         requirements: form.requirements.split('\n').map((s) => s.trim()).filter(Boolean),
         skills: form.skills,
+        experienceLevel: form.experienceLevel,
       })
       setSaved(true)
     } catch (err) {
@@ -170,6 +172,18 @@ export default function EditJob() {
               <option>Remote</option>
             </select>
           </div>
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="experienceLevel">Experience level</label>
+          <select id="experienceLevel" value={form.experienceLevel} onChange={update('experienceLevel')}>
+            <option value="">Not specified</option>
+            {experienceLevels.map((l) => <option key={l}>{l}</option>)}
+          </select>
+          <span className="hint">
+            Marking a role Entry level puts it in the students &amp; graduates feed, alongside
+            internships, national service and graduate trainee posts.
+          </span>
         </div>
 
         <div className="form-row">

@@ -99,6 +99,29 @@ const userSchema = new mongoose.Schema(
         year: { type: String, trim: true, default: '' },
       },
     ],
+    // ---- Student / recent graduate ----
+    // Opt-in: isStudent drives whether recommendations prioritise internships,
+    // national service and entry-level roles. Kept as its own group rather than
+    // squeezed into education[] because that array is a history of what someone
+    // has completed, whereas this is a statement about where they are now.
+    student: {
+      isStudent: { type: Boolean, default: false },
+      institution: { type: String, trim: true, default: '' },
+      level: {
+        type: String,
+        enum: [
+          'Level 100',
+          'Level 200',
+          'Level 300',
+          'Level 400',
+          'Postgraduate',
+          'Recent graduate',
+          'National Service',
+        ],
+      },
+      fieldOfStudy: { type: String, trim: true, default: '' },
+      graduationYear: { type: String, trim: true, default: '' },
+    },
     // Cached AI CV review. select:false so it doesn't ride along on every
     // /auth/me response — the CV endpoints ask for it explicitly.
     //

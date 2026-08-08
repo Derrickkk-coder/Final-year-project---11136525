@@ -3,6 +3,11 @@ import Application from '../models/Application.js'
 import { notifyManyUsers } from '../utils/notify.js'
 import { withMatch } from '../utils/matchScore.js'
 import { cleanSkills } from '../utils/cleanSkills.js'
+import {
+  studentFriendlyQuery,
+  isStudentFriendly,
+  fieldMatchesCategory,
+} from '../utils/studentFriendly.js'
 
 // Tells seekers who've applied in this category before that a new role landed.
 // Same signal the "Jobs you might like" panel already uses (category of past
@@ -42,7 +47,7 @@ async function notifySeekersOfNewJob(job) {
 export async function createJob(req, res, next) {
   try {
     const {
-      title, location, type, remote, salary,
+      title, location, type, remote, salary, experienceLevel,
       category, description, responsibilities, requirements, skills, closingAt,
     } = req.body
 
@@ -59,6 +64,8 @@ export async function createJob(req, res, next) {
       type,
       remote,
       salary,
+      // Empty string would fail the enum, so send nothing when unclassified
+      experienceLevel: experienceLevel || undefined,
       category,
       description,
       responsibilities: responsibilities || [],
@@ -82,12 +89,18 @@ export async function createJob(req, res, next) {
 // Supports query params: q, category, type, location, page, limit
 export async function getJobs(req, res, next) {
   try {
-    const { q, category, type, location, page = 1, limit = 20 } = req.query
+    const { q, category, type, location, studentFriendly, page = 1, limit = 20 } = req.query
 
     const filter = { status: 'open' }
 
     if (q) {
       filter.$text = { $search: q }
+    }
+    // Powers the public "Opportunities for students & graduates" feed and the
+    // jobs-board toggle. Nested under $and because studentFriendlyQuery is
+    // itself an $or, and a second bare $or on the filter would overwrite it.
+    if (studentFriendly === 'true') {
+      filter.$and = [studentFriendlyQuery]
     }
     if (category && category !== 'All categories') {
       filter.category = category
@@ -180,6 +193,25 @@ export async function getRecommendedJobs(req, res, next) {
 
     const appliedJobIds = myApplications.map((a) => a.job?._id).filter(Boolean)
     const skills = req.user.skills || []
+    const student = req.user.student
+    const isStudent = Boolean(student?.isStudent)
+
+    // Students get internships, national service and entry-level roles lifted
+    // above everything else, then ordered by match within each group. A partition
+    // rather than a score bonus: a bonus would be an invented number competing
+    // with the real coverage figure the UI displays, and "why is this 92% below
+    // that 84%?" is a question the interface couldn't then answer.
+    const studentFirst = (a, b) => {
+      if (!isStudent) return 0
+      const aFriendly = isStudentFriendly(a)
+      const bFriendly = isStudentFriendly(b)
+      if (aFriendly !== bFriendly) return aFriendly ? -1 : 1
+      // Within a group, a role in their field of study edges ahead
+      const aField = fieldMatchesCategory(student.fieldOfStudy, a.category)
+      const bField = fieldMatchesCategory(student.fieldOfStudy, b.category)
+      if (aField !== bField) return aField ? -1 : 1
+      return 0
+    }
 
     // ---- 1. Skill match ----
     if (skills.length > 0) {
@@ -195,14 +227,18 @@ export async function getRecommendedJobs(req, res, next) {
       const scored = openJobs
         .map((job) => withMatch(job, skills))
         .filter(Boolean)
-        // Ties break on how many skills actually matched, so an 8-of-9 role
-        // ranks above a 4-of-5 at the same percentage. See the note in
-        // matchScore.js about small denominators.
-        .sort((a, b) => b.matchScore - a.matchScore || b.matchedCount - a.matchedCount)
+        // Student-friendly first (for students), then by match. Ties break on
+        // how many skills actually matched, so an 8-of-9 role ranks above a
+        // 4-of-5 at the same percentage — see the note in matchScore.js about
+        // small denominators.
+        .sort(
+          (a, b) =>
+            studentFirst(a, b) || b.matchScore - a.matchScore || b.matchedCount - a.matchedCount
+        )
         .slice(0, RECOMMENDATION_LIMIT)
 
       if (scored.length > 0) {
-        return res.json({ success: true, jobs: scored, basis: 'skills' })
+        return res.json({ success: true, jobs: scored, basis: 'skills', studentMode: isStudent })
       }
       // No job matched a single skill — fall through to the weaker signals
       // rather than showing nothing.
@@ -218,22 +254,57 @@ export async function getRecommendedJobs(req, res, next) {
         _id: { $nin: appliedJobIds },
       })
         .sort({ createdAt: -1 })
-        .limit(RECOMMENDATION_LIMIT)
+        .limit(RECOMMENDATION_LIMIT * 2)
+        .lean()
 
       if (byCategory.length > 0) {
-        return res.json({ success: true, jobs: byCategory, basis: 'category' })
+        return res.json({
+          success: true,
+          jobs: byCategory.sort(studentFirst).slice(0, RECOMMENDATION_LIMIT),
+          basis: 'category',
+          studentMode: isStudent,
+        })
       }
     }
 
-    // ---- 3. Most recent open roles ----
+    // ---- 3. Recent open roles ----
+    // A student with no skills and no history gets the student feed rather than
+    // whatever happens to be newest — the most useful thing we can offer when
+    // there's nothing personal to match on yet.
+    if (isStudent) {
+      const studentRecent = await Job.find({
+        status: 'open',
+        _id: { $nin: appliedJobIds },
+        ...studentFriendlyQuery,
+      })
+        .sort({ createdAt: -1 })
+        .limit(RECOMMENDATION_LIMIT)
+        .lean()
+
+      if (studentRecent.length > 0) {
+        return res.json({
+          success: true,
+          jobs: studentRecent,
+          basis: 'student',
+          studentMode: true,
+        })
+      }
+    }
+
     const recent = await Job.find({
       status: 'open',
       _id: { $nin: appliedJobIds },
     })
       .sort({ createdAt: -1 })
       .limit(RECOMMENDATION_LIMIT)
+      .lean()
 
-    res.json({ success: true, jobs: recent, basis: 'recent' })
+    res.json({
+      success: true,
+      jobs: recent.sort(studentFirst),
+      basis: 'recent',
+      studentMode: isStudent,
+    })
   } catch (err) {
     next(err)
   }
@@ -260,6 +331,11 @@ export async function updateJob(req, res, next) {
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) job[field] = req.body[field]
     })
+
+    // Separate because clearing it needs undefined, not the '' the form sends
+    if (req.body.experienceLevel !== undefined) {
+      job.experienceLevel = req.body.experienceLevel || undefined
+    }
 
     // Normalised the same way as on create, so an edit can't reintroduce
     // untrimmed or duplicated tags

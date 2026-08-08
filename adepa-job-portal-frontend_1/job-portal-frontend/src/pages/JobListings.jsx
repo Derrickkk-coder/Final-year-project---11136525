@@ -12,6 +12,8 @@ export default function JobListings() {
   const [category, setCategory] = useState(searchParams.get('category') || 'All categories')
   const [type, setType] = useState('All types')
   const [location, setLocation] = useState('All locations')
+  // Deep-linkable, so the homepage "See all" lands here with it already on
+  const [studentOnly, setStudentOnly] = useState(searchParams.get('studentFriendly') === 'true')
 
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -25,20 +27,29 @@ export default function JobListings() {
       setLoading(true)
       setError('')
 
-      fetchJobs({ q: query, category, type, location })
+      fetchJobs({
+        q: query,
+        category,
+        type,
+        location,
+        // Only send it when on — an explicit `false` would still be a string in
+        // the query and the server checks for 'true'
+        ...(studentOnly ? { studentFriendly: true } : {}),
+      })
         .then((data) => setJobs(data.jobs))
         .catch(() => setError('Could not load jobs right now. Please try again.'))
         .finally(() => setLoading(false))
     }, 300)
 
     return () => clearTimeout(timeout)
-  }, [query, category, type, location, reloadKey])
+  }, [query, category, type, location, studentOnly, reloadKey])
 
   const clearFilters = () => {
     setQuery('')
     setCategory('All categories')
     setType('All types')
     setLocation('All locations')
+    setStudentOnly(false)
   }
 
   return (
@@ -69,6 +80,15 @@ export default function JobListings() {
             {locations.map((l) => <option key={l}>{l}</option>)}
           </select>
         </div>
+        <label className="filter-check">
+          <input
+            type="checkbox"
+            checked={studentOnly}
+            onChange={(e) => setStudentOnly(e.target.checked)}
+          />
+          Students &amp; graduates only
+        </label>
+
         <button className="btn btn--ghost btn--sm" type="button" onClick={clearFilters}>
           Clear
         </button>

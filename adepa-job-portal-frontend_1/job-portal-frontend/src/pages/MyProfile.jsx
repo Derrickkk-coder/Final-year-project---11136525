@@ -8,6 +8,7 @@ import ProfileCompletion from '../components/ProfileCompletion.jsx'
 import CvCard from '../components/CvCard.jsx'
 import EntryList from '../components/EntryList.jsx'
 import SkillsInput from '../components/SkillsInput.jsx'
+import { studentLevels } from '../data/mockJobs.js'
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2MB
 
@@ -45,7 +46,20 @@ export default function MyProfile() {
     education: user?.education || [],
     experience: user?.experience || [],
     certifications: user?.certifications || [],
+    student: {
+      isStudent: user?.student?.isStudent || false,
+      institution: user?.student?.institution || '',
+      level: user?.student?.level || '',
+      fieldOfStudy: user?.student?.fieldOfStudy || '',
+      graduationYear: user?.student?.graduationYear || '',
+    },
   })
+
+  const setStudent = (key) => (e) => {
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value
+    setForm((f) => ({ ...f, student: { ...f.student, [key]: value } }))
+    setSaved(false)
+  }
 
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(user?.profilePictureUrl || '')
@@ -204,6 +218,71 @@ export default function MyProfile() {
             <span className="hint">
               Your login email can't be changed here — it's what your account is verified against.
             </span>
+          </div>
+
+          <h2 className="profile-form__section">Student or recent graduate</h2>
+
+          <label className="student-toggle">
+            <input
+              type="checkbox"
+              checked={form.student.isStudent}
+              onChange={setStudent('isStudent')}
+            />
+            <span>
+              <strong>I'm a student or recent graduate</strong>
+              <span className="hint">
+                Turning this on prioritises internships, national service and graduate trainee
+                posts, and entry-level roles, in your recommendations.
+              </span>
+            </span>
+          </label>
+
+          {/* Only asked for once the toggle is on — no point collecting a level
+              from someone who isn't a student. */}
+          <div className={`collapsible ${form.student.isStudent ? 'is-open' : ''}`}>
+            <div className="collapsible__inner">
+              <div style={{ paddingTop: 'var(--space-5)' }}>
+                <div className="form-row">
+                  <div className="form-field">
+                    <label htmlFor="institution">Institution</label>
+                    <input
+                      id="institution"
+                      value={form.student.institution}
+                      onChange={setStudent('institution')}
+                      placeholder="e.g. University of Ghana"
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label htmlFor="level">Level</label>
+                    <select id="level" value={form.student.level} onChange={setStudent('level')}>
+                      <option value="">Select a level…</option>
+                      {studentLevels.map((l) => <option key={l}>{l}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-field">
+                    <label htmlFor="fieldOfStudy">Field of study</label>
+                    <input
+                      id="fieldOfStudy"
+                      value={form.student.fieldOfStudy}
+                      onChange={setStudent('fieldOfStudy')}
+                      placeholder="e.g. Information Technology"
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label htmlFor="graduationYear">Graduating / graduated</label>
+                    <input
+                      id="graduationYear"
+                      value={form.student.graduationYear}
+                      onChange={setStudent('graduationYear')}
+                      placeholder="e.g. 2026"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <h2 className="profile-form__section">Skills</h2>

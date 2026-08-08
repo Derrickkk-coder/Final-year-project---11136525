@@ -22,10 +22,21 @@ const jobSchema = new mongoose.Schema(
       required: [true, 'Location is required'],
       trim: true,
     },
+    // 'National Service' and 'Graduate trainee' are distinct engagement types in
+    // Ghana rather than shades of full-time, and putting them here — alongside
+    // the Internship that already existed — is what lets the student feed be a
+    // real query instead of guesswork over job titles.
     type: {
       type: String,
-      enum: ['Full-time', 'Part-time', 'Contract', 'Internship'],
+      enum: ['Full-time', 'Part-time', 'Contract', 'Internship', 'National Service', 'Graduate trainee'],
       required: [true, 'Job type is required'],
+    },
+    // Deliberately optional with no default: jobs posted before this field
+    // existed are genuinely unclassified, and defaulting them to 'Entry level'
+    // would sweep senior roles into the student feed.
+    experienceLevel: {
+      type: String,
+      enum: ['Entry level', 'Mid level', 'Senior level'],
     },
     remote: {
       type: String,
