@@ -87,9 +87,9 @@ export default function Navbar() {
 
           While closed it collapses to zero height and goes `visibility: hidden`,
           which also takes the links out of the tab order and hides them from
-          screen readers, so keeping them in the DOM costs nothing. Padding sits
-          on the inner wrapper: on the panel itself it would stay visible as a
-          stripe when the rows collapse to 0fr. */}
+          screen readers, so keeping them in the DOM costs nothing. The inner
+          wrapper exists to carry the drawer's padding away from the element
+          doing the clipping — see the overflow note in global.css. */}
       <div
         id="nav-mobile-panel"
         className={`nav__mobile-panel ${menuOpen ? 'is-open' : ''}`}
