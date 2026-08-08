@@ -1,0 +1,249 @@
+/* ============================================================
+   Animations — landing page motion layer
+   ------------------------------------------------------------
+   Everything here is CSS-driven. The only JavaScript involved is
+   an IntersectionObserver (see src/hooks/useReveal.js) that adds
+   `.is-visible` to a `.reveal` element once it scrolls into view.
+
+   Reduced motion: tokens.css already collapses every animation and
+   transition duration to ~0 under `prefers-reduced-motion: reduce`.
+   Every effect below is written so that its *end state* is the
+   readable one, which means it degrades to "content just appears"
+   rather than "content stays invisible".
+   ============================================================ */
+
+/* ---- Easing: a soft, overshoot-free curve used throughout ---- */
+:root {
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ============ Keyframes ============ */
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInFromRight {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Split-flap nod for the departure board rows — they hinge down from the top,
+   the way a real flap-board row turns over. */
+@keyframes flapDown {
+  from { opacity: 0; transform: perspective(400px) rotateX(-72deg); }
+  to   { opacity: 1; transform: perspective(400px) rotateX(0deg); }
+}
+
+/* Underline sweep behind the coral words in the hero headline */
+@keyframes sweepIn {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.86); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Continuous, seamless logo scroll. The track holds two copies of the list,
+   so travelling exactly -50% lands copy 2 where copy 1 began. */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* Slow breathing glow on the "OPEN" status pills — signals liveness */
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+/* ============ Load-in: staggered hero entrance ============
+   `both` fill mode matters here — it applies the `from` frame before the
+   delay elapses, so nothing flashes at full opacity first. */
+.anim-rise {
+  animation: riseIn 0.72s var(--ease-out-soft) both;
+}
+.anim-slide-right {
+  animation: slideInFromRight 0.8s var(--ease-out-soft) both;
+}
+
+/* Delay utilities, in 90ms steps */
+.anim-d1 { animation-delay: 0.09s; }
+.anim-d2 { animation-delay: 0.18s; }
+.anim-d3 { animation-delay: 0.27s; }
+.anim-d4 { animation-delay: 0.36s; }
+.anim-d5 { animation-delay: 0.45s; }
+.anim-d6 { animation-delay: 0.54s; }
+
+/* ============ Scroll reveal ============
+   Paired with the useReveal hook. Kept as a transition (not an animation) so
+   the delay can be set per-instance from JSX without a class explosion. */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.7s var(--ease-out-soft),
+    transform 0.7s var(--ease-out-soft);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============ Hero headline underline ============ */
+.hero__title em {
+  position: relative;
+  display: inline-block;
+}
+.hero__title em::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.06em;
+  height: 0.14em;
+  background: var(--coral);
+  opacity: 0.28;
+  border-radius: 999px;
+  transform-origin: left center;
+  animation: sweepIn 0.85s var(--ease-out-soft) 0.6s both;
+}
+
+/* ============ Departure board ============ */
+.board__row--flap {
+  animation: flapDown 0.55s var(--ease-out-soft) both;
+  transform-origin: top center;
+  backface-visibility: hidden;
+}
+.flap--status {
+  animation: livePulse 2.8s ease-in-out infinite;
+}
+
+/* ============ Logo marquee ============ */
+.logo-marquee {
+  overflow: hidden;
+  /* Feather both edges so names slide in and out instead of being chopped */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 10%, #000 90%, transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0, #000 10%, #000 90%, transparent 100%);
+}
+.logo-marquee__track {
+  display: flex;
+  align-items: center;
+  gap: 44px;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+/* Let a curious visitor stop it to read the names */
+.logo-marquee:hover .logo-marquee__track,
+.logo-marquee:focus-within .logo-marquee__track {
+  animation-play-state: paused;
+}
+.logo-marquee .logo-strip__item {
+  white-space: nowrap;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+.logo-marquee .logo-strip__item:hover {
+  color: var(--teal-700);
+  transform: translateY(-2px);
+}
+
+/* ============ Staggered children ============
+   Each child carries `--i` inline; the delay is derived from it. `min()` caps
+   the ramp so a long list (27 category pills) doesn't crawl in for 2 seconds. */
+.stagger-children.is-visible > * {
+  animation: popIn 0.5s var(--ease-out-soft) both;
+  animation-delay: calc(min(var(--i, 0), 12) * 45ms);
+}
+
+/* ============ Hover polish (landing page surfaces) ============ */
+.testimonial-card {
+  transition:
+    transform 0.2s var(--ease-out-soft),
+    box-shadow 0.2s var(--ease-out-soft),
+    border-color 0.2s ease;
+}
+.testimonial-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lift);
+  border-color: var(--teal-500);
+}
+
+.category-pill {
+  transition:
+    transform 0.16s var(--ease-out-soft),
+    border-color 0.16s ease,
+    color 0.16s ease,
+    background 0.16s ease;
+}
+.category-pill:hover {
+  transform: translateY(-2px);
+  background: var(--teal-100);
+}
+
+/* Feature check-badges tilt when their column is hovered */
+.feature-badge {
+  transition: transform 0.25s var(--ease-out-soft), box-shadow 0.25s ease;
+}
+.feature-card:hover .feature-badge {
+  transform: scale(1.12) rotate(-6deg);
+  box-shadow: 0 4px 14px rgba(12, 124, 146, 0.25);
+}
+
+/* Sheen that sweeps across a primary CTA on hover */
+.btn--shine {
+  position: relative;
+  overflow: hidden;
+}
+.btn--shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.32) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-18deg);
+  transition: left 0.55s var(--ease-out-soft);
+  pointer-events: none;
+}
+.btn--shine:hover::after {
+  left: 120%;
+}
+
+/* The hero search field lifts slightly when focused */
+.hero__form {
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s var(--ease-out-soft);
+}
+.hero__form:focus-within {
+  border-color: var(--teal-500);
+  box-shadow: var(--shadow-lift);
+  transform: translateY(-2px);
+}
+
+/* ============ Reduced motion: belt and braces ============
+   tokens.css already zeroes durations globally. These need the *effect*
+   switched off as well, not merely sped up: an infinite marquee and an
+   infinite pulse would otherwise sit frozen at an arbitrary frame. */
+@media (prefers-reduced-motion: reduce) {
+  .logo-marquee__track {
+    animation: none;
+    transform: none;
+  }
+  .flap--status {
+    animation: none;
+    opacity: 1;
+  }
+  /* Guarantee revealed content is legible even if the observer never runs */
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -4,6 +4,8 @@ import DepartureBoard from '../components/DepartureBoard.jsx'
 import JobCard from '../components/JobCard.jsx'
 import LogoStrip from '../components/LogoStrip.jsx'
 import Testimonials from '../components/Testimonials.jsx'
+import Reveal from '../components/Reveal.jsx'
+import CountUp from '../components/CountUp.jsx'
 import { fetchJobs } from '../api/jobs.js'
 import { categories } from '../data/mockJobs.js' // static filter option list only, not job data
 
@@ -47,19 +49,21 @@ export default function Home() {
 
   return (
     <>
+      {/* Hero content animates in on load in a staggered cascade (anim-d1…d4);
+          everything further down the page waits until it's scrolled to. */}
       <section className="hero">
         <div className="container hero__grid">
           <div>
-            <span className="hero__eyebrow">The centralised job portal for Ghana</span>
-            <h1 className="hero__title">
+            <span className="hero__eyebrow anim-rise">The centralised job portal for Ghana</span>
+            <h1 className="hero__title anim-rise anim-d1">
               Find a <em>better way</em> to get hired
             </h1>
-            <p className="hero__sub">
+            <p className="hero__sub anim-rise anim-d2">
               Nextleap connects job seekers with verified employers across Accra, Tema, and remote
               teams — search once, apply in a click, and track every application in one place.
             </p>
 
-            <form className="hero__form" onSubmit={handleSearch}>
+            <form className="hero__form anim-rise anim-d3" onSubmit={handleSearch}>
               <input
                 type="text"
                 placeholder="Search by role, company, or keyword…"
@@ -67,28 +71,28 @@ export default function Home() {
                 onChange={(e) => setQuery(e.target.value)}
                 aria-label="Search jobs"
               />
-              <button className="btn btn--coral" type="submit">
+              <button className="btn btn--coral btn--shine" type="submit">
                 Search jobs
               </button>
             </form>
 
-            <div className="hero__stats">
+            <div className="hero__stats anim-rise anim-d4">
               <div>
-                <div className="hero__stat-num">{totalOpenJobs}+</div>
+                <div className="hero__stat-num"><CountUp end={totalOpenJobs} suffix="+" /></div>
                 <div className="hero__stat-label">Open roles</div>
               </div>
               <div>
-                <div className="hero__stat-num">120+</div>
+                <div className="hero__stat-num"><CountUp end={120} suffix="+" /></div>
                 <div className="hero__stat-label">Employers</div>
               </div>
               <div>
-                <div className="hero__stat-num">2,400+</div>
+                <div className="hero__stat-num"><CountUp end={2400} suffix="+" /></div>
                 <div className="hero__stat-label">Applications sent</div>
               </div>
             </div>
           </div>
 
-          <div>
+          <div className="anim-slide-right anim-d3">
             <DepartureBoard />
           </div>
         </div>
@@ -98,7 +102,7 @@ export default function Home() {
 
       <section className="section">
         <div className="container">
-          <div className="section__head">
+          <Reveal className="section__head">
             <div>
               <span className="eyebrow">Fresh listings</span>
               <h2 className="section__title">Recently posted roles</h2>
@@ -110,12 +114,14 @@ export default function Home() {
             <a href="/jobs" className="btn btn--outline-teal">
               View all jobs
             </a>
-          </div>
+          </Reveal>
 
           {featuredJobs.length > 0 ? (
             <div className="listings-grid">
-              {featuredJobs.map((job) => (
-                <JobCard key={job._id} job={job} />
+              {featuredJobs.map((job, i) => (
+                <Reveal key={job._id} delay={i * 90}>
+                  <JobCard job={job} />
+                </Reveal>
               ))}
             </div>
           ) : (
@@ -129,19 +135,21 @@ export default function Home() {
 
       <section className="section" style={{ background: '#fff', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
         <div className="container">
-          <span className="eyebrow">Why NextLeap</span>
-          <h2 className="section__title" style={{ marginTop: 8, marginBottom: 36 }}>How NextLeap is different</h2>
+          <Reveal>
+            <span className="eyebrow">Why NextLeap</span>
+            <h2 className="section__title" style={{ marginTop: 8, marginBottom: 36 }}>How NextLeap is different</h2>
+          </Reveal>
           <div className="features-grid">
-            {FEATURES.map((f) => (
-              <div key={f.title}>
-                <div style={{
+            {FEATURES.map((f, i) => (
+              <Reveal className="feature-card" key={f.title} delay={i * 110}>
+                <div className="feature-badge" style={{
                   width: 36, height: 36, borderRadius: '50%', background: 'var(--teal-100)',
                   color: 'var(--teal-700)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontWeight: 800, marginBottom: 14,
                 }}>✓</div>
                 <h3 style={{ fontSize: 17, marginBottom: 8 }}>{f.title}</h3>
                 <p style={{ color: 'var(--ink-soft)', fontSize: 14.5, lineHeight: 1.6 }}>{f.body}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -149,29 +157,41 @@ export default function Home() {
 
       <section className="section">
         <div className="container">
-          <span className="eyebrow">Explore by category</span>
-          <h2 className="section__title" style={{ marginTop: 8 }}>
-            Open roles across {categories.length - 1} categories
-          </h2>
-          <div className="category-pills">
-            {categories.filter((c) => c !== 'All categories').map((c) => (
-              <a key={c} href={`/jobs?category=${encodeURIComponent(c)}`} className="category-pill">{c}</a>
+          <Reveal>
+            <span className="eyebrow">Explore by category</span>
+            <h2 className="section__title" style={{ marginTop: 8 }}>
+              Open roles across {categories.length - 1} categories
+            </h2>
+          </Reveal>
+          {/* --i drives each pill's stagger delay; see .stagger-children */}
+          <Reveal className="category-pills stagger-children">
+            {categories.filter((c) => c !== 'All categories').map((c, i) => (
+              <a
+                key={c}
+                href={`/jobs?category=${encodeURIComponent(c)}`}
+                className="category-pill"
+                style={{ '--i': i }}
+              >
+                {c}
+              </a>
             ))}
-          </div>
+          </Reveal>
         </div>
       </section>
 
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="container">
-          <span className="eyebrow">What people are saying</span>
-          <h2 className="section__title" style={{ marginTop: 8, marginBottom: 32 }}>Trusted by job seekers and employers</h2>
+          <Reveal>
+            <span className="eyebrow">What people are saying</span>
+            <h2 className="section__title" style={{ marginTop: 8, marginBottom: 32 }}>Trusted by job seekers and employers</h2>
+          </Reveal>
           <Testimonials />
         </div>
       </section>
 
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="container">
-          <div className="panel panel--pine" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
+          <Reveal className="panel panel--pine" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
             <div>
               <h2 style={{ fontSize: 24, marginBottom: 8, color: '#fff' }}>Hiring? List your vacancy today.</h2>
               <p style={{ color: 'rgba(255,255,255,0.8)', maxWidth: '48ch' }}>
@@ -179,8 +199,8 @@ export default function Home() {
                 Ghana — no paperwork, no scattered inboxes.
               </p>
             </div>
-            <a href="/register" className="btn btn--coral">Post a job</a>
-          </div>
+            <a href="/register" className="btn btn--coral btn--shine">Post a job</a>
+          </Reveal>
         </div>
       </section>
     </>

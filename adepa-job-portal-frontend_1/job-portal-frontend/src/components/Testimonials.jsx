@@ -1,4 +1,5 @@
 import React from 'react'
+import Reveal from './Reveal.jsx'
 
 const TESTIMONIALS = [
   {
@@ -21,13 +22,13 @@ const TESTIMONIALS = [
 export default function Testimonials() {
   return (
     <div className="testimonial-grid">
-      {TESTIMONIALS.map((t) => (
-        <div className="testimonial-card" key={t.author}>
+      {TESTIMONIALS.map((t, i) => (
+        <Reveal className="testimonial-card" key={t.author} delay={i * 110}>
           <div className="testimonial-card__stars" aria-hidden="true">★★★★★</div>
           <p className="testimonial-card__quote">&ldquo;{t.quote}&rdquo;</p>
           <div className="testimonial-card__author">{t.author}</div>
           <div className="testimonial-card__role">{t.role}</div>
-        </div>
+        </Reveal>
       ))}
     </div>
   )

@@ -33,8 +33,16 @@ export default function DepartureBoard() {
         </div>
       )}
 
-      {jobs.map((job) => (
-        <div className="board__row" key={job._id} role="row">
+      {jobs.map((job, i) => (
+        <div
+          className="board__row board__row--flap"
+          key={job._id}
+          role="row"
+          // Rows hinge in one after another, like a real split-flap board
+          // turning over. Staggered here rather than in CSS because the row
+          // count depends on how many jobs came back.
+          style={{ animationDelay: `${0.35 + i * 0.09}s` }}
+        >
           <span className="flap">{job.ref}</span>
           <span className="flap flap--wide">
             {job.title} <span style={{ opacity: 0.55 }}>· {job.company}</span>
