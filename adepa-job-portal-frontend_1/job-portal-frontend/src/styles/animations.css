@@ -12,10 +12,8 @@
    rather than "content stays invisible".
    ============================================================ */
 
-/* ---- Easing: a soft, overshoot-free curve used throughout ---- */
-:root {
-  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
-}
+/* Easing (--ease-out-soft) is declared in tokens.css, since global.css uses it
+   for the mobile menu drawer too. */
 
 /* ============ Keyframes ============ */
 
@@ -226,6 +224,25 @@
   border-color: var(--teal-500);
   box-shadow: var(--shadow-lift);
   transform: translateY(-2px);
+}
+
+/* ============ Mobile menu ============
+   The drawer's own open/close animation lives in global.css, next to the rest
+   of the panel's layout. This is just the contents arriving after it: each row
+   rises in a beat behind the last, so the menu unfolds rather than blinking on.
+
+   Scoped to the same breakpoint the panel is, since the desktop nav has no
+   drawer to animate. */
+@media (max-width: 900px) {
+  .nav__mobile-panel.is-open .nav__mobile-links a,
+  .nav__mobile-panel.is-open .nav__mobile-actions > * {
+    animation: riseIn 0.4s var(--ease-out-soft) both;
+  }
+  .nav__mobile-panel.is-open .nav__mobile-links a:nth-child(1) { animation-delay: 0.08s; }
+  .nav__mobile-panel.is-open .nav__mobile-links a:nth-child(2) { animation-delay: 0.13s; }
+  .nav__mobile-panel.is-open .nav__mobile-links a:nth-child(3) { animation-delay: 0.18s; }
+  .nav__mobile-panel.is-open .nav__mobile-actions > *:nth-child(1) { animation-delay: 0.20s; }
+  .nav__mobile-panel.is-open .nav__mobile-actions > *:nth-child(2) { animation-delay: 0.25s; }
 }
 
 /* ============ Reduced motion: belt and braces ============

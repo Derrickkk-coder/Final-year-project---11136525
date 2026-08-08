@@ -72,6 +72,7 @@ export default function Navbar() {
           className="nav__burger"
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={menuOpen}
+          aria-controls="nav-mobile-panel"
           onClick={() => setMenuOpen((v) => !v)}
         >
           <span className={`nav__burger-line ${menuOpen ? 'is-open' : ''}`} />
@@ -80,8 +81,21 @@ export default function Navbar() {
         </button>
       </div>
 
-      {menuOpen && (
-        <div className="nav__mobile-panel">
+      {/* Kept mounted rather than rendered behind `menuOpen &&` so it can animate
+          in *and* out — a conditionally rendered panel unmounts the instant the
+          state flips, so a closing transition never gets to play.
+
+          While closed it collapses to zero height and goes `visibility: hidden`,
+          which also takes the links out of the tab order and hides them from
+          screen readers, so keeping them in the DOM costs nothing. Padding sits
+          on the inner wrapper: on the panel itself it would stay visible as a
+          stripe when the rows collapse to 0fr. */}
+      <div
+        id="nav-mobile-panel"
+        className={`nav__mobile-panel ${menuOpen ? 'is-open' : ''}`}
+        aria-hidden={!menuOpen}
+      >
+        <div className="nav__mobile-panel__inner">
           <nav className="nav__mobile-links">
             <NavLink to="/jobs" className={({ isActive }) => (isActive ? 'active' : '')}>
               Browse jobs
@@ -126,7 +140,7 @@ export default function Navbar() {
             )}
           </div>
         </div>
-      )}
+      </div>
     </header>
   )
 }

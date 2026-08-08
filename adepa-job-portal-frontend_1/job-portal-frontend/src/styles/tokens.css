@@ -26,6 +26,10 @@
   --radius-pill: 999px;
   --container: 1180px;
 
+  /* ---- Motion ---- */
+  /* Soft, overshoot-free easing shared by global.css and animations.css */
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+
   /* ---- Aliases for backward compatibility with earlier component styles ---- */
   --pine: var(--teal-700);
   --pine-deep: var(--teal-900);

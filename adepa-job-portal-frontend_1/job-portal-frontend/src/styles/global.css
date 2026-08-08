@@ -426,10 +426,31 @@
   .nav__burger {
     display: flex;
   }
+  /* Collapsible drawer. The 0fr -> 1fr grid row is what animates open; same
+     technique as .collapsible on the register form. Two details matter:
+     padding sits on __inner (on the panel itself it would stay visible as a
+     stripe once the row collapses), and the border starts transparent rather
+     than absent so fading it in costs no layout shift.
+     Link stagger lives in animations.css. */
   .nav__mobile-panel {
-    display: block;
-    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-rows: 0fr;
     background: var(--paper-raised);
+    border-top: 1px solid transparent;
+    visibility: hidden;
+    transition:
+      grid-template-rows 0.32s var(--ease-out-soft),
+      border-color 0.32s ease,
+      visibility 0.32s;
+  }
+  .nav__mobile-panel.is-open {
+    grid-template-rows: 1fr;
+    border-top-color: var(--line);
+    visibility: visible;
+  }
+  .nav__mobile-panel__inner {
+    overflow: hidden;
+    min-height: 0;
     padding: 16px 24px 24px;
   }
   .nav__mobile-links {
