@@ -307,9 +307,43 @@
 .hero__form input { flex: 1; background: transparent; border: none; color: var(--ink); padding: 10px 16px; font-size: 14.5px; }
 .hero__form input::placeholder { color: var(--ink-faint); }
 .hero__form input:focus { outline: none; }
-.hero__stats { display: flex; gap: 34px; margin-top: 34px; }
+/* Dual-audience call to action, directly under the search field */
+.hero__cta { display: flex; gap: var(--space-3); margin-top: var(--space-5); flex-wrap: wrap; }
+
+/* Four stats now rather than three, so they wrap instead of squeezing */
+.hero__stats {
+  display: flex; flex-wrap: wrap; gap: var(--space-5) var(--space-8); margin-top: var(--space-8);
+}
 .hero__stat-num { font-family: var(--font-display); font-size: 26px; font-weight: 800; color: var(--teal-700); }
-.hero__stat-label { font-size: 12px; color: var(--ink-soft); font-weight: 600; }
+.hero__stat-label { font-size: 12px; color: var(--ink-soft); font-weight: 600; max-width: 14ch; }
+
+/* ============ How it works ============ */
+.how { background: var(--paper-raised); border-bottom: 1px solid var(--line); }
+.how-grid {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-6);
+  /* Connecting rule behind the numbered markers, so the four read as a sequence
+     rather than four unrelated cards */
+  position: relative;
+}
+.how-step { position: relative; }
+.how-step__num {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--teal-700); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 800; font-size: var(--text-md);
+  margin-bottom: var(--space-4);
+  position: relative; z-index: 1;
+}
+/* The line runs from each marker to the next, and stops at the last one */
+.how-step:not(:last-child) .how-step__num::after {
+  content: ''; position: absolute; left: 100%; top: 50%;
+  width: calc(var(--space-6) + 100%); height: 2px;
+  background: var(--line); z-index: -1;
+}
+.how-step__title { font-size: var(--text-md); margin-bottom: var(--space-2); }
+.how-step__body {
+  font-size: var(--text-base); color: var(--ink-soft); line-height: var(--leading-normal); margin: 0;
+}
 
 /* Hero side panel: mini job list preview */
 .board { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-card); padding: 8px; box-shadow: var(--shadow-lift); }
@@ -1314,6 +1348,9 @@
   .job-detail-grid { grid-template-columns: 1fr; gap: 24px; }
   .job-detail-aside { position: static; top: auto; }
   .features-grid { grid-template-columns: 1fr 1fr; }
+  /* Two-up, and the connecting line goes — it only makes sense on a single row */
+  .how-grid { grid-template-columns: 1fr 1fr; gap: var(--space-8) var(--space-6); }
+  .how-step:not(:last-child) .how-step__num::after { display: none; }
 }
 
 @media (max-width: 560px) {
@@ -1327,7 +1364,11 @@
   .filters .form-field { min-width: 0; width: 100%; }
   .hero__form { flex-direction: column; border-radius: 14px; }
   .hero__form input { padding: 12px 14px; }
-  .hero__stats { flex-wrap: wrap; row-gap: 16px; }
+  .hero__stats { row-gap: var(--space-4); column-gap: var(--space-6); }
+  /* Full-width stacked CTAs — side by side they'd each be too narrow to read */
+  .hero__cta { flex-direction: column; }
+  .hero__cta .btn { width: 100%; }
+  .how-grid { grid-template-columns: 1fr; }
   .section__head { flex-direction: column; align-items: flex-start; }
   .logo-strip__row { gap: 24px; }
   .auth-shell__form { padding: 40px 24px; }

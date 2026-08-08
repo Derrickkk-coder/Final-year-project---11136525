@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
 import DepartureBoard from '../components/DepartureBoard.jsx'
 import JobCard from '../components/JobCard.jsx'
 import LogoStrip from '../components/LogoStrip.jsx'
@@ -9,7 +10,27 @@ import CountUp from '../components/CountUp.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import { SkeletonJobList } from '../components/Skeleton.jsx'
 import { fetchJobs } from '../api/jobs.js'
+import { fetchPublicStats } from '../api/stats.js'
 import { categories } from '../data/mockJobs.js' // static filter option list only, not job data
+
+const HOW_IT_WORKS = [
+  {
+    title: 'Register',
+    body: 'Create a free account as a job seeker or an employer. Employers are reviewed by an admin before they can post, which is why every listing here comes from a real company.',
+  },
+  {
+    title: 'Find or post a job',
+    body: 'Seekers search, filter, and get roles matched against the skills on their profile. Employers publish a vacancy in one form, tagging the skills the role actually needs.',
+  },
+  {
+    title: 'Apply',
+    body: 'Apply with your saved CV in a couple of clicks — no re-uploading for every role. See how well you fit before you commit, and what you are missing.',
+  },
+  {
+    title: 'Manage applications',
+    body: 'Track every application and its status in one dashboard. Employers get applicants ranked by skill fit, and can shortlist and schedule interviews from the same place.',
+  },
+]
 
 const FEATURES = [
   {
@@ -29,21 +50,32 @@ const FEATURES = [
 export default function Home() {
   const [query, setQuery] = useState('')
   const [featuredJobs, setFeaturedJobs] = useState([])
-  const [totalOpenJobs, setTotalOpenJobs] = useState(0)
+  // Open-job count now comes from /api/stats along with the other three, so the
+  // featured-jobs request no longer needs to report a total.
   const [jobsLoading, setJobsLoading] = useState(true)
   const [studentJobs, setStudentJobs] = useState([])
+  const [stats, setStats] = useState({
+    openJobs: 0,
+    seekers: 0,
+    employers: 0,
+    successfulApplications: 0,
+  })
   const navigate = useNavigate()
+  const { user } = useAuth()
+
+  // Send an employer straight to the form; anyone else needs an account first
+  const employerCtaTarget = user?.role === 'employer' ? '/employer/post' : '/register'
 
   useEffect(() => {
+    fetchPublicStats()
+      .then((data) => setStats(data.stats))
+      // Counters stay at zero rather than the page failing — they're
+      // decoration, not the reason anyone is here
+      .catch(() => {})
+
     fetchJobs({ limit: 3 })
-      .then((data) => {
-        setFeaturedJobs(data.jobs)
-        setTotalOpenJobs(data.pagination?.total ?? data.jobs.length)
-      })
-      .catch(() => {
-        setFeaturedJobs([])
-        setTotalOpenJobs(0)
-      })
+      .then((data) => setFeaturedJobs(data.jobs))
+      .catch(() => setFeaturedJobs([]))
       .finally(() => setJobsLoading(false))
 
     // Public — no login needed, so a student landing here sees relevant
@@ -67,12 +99,14 @@ export default function Home() {
         <div className="container hero__grid">
           <div>
             <span className="hero__eyebrow anim-rise">The centralised job portal for Ghana</span>
+            {/* Names what the platform actually does — verified employers and
+                skill matching are real features, not slogan. */}
             <h1 className="hero__title anim-rise anim-d1">
-              Find a <em>better way</em> to get hired
+              Verified jobs across Ghana, <em>matched to your skills</em>
             </h1>
             <p className="hero__sub anim-rise anim-d2">
-              Nextleap connects job seekers with verified employers across Accra, Tema, and remote
-              teams — search once, apply in a click, and track every application in one place.
+              Every employer on NextLeap is approved before they can post. Build a profile once,
+              see how well you fit each role, and track every application in one place.
             </p>
 
             <form className="hero__form anim-rise anim-d3" onSubmit={handleSearch}>
@@ -83,23 +117,37 @@ export default function Home() {
                 onChange={(e) => setQuery(e.target.value)}
                 aria-label="Search jobs"
               />
+              {/* "Search" not "Search jobs" — "Find jobs" sits directly below and
+                  two near-identical labels would compete */}
               <button className="btn btn--coral btn--shine" type="submit">
-                Search jobs
+                Search
               </button>
             </form>
 
-            <div className="hero__stats anim-rise anim-d4">
+            <div className="hero__cta anim-rise anim-d4">
+              <Link to="/jobs" className="btn btn--pine btn--lg">Find jobs</Link>
+              <Link to={employerCtaTarget} className="btn btn--outline-pine btn--lg">Post a job</Link>
+            </div>
+
+            {/* Real counts from /api/stats. The two figures here that used to be
+                hardcoded ("120+ employers", "2,400+ applications sent") were
+                invented, and are now measured. */}
+            <div className="hero__stats anim-rise anim-d5">
               <div>
-                <div className="hero__stat-num"><CountUp end={totalOpenJobs} suffix="+" /></div>
-                <div className="hero__stat-label">Open roles</div>
+                <div className="hero__stat-num"><CountUp end={stats.openJobs} /></div>
+                <div className="hero__stat-label">Jobs available</div>
               </div>
               <div>
-                <div className="hero__stat-num"><CountUp end={120} suffix="+" /></div>
+                <div className="hero__stat-num"><CountUp end={stats.seekers} /></div>
+                <div className="hero__stat-label">Job seekers</div>
+              </div>
+              <div>
+                <div className="hero__stat-num"><CountUp end={stats.employers} /></div>
                 <div className="hero__stat-label">Employers</div>
               </div>
               <div>
-                <div className="hero__stat-num"><CountUp end={2400} suffix="+" /></div>
-                <div className="hero__stat-label">Applications sent</div>
+                <div className="hero__stat-num"><CountUp end={stats.successfulApplications} /></div>
+                <div className="hero__stat-label">Successful applications</div>
               </div>
             </div>
           </div>
@@ -111,6 +159,29 @@ export default function Home() {
       </section>
 
       <LogoStrip />
+
+      {/* Four steps, each covering both audiences rather than splitting into two
+          tracks — the flow is genuinely the same shape from either side. */}
+      <section className="section how">
+        <div className="container">
+          <Reveal>
+            <span className="eyebrow">How it works</span>
+            <h2 className="section__title" style={{ marginTop: 8, marginBottom: 'var(--space-10)' }}>
+              From sign-up to hired, in four steps
+            </h2>
+          </Reveal>
+
+          <div className="how-grid">
+            {HOW_IT_WORKS.map((step, i) => (
+              <Reveal className="how-step" key={step.title} delay={i * 110}>
+                <div className="how-step__num" aria-hidden="true">{i + 1}</div>
+                <h3 className="how-step__title">{step.title}</h3>
+                <p className="how-step__body">{step.body}</p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <section className="section">
         <div className="container">

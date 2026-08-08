@@ -64,12 +64,6 @@
   to   { opacity: 1; transform: perspective(400px) rotateX(0deg); }
 }
 
-/* Underline sweep behind the coral words in the hero headline */
-@keyframes sweepIn {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
-}
-
 @keyframes popIn {
   from { opacity: 0; transform: scale(0.86); }
   to   { opacity: 1; transform: scale(1); }
@@ -121,23 +115,37 @@
   transform: translateY(0);
 }
 
-/* ============ Hero headline underline ============ */
+/* ============ Hero headline underline ============
+   Drawn with text-decoration rather than a positioned ::after bar. The bar
+   version needed `display: inline-block` to anchor itself, which made it span
+   the full column width once the emphasised phrase wrapped onto two lines —
+   a rule across the whole hero instead of under the words. text-decoration
+   follows the text and breaks with it, so each line gets its own underline.
+
+   The trade-off is that it fades in rather than sweeping left-to-right:
+   text-decoration-color animates, geometry doesn't. Worth it to have it hug the
+   phrase at any width.
+
+   skip-ink: none keeps the rule unbroken under the descender in "your" — the
+   default would notch around it, which reads as a gap rather than a rule. */
 .hero__title em {
-  position: relative;
-  display: inline-block;
+  /* Named once and referenced from the keyframe, so the resting tint and the
+     animated end state can't drift apart. Declared on the element rather than
+     the animation so that if the animation never runs — old browser, or
+     text-decoration-color not animatable there — the underline still lands on
+     the soft tint instead of defaulting to full-strength currentColor. */
+  --underline-tint: rgba(255, 106, 69, 0.35);
+  text-decoration: underline;
+  text-decoration-color: var(--underline-tint);
+  text-decoration-thickness: 0.13em;
+  text-underline-offset: 0.1em;
+  text-decoration-skip-ink: none;
+  animation: underlineIn 0.7s ease 0.6s both;
 }
-.hero__title em::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0.06em;
-  height: 0.14em;
-  background: var(--coral);
-  opacity: 0.28;
-  border-radius: 999px;
-  transform-origin: left center;
-  animation: sweepIn 0.85s var(--ease-out-soft) 0.6s both;
+
+@keyframes underlineIn {
+  from { text-decoration-color: transparent; }
+  to   { text-decoration-color: var(--underline-tint); }
 }
 
 /* ============ Departure board ============ */
