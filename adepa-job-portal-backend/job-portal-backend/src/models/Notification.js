@@ -12,7 +12,7 @@ const notificationSchema = new mongoose.Schema(
     // adding a new kind later doesn't need a migration.
     type: {
       type: String,
-      enum: ['application_status', 'new_matching_job', 'interview_scheduled'],
+      enum: ['application_status', 'new_matching_job', 'interview_scheduled', 'support_reply'],
       required: true,
     },
     // Rendered at write time rather than assembled in the client. The job title

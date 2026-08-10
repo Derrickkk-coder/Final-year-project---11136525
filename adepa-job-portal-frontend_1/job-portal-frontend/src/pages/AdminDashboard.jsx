@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext.jsx'
 import { useConfirm } from '../context/ConfirmContext.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import EmptyState from '../components/EmptyState.jsx'
+import SupportInbox from '../components/SupportInbox.jsx'
 import { SkeletonRows } from '../components/Skeleton.jsx'
 import {
   fetchEmployers, approveEmployer, rejectEmployer, fetchAdminStats,
@@ -47,6 +48,15 @@ export default function AdminDashboard() {
   }, [])
 
   useEffect(() => {
+    // SupportInbox fetches and polls for itself, so there's nothing to load here
+    // — and falling through to the employer branch would fetch every employer
+    // for a tab that doesn't show them.
+    if (tab === 'support') {
+      setLoading(false)
+      setError('')
+      return
+    }
+
     setLoading(true)
     setError('')
 
@@ -208,6 +218,9 @@ export default function AdminDashboard() {
           </a>
           <a href="#comments" className={tab === 'comments' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('comments') }}>
             Comments
+          </a>
+          <a href="#support" className={tab === 'support' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('support') }}>
+            Support chat
           </a>
         </div>
       </aside>
@@ -511,6 +524,19 @@ export default function AdminDashboard() {
                 description="Job postings from employers will show up here."
               />
             )}
+          </>
+        )}
+
+        {/* Outside the shared loading/error gate — SupportInbox owns its own
+            fetching and polling, and the tab effect below deliberately skips it. */}
+        {tab === 'support' && (
+          <>
+            <h2 style={{ fontSize: 18, marginBottom: 4 }}>Support chat</h2>
+            <p style={{ color: 'var(--ink-soft)', fontSize: 'var(--text-sm)', marginTop: 0, marginBottom: 'var(--space-5)' }}>
+              People who asked the assistant to put them through. Replies reach them straight away,
+              and they'll get a notification if they've closed the window.
+            </p>
+            <SupportInbox />
           </>
         )}
 

@@ -76,6 +76,13 @@
   to   { transform: translateX(-50%); }
 }
 
+/* The iMessage typing dots: each lifts and brightens, staggered by delay so the
+   three read as a travelling wave rather than one pulse. */
+@keyframes typingDot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30%           { transform: translateY(-4px); opacity: 1; }
+}
+
 /* Slow breathing glow on the "OPEN" status pills — signals liveness */
 @keyframes livePulse {
   0%, 100% { opacity: 1; }
@@ -302,6 +309,12 @@
     transform: none;
   }
   .flap--status {
+    animation: none;
+    opacity: 1;
+  }
+  /* Frozen dots would read as a broken bubble. Hold them at full opacity so the
+     indicator still says "typing", it just doesn't move. */
+  .chat-typing__dot {
     animation: none;
     opacity: 1;
   }
