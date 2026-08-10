@@ -82,19 +82,15 @@ export default function SupportWidget() {
     sayBot(BOT_NODES[BOT_START].body)
   }, [open, mode])
 
-  // .chat-open handles the desktop case, where the body only needs overflow
-  // hidden. It is not enough on a phone — see the hook below.
-  useEffect(() => {
-    if (!open) return
-    document.body.classList.add('chat-open')
-    return () => document.body.classList.remove('chat-open')
-  }, [open])
-
   // Mobile only, because on desktop the panel is a small floating card and
-  // someone may legitimately want to scroll the page while reading it. The lock
-  // itself used to be inlined here; it's now shared with the dashboard's mobile
-  // drawer, which hits the same iOS quirk.
-  useBodyScrollLock(open, MOBILE_SHEET_QUERY)
+  // someone may legitimately want to scroll the page while reading it.
+  //
+  // .chat-open is `overflow: hidden` on the body, at the same breakpoint. The
+  // hook toggles it rather than a separate effect here, so the scroll offset is
+  // always read before the class lands and the class is always gone before the
+  // body returns to flow — the reason the reader used to come back to the top of
+  // the page instead of where they left it.
+  useBodyScrollLock(open, { query: MOBILE_SHEET_QUERY, bodyClass: 'chat-open' })
 
   // Keep the newest message in view. Depends on the typing flags too, since a
   // bubble appearing changes the height.

@@ -99,7 +99,7 @@ export default function DashboardShell({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [navOpen, setNavOpen])
 
-  useBodyScrollLock(navOpen, DRAWER_QUERY)
+  useBodyScrollLock(navOpen, { query: DRAWER_QUERY })
 
   return (
     <div className="dash">
