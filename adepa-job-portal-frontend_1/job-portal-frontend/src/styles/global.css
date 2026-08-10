@@ -304,7 +304,9 @@
   border: 1.5px solid var(--line); padding: 7px; border-radius: var(--radius-pill);
   box-shadow: var(--shadow-card);
 }
-.hero__form input { flex: 1; background: transparent; border: none; color: var(--ink); padding: 10px 16px; font-size: 14.5px; }
+/* 16px, not 14.5 — tapping this on iOS was zooming the whole landing page in,
+   the same reason every .form-field input is 16px. */
+.hero__form input { flex: 1; background: transparent; border: none; color: var(--ink); padding: 10px 16px; font-size: 16px; }
 .hero__form input::placeholder { color: var(--ink-faint); }
 .hero__form input:focus { outline: none; }
 /* Dual-audience call to action, directly under the search field */
@@ -517,7 +519,13 @@
 .chat-panel {
   position: fixed; bottom: calc(var(--space-6) + 62px); left: var(--space-6); z-index: 250;
   width: min(370px, calc(100vw - 32px));
-  height: min(540px, calc(100vh - 160px));
+  /* dvh, because on mobile 100vh is the viewport *including* the collapsible
+     browser chrome — a vh-sized panel is taller than the visible area and pushes
+     its own composer off-screen.
+     The vh fallback lives in the @supports block at the end of this section, not
+     as a duplicate declaration here: the minifier dedupes identical properties
+     and keeps only the last, so a two-line fallback silently disappears. */
+  height: min(540px, calc(100dvh - 160px));
   display: flex; flex-direction: column; overflow: hidden;
   background: var(--paper-raised);
   border: 1px solid var(--line); border-radius: var(--radius-lg);
@@ -622,7 +630,10 @@
 .chat-compose input {
   flex: 1; min-width: 0;
   border: 1.5px solid var(--line); border-radius: var(--radius-pill);
-  padding: 10px 15px; font-size: var(--text-base);
+  /* 16px, not --text-base. iOS Safari zooms the page in whenever a focused text
+     input is under 16px, and the page doesn't return cleanly afterwards. Every
+     .form-field input in this stylesheet is 16px for the same reason. */
+  padding: 10px 15px; font-size: 16px;
   background: var(--paper); color: var(--ink);
 }
 .chat-compose input:focus { outline: none; border-color: var(--teal-500); box-shadow: var(--focus-ring); }
@@ -635,6 +646,37 @@
 }
 .chat-send:hover:not(:disabled) { background: var(--teal-900); }
 .chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ---- Chat on small screens ----
+   A 370px floating card with rounded corners is a desktop idea. On a phone it
+   becomes a bottom sheet across the full width, which is what every messaging
+   app does and what leaves room to actually read a conversation. */
+@media (max-width: 560px) {
+  .chat-panel {
+    left: 0; right: 0; bottom: 0;
+    width: 100%;
+    height: 86dvh;
+    /* Square off the edges that now meet the screen */
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-left: none; border-right: none; border-bottom: none;
+  }
+  /* The sheet covers it anyway, and a button peeking through the panel reads as
+     a rendering fault. Closing is the header ✕. */
+  .help-fab.is-open { display: none; }
+  .help-fab { bottom: var(--space-4); left: var(--space-4); padding: 11px 17px; }
+  .chat-bubble { max-width: 88%; }
+}
+
+/* Pre-dvh browsers (before roughly mid-2022). A separate rule rather than a
+   duplicate declaration, so the minifier can't drop it. Slightly shorter than
+   the dvh values, to leave room for the browser chrome vh doesn't account for. */
+@supports not (height: 1dvh) {
+  .chat-panel { height: min(540px, calc(100vh - 200px)); }
+  @media (max-width: 560px) {
+    .chat-panel { height: 78vh; }
+  }
+  .inbox__thread { height: 560px; }
+}
 
 /* ---- Admin inbox ---- */
 .inbox {
@@ -1088,7 +1130,8 @@
 }
 .skills-input__field {
   flex: 1; min-width: 140px; border: none !important;
-  padding: 4px 6px !important; font-size: 14.5px !important;
+  /* 16px for the same iOS zoom reason as .chat-compose input above */
+  padding: 4px 6px !important; font-size: 16px !important;
   background: transparent !important; box-shadow: none !important;
 }
 .skills-input__field:focus { outline: none; }
@@ -1679,6 +1722,11 @@
   .hero__cta { flex-direction: column; }
   .hero__cta .btn { width: 100%; }
   .how-grid { grid-template-columns: 1fr; }
+  /* Admin inbox: the list above, the open thread below, since 300px + a chat
+     pane cannot both fit on a phone */
+  .inbox { grid-template-columns: minmax(0, 1fr); }
+  .inbox__list { max-height: 240px; }
+  .inbox__thread { height: 70vh; height: 70dvh; }
   .section__head { flex-direction: column; align-items: flex-start; }
   .logo-strip__row { gap: 24px; }
   .auth-shell__form { padding: 40px 24px; }
