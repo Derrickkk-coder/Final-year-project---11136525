@@ -491,6 +491,15 @@
 .testimonial-card__role { font-size: 12px; color: var(--ink-soft); }
 
 /* ============ Support chat ============ */
+/* iMessage's own palette, kept as tokens rather than sprinkled hex. These sit
+   outside the brand palette on purpose: the chat is deliberately imitating a
+   familiar messaging app, and the blue is the single most recognisable part of
+   that. Swap these two values to bring it back to NextLeap teal. */
+:root {
+  --chat-blue: #0B84FF;
+  --chat-grey: #E9E9EB;
+}
+
 /* Floating help button. Above toasts (200) but below dialogs (300), so a
    confirmation still covers it. */
 .help-fab {
@@ -531,18 +540,45 @@
   border: 1px solid var(--line); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-pop);
   animation: riseIn 0.28s var(--ease-out-soft) both;
+  /* Nothing on the panel pans the page. Without this, a drag starting on the
+     header or the composer — neither of which is inside the scroll container —
+     goes straight through to the document and scrolls the page behind the sheet.
+     Taps and clicks are unaffected; touch-action only governs panning and zoom.
+     .chat-scroll opts back in to vertical panning below. */
+  touch-action: none;
 }
+/* iMessage thread header: dismiss on the left, identity centred, translucent
+   light ground. The grid's matching outer columns are what keep the name
+   optically centred rather than pushed off by the back button. */
 .chat-panel__head {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
-  background: var(--teal-700); color: #fff; flex-shrink: 0;
+  display: grid; grid-template-columns: 34px 1fr 34px; align-items: center;
+  padding: var(--space-3) var(--space-3) var(--space-4);
+  background: rgba(248, 250, 251, 0.92);
+  backdrop-filter: saturate(150%) blur(14px);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink); flex-shrink: 0;
 }
-.chat-panel__status { display: block; font-size: var(--text-xs); opacity: 0.8; margin-top: 2px; }
-.chat-panel__close {
-  border: none; background: transparent; color: #fff; cursor: pointer;
-  font-size: 15px; line-height: 1; padding: 2px 4px; opacity: 0.8;
+.chat-panel__back {
+  border: none; background: transparent; cursor: pointer;
+  color: var(--chat-blue); font-size: 28px; line-height: 1;
+  padding: 0; justify-self: start; font-weight: 300;
 }
-.chat-panel__close:hover { opacity: 1; }
+.chat-panel__ident { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.chat-panel__avatar {
+  width: 42px; height: 42px; border-radius: 50%; object-fit: cover;
+  margin-bottom: 5px; background: var(--paper);
+}
+.chat-panel__name {
+  display: inline-flex; align-items: center; gap: 2px;
+  font-size: var(--text-base); font-weight: 600; color: var(--ink);
+  max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.chat-panel__chevron { color: var(--ink-faint); font-size: 15px; }
+.chat-panel__service {
+  font-size: 11.5px; color: var(--ink-faint); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.chat-panel__spacer { display: block; }
 
 .chat-scroll {
   flex: 1; overflow-y: auto; padding: var(--space-4) var(--space-4) var(--space-2);
@@ -553,6 +589,8 @@
      the panel. `contain` keeps it here and also blocks pull-to-refresh. */
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  /* The one place on the panel that may pan — see touch-action on .chat-panel */
+  touch-action: pan-y;
 }
 
 /* ---- Bubbles ---- */
@@ -569,8 +607,8 @@
   display: flex; flex-direction: column;
   margin-top: 3px;
 }
-.chat-bubble.is-out { background: var(--teal-700); color: #fff; border-bottom-right-radius: 19px; }
-.chat-bubble.is-in { background: #E9EDEF; color: var(--ink); border-bottom-left-radius: 19px; }
+.chat-bubble.is-out { background: var(--chat-blue); color: #fff; border-bottom-right-radius: 19px; }
+.chat-bubble.is-in { background: var(--chat-grey); color: #000; border-bottom-left-radius: 19px; }
 /* Only the last bubble of a run gets the squared corner, so a run reads as one
    utterance rather than several */
 .chat-bubble.is-out.has-tail { border-bottom-right-radius: 5px; }
@@ -579,8 +617,17 @@
 .chat-bubble__author {
   font-size: 11px; font-weight: 700; opacity: 0.75; margin-bottom: 2px;
 }
-.chat-bubble__time {
-  font-size: 10.5px; opacity: 0.6; margin-top: 3px; align-self: flex-end;
+
+/* Centred time above a burst of messages, replacing a clock in every bubble */
+.chat-daymark {
+  align-self: center; margin: var(--space-4) 0 var(--space-1);
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--ink-faint); text-transform: uppercase;
+}
+/* Right-aligned receipt under the newest outgoing message */
+.chat-receipt {
+  align-self: flex-end; margin: 2px 4px var(--space-2);
+  font-size: 10.5px; color: var(--ink-faint); font-weight: 500;
 }
 
 .chat-system {
@@ -605,14 +652,14 @@
   gap: var(--space-2); margin-top: var(--space-3);
 }
 .chat-option {
-  background: var(--paper-raised); border: 1.5px solid var(--teal-500);
-  color: var(--teal-700); border-radius: var(--radius-pill);
+  background: var(--paper-raised); border: 1.5px solid var(--chat-blue);
+  color: var(--chat-blue); border-radius: var(--radius-pill);
   padding: 8px 15px; font: inherit; font-size: var(--text-sm); font-weight: 600;
   cursor: pointer; text-align: right; max-width: 90%;
   transition: background 0.14s ease, color 0.14s ease;
   animation: riseIn 0.3s var(--ease-out-soft) both;
 }
-.chat-option:hover { background: var(--teal-700); color: #fff; border-color: var(--teal-700); }
+.chat-option:hover { background: var(--chat-blue); color: #fff; border-color: var(--chat-blue); }
 .chat-option.is-escalate { border-color: var(--coral); color: var(--coral-dark); }
 .chat-option.is-escalate:hover { background: var(--coral); color: #fff; border-color: var(--coral); }
 
@@ -641,16 +688,17 @@
   padding: 10px 15px; font-size: 16px;
   background: var(--paper); color: var(--ink);
 }
-.chat-compose input:focus { outline: none; border-color: var(--teal-500); box-shadow: var(--focus-ring); }
+.chat-compose input:focus { outline: none; border-color: var(--chat-blue); box-shadow: none; }
+/* The blue circular arrow, which iMessage only shows once there's something to
+   send — hence the muted disabled state rather than hiding it. */
 .chat-send {
-  flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
-  border: none; background: var(--teal-700); color: #fff;
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+  border: none; background: var(--chat-blue); color: #fff;
   font-size: 17px; font-weight: 700; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: background 0.14s ease;
+  transition: opacity 0.14s ease;
 }
-.chat-send:hover:not(:disabled) { background: var(--teal-900); }
-.chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+.chat-send:disabled { background: var(--ink-faint); opacity: 0.5; cursor: not-allowed; }
 
 /* ---- Chat on small screens ----
    A 370px floating card with rounded corners is a desktop idea. On a phone it

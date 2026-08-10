@@ -5,6 +5,7 @@ import TypingBubble from './chat/TypingBubble.jsx'
 import EmptyState from './EmptyState.jsx'
 import { SkeletonRows } from './Skeleton.jsx'
 import { useToast } from '../context/ToastContext.jsx'
+import { withTimeSeparators, formatSeparator } from '../utils/chatGrouping.js'
 import {
   fetchSupportConversations,
   fetchMessages,
@@ -212,8 +213,12 @@ export default function SupportInbox() {
                 </details>
               )}
 
-              {messages.map((m, i) => {
-                const previous = messages[i - 1]
+              {withTimeSeparators(messages).map((m, i, all) => {
+                if (m.separator) {
+                  return <div className="chat-daymark" key={m.key}>{formatSeparator(m.at)}</div>
+                }
+
+                const next = all[i + 1]
                 return (
                   <ChatBubble
                     key={m._id || i}
@@ -221,11 +226,14 @@ export default function SupportInbox() {
                     // Reversed from the user's view: here the admin is 'out'
                     side={m.from === 'admin' ? 'out' : 'in'}
                     body={m.body}
-                    at={m.createdAt}
-                    showTail={previous?.from !== m.from}
+                    showTail={!next || next.separator || next.from !== m.from}
                   />
                 )
               })}
+
+              {messages.length > 0 &&
+                messages[messages.length - 1].from === 'admin' &&
+                !active?.peerTyping && <div className="chat-receipt">Delivered</div>}
 
               {active?.peerTyping && <TypingBubble label="They are typing" />}
             </div>

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import ChatBubble from './chat/ChatBubble.jsx'
 import TypingBubble from './chat/TypingBubble.jsx'
 import { BOT_NODES, BOT_START, botThinkingMs } from '../utils/supportBot.js'
+import { withTimeSeparators, formatSeparator } from '../utils/chatGrouping.js'
 import {
   startSupportConversation,
   fetchMyConversation,
@@ -11,6 +12,11 @@ import {
   sendSupportMessage,
   pingTyping,
 } from '../api/support.js'
+
+// Mirrors the 560px breakpoint in global.css at which .chat-panel becomes a
+// full-height sheet. Needed in JS because the iOS scroll lock can't be expressed
+// in CSS alone — change both together.
+const MOBILE_SHEET_QUERY = '(max-width: 560px)'
 
 // While the panel is open, how often to check for the other side's messages and
 // typing state. Fast enough that a reply and a typing bubble feel live; slow
@@ -68,14 +74,48 @@ export default function SupportWidget() {
     sayBot(BOT_NODES[BOT_START].body)
   }, [open, mode])
 
-  // Marks the page while the panel is open so CSS can freeze it — but only at
-  // the mobile breakpoint, where the panel is a full sheet. The breakpoint lives
-  // in the stylesheet (body.chat-open) rather than here, so there's one place
-  // that decides what "mobile" means.
+  // Freezing the page behind the sheet.
+  //
+  // `overflow: hidden` on body — which is what the .chat-open class does — is
+  // simply ignored by iOS Safari for touch scrolling, so on a phone it achieved
+  // nothing. The only reliable lock is taking the body out of flow with
+  // position: fixed, which does stop touch scrolling. That collapses the page to
+  // scroll offset 0, so the offset has to be captured and restored, otherwise
+  // closing the chat dumps the reader back at the top of the page.
+  //
+  // Mobile only: on desktop the panel is a small floating card, and someone may
+  // legitimately want to scroll the page while reading it.
   useEffect(() => {
     if (!open) return
+
     document.body.classList.add('chat-open')
-    return () => document.body.classList.remove('chat-open')
+
+    const isSheet = window.matchMedia?.(MOBILE_SHEET_QUERY)?.matches
+    if (!isSheet) {
+      return () => document.body.classList.remove('chat-open')
+    }
+
+    const scrollY = window.scrollY
+    const { style } = document.body
+    const previous = {
+      position: style.position,
+      top: style.top,
+      left: style.left,
+      right: style.right,
+      width: style.width,
+    }
+
+    style.position = 'fixed'
+    style.top = `-${scrollY}px`
+    style.left = '0'
+    style.right = '0'
+    style.width = '100%'
+
+    return () => {
+      Object.assign(style, previous)
+      document.body.classList.remove('chat-open')
+      window.scrollTo(0, scrollY)
+    }
   }, [open])
 
   // Keep the newest message in view. Depends on the typing flags too, since a
@@ -226,35 +266,53 @@ export default function SupportWidget() {
 
       {open && (
         <div className="chat-panel" role="dialog" aria-label="Support chat">
+          {/* Centred identity above a service label, with the dismiss control on
+              the left — the iMessage thread header. */}
           <header className="chat-panel__head">
-            <div>
-              <strong>{mode === 'bot' ? 'NextLeap assistant' : 'NextLeap support'}</strong>
-              <span className="chat-panel__status">
+            <button
+              type="button"
+              className="chat-panel__back"
+              onClick={() => setOpen(false)}
+              aria-label="Close chat"
+            >
+              ‹
+            </button>
+
+            <div className="chat-panel__ident">
+              <img src="/images/logo-mark.png" alt="" className="chat-panel__avatar" />
+              <strong className="chat-panel__name">
+                {mode === 'bot' ? 'NextLeap Assistant' : 'NextLeap Support'}
+                <span className="chat-panel__chevron" aria-hidden="true">›</span>
+              </strong>
+              <span className="chat-panel__service">
                 {mode === 'bot'
-                  ? 'Answers common questions instantly'
+                  ? 'Automated replies'
                   : waiting
                     ? 'Waiting for a team member…'
                     : conversation?.peerTyping
                       ? 'Typing…'
-                      : 'Connected to support'}
+                      : 'Support team'}
               </span>
             </div>
-            <button type="button" className="chat-panel__close" onClick={() => setOpen(false)} aria-label="Close">
-              ✕
-            </button>
+
+            {/* Balances the back button so the identity stays optically centred */}
+            <span className="chat-panel__spacer" aria-hidden="true" />
           </header>
 
           <div className="chat-scroll" ref={scrollRef}>
             {mode === 'bot' ? (
               <>
-                {thread.map((m, i) => (
-                  <ChatBubble
-                    key={i}
-                    side={m.from === 'user' ? 'out' : 'in'}
-                    body={m.body}
-                    at={m.at}
-                  />
-                ))}
+                {withTimeSeparators(thread).map((m, i) =>
+                  m.separator ? (
+                    <div className="chat-daymark" key={m.key}>{formatSeparator(m.at)}</div>
+                  ) : (
+                    <ChatBubble
+                      key={i}
+                      side={m.from === 'user' ? 'out' : 'in'}
+                      body={m.body}
+                    />
+                  )
+                )}
                 {botTyping && <TypingBubble label="Assistant is typing" />}
 
                 {/* Quick replies only once the bot has finished speaking */}
@@ -288,25 +346,36 @@ export default function SupportWidget() {
                   </div>
                 )}
 
-                {messages.map((m, i) => {
-                  const previous = messages[i - 1]
+                {withTimeSeparators(messages).map((m, i, all) => {
+                  if (m.separator) {
+                    return <div className="chat-daymark" key={m.key}>{formatSeparator(m.at)}</div>
+                  }
+
+                  const previous = all[i - 1]
+                  const next = all[i + 1]
                   return (
                     <ChatBubble
                       key={m._id || i}
                       system={m.from === 'system'}
                       side={m.from === 'user' ? 'out' : 'in'}
                       body={m.body}
-                      at={m.createdAt}
                       // Name the admin only on the first of a run, as iMessage does
                       author={
                         m.from === 'admin' && previous?.from !== 'admin'
                           ? m.sender?.name || 'Support'
                           : null
                       }
-                      showTail={previous?.from !== m.from}
+                      // The tail belongs to the last bubble of a run
+                      showTail={!next || next.separator || next.from !== m.from}
                     />
                   )
                 })}
+
+                {/* Receipt under the newest message, and only when it's ours —
+                    there's nothing to report about a message we received. */}
+                {messages.length > 0 &&
+                  messages[messages.length - 1].from === 'user' &&
+                  !conversation?.peerTyping && <div className="chat-receipt">Delivered</div>}
 
                 {conversation?.peerTyping && <TypingBubble label="Support is typing" />}
               </>
