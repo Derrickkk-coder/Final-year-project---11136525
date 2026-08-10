@@ -4,6 +4,7 @@ import { categories, jobTypes, experienceLevels } from '../data/mockJobs.js' // 
 import { createJob } from '../api/jobs.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import SkillsInput from '../components/SkillsInput.jsx'
+import DashboardShell from '../components/DashboardShell.jsx'
 
 export default function PostJob() {
   const navigate = useNavigate()
@@ -55,7 +56,8 @@ export default function PostJob() {
 
   if (user?.employerStatus !== 'approved') {
     return (
-      <div className="container" style={{ padding: '80px 24px', textAlign: 'center' }}>
+      <DashboardShell eyebrow="New posting" title="Post a job">
+      <div className="card" style={{ textAlign: 'center', padding: 'var(--space-12) var(--space-6)' }}>
         <span className="eyebrow">
           {user?.employerStatus === 'rejected' ? 'Account not approved' : 'Awaiting approval'}
         </span>
@@ -71,12 +73,14 @@ export default function PostJob() {
         </p>
         <Link to="/employer" className="btn btn--outline-pine">Back to dashboard</Link>
       </div>
+    </DashboardShell>
     )
   }
 
   if (submitted) {
     return (
-      <div className="container" style={{ padding: '80px 24px', textAlign: 'center' }}>
+      <DashboardShell eyebrow="New posting" title="Post a job">
+      <div className="card" style={{ textAlign: 'center', padding: 'var(--space-12) var(--space-6)' }}>
         <span className="eyebrow">Job posted</span>
         <h1 style={{ fontSize: 28, margin: '12px 0' }}>Your job posting is live</h1>
         <p style={{ color: 'var(--ink-soft)', marginBottom: 24 }}>
@@ -84,15 +88,13 @@ export default function PostJob() {
         </p>
         <button className="btn btn--pine" onClick={() => navigate('/employer')}>Go to dashboard</button>
       </div>
+    </DashboardShell>
     )
   }
 
   return (
-    <div className="container" style={{ paddingTop: 40, paddingBottom: 72, maxWidth: 720 }}>
-      <span className="eyebrow">New posting</span>
-      <h1 style={{ fontSize: 28, marginTop: 8, marginBottom: 28 }}>Post a job vacancy</h1>
-
-      <form className="panel" onSubmit={handleSubmit}>
+    <DashboardShell eyebrow="New posting" title="Post a job vacancy">
+      <form className="panel" style={{ maxWidth: 720 }} onSubmit={handleSubmit}>
         <div className="form-field">
           <label htmlFor="title">Job title</label>
           <input id="title" value={form.title} onChange={update('title')} placeholder="e.g. Frontend Engineer" required />
@@ -184,6 +186,6 @@ export default function PostJob() {
           {submitting ? 'Publishing…' : 'Publish job posting'}
         </button>
       </form>
-    </div>
+    </DashboardShell>
   )
 }

@@ -6,6 +6,7 @@ import CandidateCard from '../components/CandidateCard.jsx'
 import InterviewDialog from '../components/InterviewDialog.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import { SkeletonRows } from '../components/Skeleton.jsx'
+import DashboardShell from '../components/DashboardShell.jsx'
 import {
   fetchApplicationsForJob,
   updateApplicationStatus,
@@ -115,23 +116,16 @@ export default function JobCandidates() {
   let rankCursor = -1
 
   return (
-    <div className="container" style={{ paddingTop: 40, paddingBottom: 72 }}>
-      <Link to="/employer" style={{ fontSize: 'var(--text-sm)', color: 'var(--ink-soft)' }}>
-        &larr; Back to dashboard
-      </Link>
-
-      <div className="dash-header" style={{ marginTop: 20 }}>
-        <div>
-          <span className="eyebrow">Top candidates</span>
-          <h1 style={{ fontSize: 26, marginTop: 6 }}>{job?.title || 'Candidates'}</h1>
-          {job && (
-            <p style={{ color: 'var(--ink-soft)', fontSize: 'var(--text-sm)', margin: '4px 0 0' }}>
-              {job.ref} · {applications.length} {applications.length === 1 ? 'applicant' : 'applicants'}
-            </p>
-          )}
-        </div>
-        {job && <Link to={`/employer/jobs/${job._id}/edit`} className="btn btn--ghost">Edit posting</Link>}
-      </div>
+    <DashboardShell
+      eyebrow="Top candidates"
+      title={job?.title || 'Candidates'}
+      actions={job && <Link to={`/employer/jobs/${job._id}/edit`} className="btn btn--ghost">Edit posting</Link>}
+    >
+      {job && (
+        <p style={{ color: 'var(--ink-soft)', fontSize: 'var(--text-sm)', margin: '-12px 0 var(--space-5)' }}>
+          {job.ref} · {applications.length} {applications.length === 1 ? 'applicant' : 'applicants'}
+        </p>
+      )}
 
       {/* An untagged role can only be matched by scanning its text, which is
           less precise — and the employer is the one who can fix that. */}
@@ -193,6 +187,6 @@ export default function JobCandidates() {
           onSubmit={handleScheduleInterview}
         />
       )}
-    </div>
+    </DashboardShell>
   )
 }

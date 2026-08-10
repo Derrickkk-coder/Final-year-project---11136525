@@ -8,6 +8,7 @@ import Avatar from '../components/Avatar.jsx'
 import { SkeletonRows } from '../components/Skeleton.jsx'
 import { fetchMyInterviews } from '../api/applications.js'
 import interviewFormat from '../utils/interviewFormat.js'
+import DashboardShell from '../components/DashboardShell.jsx'
 
 function formatTime(date) {
   return new Date(date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
@@ -58,47 +59,7 @@ export default function Interviews() {
   ).length
 
   return (
-    <div className="dash-shell">
-      <aside className="dash-sidebar">
-        {isEmployer ? (
-          <div className="dash-sidebar__group">
-            <span className="dash-sidebar__label">Employer</span>
-            <a href="/employer">My job postings</a>
-            <a href="/interviews" className="active">Interviews</a>
-            <a href="/employer/profile">Company profile</a>
-          </div>
-        ) : (
-          <>
-            <div className="dash-sidebar__group">
-              <span className="dash-sidebar__label">Job seeker</span>
-              <a href="/dashboard">My applications</a>
-              <a href="/jobs">Browse jobs</a>
-              <a href="/interviews" className="active">Interviews</a>
-            </div>
-            <div className="dash-sidebar__group">
-              <span className="dash-sidebar__label">Account</span>
-              <a href="/profile">My profile</a>
-              <a href="/cv-review">CV review</a>
-            </div>
-          </>
-        )}
-      </aside>
-
-      <div className="dash-main">
-        <div className="dash-header">
-          <div>
-            <span className="eyebrow">Schedule</span>
-            <h1 style={{ fontSize: 26, marginTop: 6 }}>Interviews</h1>
-            {!loading && (
-              <p style={{ color: 'var(--ink-soft)', fontSize: 'var(--text-sm)', margin: '4px 0 0' }}>
-                {upcomingCount === 0
-                  ? 'Nothing coming up.'
-                  : `${upcomingCount} upcoming ${upcomingCount === 1 ? 'interview' : 'interviews'}.`}
-              </p>
-            )}
-          </div>
-        </div>
-
+    <DashboardShell eyebrow="Schedule" title="Interviews">
         {loading && <SkeletonRows count={3} height={90} />}
 
         {!loading && interviews.length === 0 && (
@@ -191,7 +152,6 @@ export default function Interviews() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </DashboardShell>
   )
 }

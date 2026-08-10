@@ -10,6 +10,10 @@ import EmptyState from '../components/EmptyState.jsx'
 import { SkeletonJobList, SkeletonRows } from '../components/Skeleton.jsx'
 import { fetchMyApplications } from '../api/applications.js'
 import { fetchRecommendedJobs } from '../api/jobs.js'
+import DashboardShell, { StatCard } from '../components/DashboardShell.jsx'
+import ActivityChart from '../components/ActivityChart.jsx'
+import { dailyCounts, activeDayCount } from '../utils/activitySeries.js'
+import { FileIcon, ClockIcon, EyeIcon, CheckIcon } from '../components/DashboardIcons.jsx'
 
 function formatDate(date) {
   return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -47,6 +51,10 @@ export default function JobSeekerDashboard() {
     .filter((a) => a.interview?.scheduledAt && new Date(a.interview.scheduledAt) > new Date())
     .sort((a, b) => new Date(a.interview.scheduledAt) - new Date(b.interview.scheduledAt))
 
+  // Built from the applications already fetched - no extra request
+  const activity = dailyCounts(applications, { days: 14 })
+  const recentApplications = applications.slice(0, 5)
+
   const counts = {
     total: applications.length,
     pending: applications.filter((a) => a.status === 'pending').length,
@@ -55,47 +63,63 @@ export default function JobSeekerDashboard() {
   }
 
   return (
-    <div className="dash-shell">
-     <aside className="dash-sidebar">
-        <div className="dash-sidebar__group">
-          <span className="dash-sidebar__label">Job seeker</span>
-          <a href="/dashboard" className="active">My applications</a>
-          <a href="/jobs">Browse jobs</a>
-          <a href="/interviews">Interviews</a>
-        </div>
-        <div className="dash-sidebar__group">
-          <span className="dash-sidebar__label">Account</span>
-          <a href="/profile">My profile</a>
-          <a href="/cv-review">CV review</a>
-        </div>
-      </aside>
-
-      <div className="dash-main">
-        <div className="dash-header">
-          <div>
-            <span className="eyebrow">Welcome back</span>
-            <h1 style={{ fontSize: 26, marginTop: 6 }}>{user?.name}</h1>
-          </div>
-          <Link to="/jobs" className="btn btn--pine">Find more jobs</Link>
+    <DashboardShell
+      eyebrow="Welcome back"
+      title={user?.name || 'Dashboard'}
+      actions={<Link to="/jobs" className="btn btn--pine">Find more jobs</Link>}
+    >
+        <div className="dash__stats">
+          <StatCard value={counts.total} label="Total applications" icon={FileIcon} tone="lime" />
+          <StatCard value={counts.pending} label="Pending review" icon={ClockIcon} tone="teal" />
+          <StatCard value={counts.review} label="In review" icon={EyeIcon} tone="teal" />
+          <StatCard value={counts.accepted} label="Accepted" icon={CheckIcon} tone="lime" />
         </div>
 
-        <div className="stat-grid">
-          <div className="stat-card">
-            <div className="stat-card__num">{counts.total}</div>
-            <div className="stat-card__label">Total applications</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-card__num">{counts.pending}</div>
-            <div className="stat-card__label">Pending review</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-card__num">{counts.review}</div>
-            <div className="stat-card__label">In review</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-card__num">{counts.accepted}</div>
-            <div className="stat-card__label">Accepted</div>
-          </div>
+        <div className="dash__cols">
+          <section className="card">
+            <div className="card__head">
+              <h2 className="card__title">Applications sent</h2>
+              <p className="card__note">Last 14 days</p>
+            </div>
+            {/* Three points is a shape read into noise, so below that the card
+                says so rather than drawing a line */}
+            {activeDayCount(activity) >= 3 ? (
+              <ActivityChart series={activity} label="Applications" unit="application" />
+            ) : (
+              <p className="chart__empty">
+                Not enough activity to chart yet - apply to a few roles and your
+                pattern will show up here.
+              </p>
+            )}
+          </section>
+
+          <section className="card">
+            <div className="card__head">
+              <h2 className="card__title">Recent applications</h2>
+            </div>
+            {recentApplications.length > 0 ? (
+              <div className="mini-list">
+                {recentApplications.map((app) => (
+                  <div className="mini-item" key={app._id}>
+                    <span className="mini-item__mark">
+                      {(app.job?.company || '?').charAt(0).toUpperCase()}
+                    </span>
+                    <span className="mini-item__body">
+                      <Link to={`/jobs/${app.job?._id}`} className="mini-item__title">
+                        {app.job?.title || 'Job no longer available'}
+                      </Link>
+                      <span className="mini-item__meta">
+                        {app.job?.company || '-'} - {formatDate(app.createdAt)}
+                      </span>
+                    </span>
+                    <span className="mini-item__end"><StatusPill status={app.status} /></span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="chart__empty">Nothing yet.</p>
+            )}
+          </section>
         </div>
 
         {/* Above "Jobs you might like" — a status change on something you've
@@ -290,7 +314,6 @@ export default function JobSeekerDashboard() {
             />
           )
         )}
-      </div>
-    </div>
+    </DashboardShell>
   )
 }

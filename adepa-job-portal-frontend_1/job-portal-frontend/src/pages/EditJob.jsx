@@ -4,6 +4,7 @@ import { categories, jobTypes, experienceLevels } from '../data/mockJobs.js' // 
 import { fetchJobById, updateJob } from '../api/jobs.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import SkillsInput from '../components/SkillsInput.jsx'
+import DashboardShell from '../components/DashboardShell.jsx'
 
 export default function EditJob() {
   const { id } = useParams()
@@ -94,35 +95,42 @@ export default function EditJob() {
 
   if (loading) {
     return (
-      <div className="container" style={{ padding: '80px 24px', textAlign: 'center', color: 'var(--ink-soft)' }}>
+      <DashboardShell eyebrow="Edit posting" title="Edit job">
+      <div className="card" style={{ textAlign: 'center', padding: 'var(--space-12) var(--space-6)', color: 'var(--ink-soft)' }}>
         Loading job…
       </div>
+    </DashboardShell>
     )
   }
 
   if (notFound) {
     return (
-      <div className="container" style={{ padding: '80px 24px', textAlign: 'center' }}>
+      <DashboardShell eyebrow="Edit posting" title="Edit job">
+      <div className="card" style={{ textAlign: 'center', padding: 'var(--space-12) var(--space-6)' }}>
         <span className="eyebrow">Not found</span>
         <h1 style={{ fontSize: 26, margin: '12px 0' }}>This job doesn't exist</h1>
         <Link to="/employer" className="btn btn--outline-pine">Back to dashboard</Link>
       </div>
+    </DashboardShell>
     )
   }
 
   if (forbidden) {
     return (
-      <div className="container" style={{ padding: '80px 24px', textAlign: 'center' }}>
+      <DashboardShell eyebrow="Edit posting" title="Edit job">
+      <div className="card" style={{ textAlign: 'center', padding: 'var(--space-12) var(--space-6)' }}>
         <span className="eyebrow">Not allowed</span>
         <h1 style={{ fontSize: 26, margin: '12px 0' }}>You can only edit jobs you posted</h1>
         <Link to="/employer" className="btn btn--outline-pine">Back to dashboard</Link>
       </div>
+    </DashboardShell>
     )
   }
 
   if (saved) {
     return (
-      <div className="container" style={{ padding: '80px 24px', textAlign: 'center' }}>
+      <DashboardShell eyebrow="Edit posting" title="Edit job">
+      <div className="card" style={{ textAlign: 'center', padding: 'var(--space-12) var(--space-6)' }}>
         <span className="eyebrow">Saved</span>
         <h1 style={{ fontSize: 28, margin: '12px 0' }}>Your changes are live</h1>
         <p style={{ color: 'var(--ink-soft)', marginBottom: 24 }}>
@@ -130,15 +138,13 @@ export default function EditJob() {
         </p>
         <button className="btn btn--pine" onClick={() => navigate('/employer')}>Go to dashboard</button>
       </div>
+    </DashboardShell>
     )
   }
 
   return (
-    <div className="container" style={{ paddingTop: 40, paddingBottom: 72, maxWidth: 720 }}>
-      <span className="eyebrow">Edit posting</span>
-      <h1 style={{ fontSize: 28, marginTop: 8, marginBottom: 28 }}>Edit job vacancy</h1>
-
-      <form className="panel" onSubmit={handleSubmit}>
+    <DashboardShell eyebrow="Edit posting" title="Edit job vacancy">
+      <form className="panel" style={{ maxWidth: 720 }} onSubmit={handleSubmit}>
         <div className="form-field">
           <label htmlFor="title">Job title</label>
           <input id="title" value={form.title} onChange={update('title')} placeholder="e.g. Frontend Engineer" required />
@@ -233,6 +239,6 @@ export default function EditJob() {
           <Link to="/employer" className="btn btn--ghost">Cancel</Link>
         </div>
       </form>
-    </div>
+    </DashboardShell>
   )
 }

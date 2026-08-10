@@ -9,6 +9,7 @@ import CvCard from '../components/CvCard.jsx'
 import EntryList from '../components/EntryList.jsx'
 import SkillsInput from '../components/SkillsInput.jsx'
 import { studentLevels } from '../data/mockJobs.js'
+import DashboardShell from '../components/DashboardShell.jsx'
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2MB
 
@@ -136,28 +137,7 @@ export default function MyProfile() {
   }
 
   return (
-    <div className="dash-shell">
-      <aside className="dash-sidebar">
-        <div className="dash-sidebar__group">
-          <span className="dash-sidebar__label">Job seeker</span>
-          <a href="/dashboard">My applications</a>
-          <a href="/jobs">Browse jobs</a>
-        </div>
-        <div className="dash-sidebar__group">
-          <span className="dash-sidebar__label">Account</span>
-          <a href="/profile" className="active">My profile</a>
-          <a href="/cv-review">CV review</a>
-        </div>
-      </aside>
-
-      <div className="dash-main">
-        <div className="dash-header">
-          <div>
-            <span className="eyebrow">Account</span>
-            <h1 style={{ fontSize: 26, marginTop: 6 }}>My profile</h1>
-          </div>
-        </div>
-
+    <DashboardShell eyebrow="Account" title="My profile">
         {/* Reads from `user`, not `form`, so the percentage reflects what is
             actually saved rather than what's currently typed. */}
         <ProfileCompletion user={user} />
@@ -324,7 +304,6 @@ export default function MyProfile() {
             {uploading ? 'Uploading photo…' : saving ? 'Saving…' : 'Save changes'}
           </button>
         </form>
-      </div>
-    </div>
+    </DashboardShell>
   )
 }

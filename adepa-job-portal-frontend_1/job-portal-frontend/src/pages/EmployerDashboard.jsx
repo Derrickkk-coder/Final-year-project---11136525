@@ -11,6 +11,10 @@ import { SkeletonStatCards, SkeletonRows } from '../components/Skeleton.jsx'
 import { toDownloadUrl } from '../api/cloudinary.js'
 import { fetchMyJobs, updateJob } from '../api/jobs.js'
 import { fetchApplicationsForEmployer, updateApplicationStatus, analyzeApplication } from '../api/applications.js'
+import DashboardShell, { StatCard } from '../components/DashboardShell.jsx'
+import ActivityChart from '../components/ActivityChart.jsx'
+import { dailyCounts, activeDayCount } from '../utils/activitySeries.js'
+import { BriefcaseIcon, CheckIcon, UsersIcon, ClockIcon } from '../components/DashboardIcons.jsx'
 
 const STATUS_OPTIONS = ['pending', 'review', 'shortlisted', 'accepted', 'rejected']
 
@@ -113,34 +117,26 @@ export default function EmployerDashboard() {
     }
   }
 
+  // From the applications already loaded for the Applicants tab
+  const activity = dailyCounts(applications, { days: 14 })
+  const topJobs = [...jobs].sort((a, b) => (b.applicantsCount || 0) - (a.applicantsCount || 0)).slice(0, 5)
+
   const openJobs = jobs.filter((j) => j.status === 'open').length
   const totalApplicants = jobs.reduce((sum, j) => sum + (j.applicantsCount || 0), 0)
   const pendingCount = applications.filter((a) => a.status === 'pending').length
 
   return (
-    <div className="dash-shell">
-      <aside className="dash-sidebar">
-        <div className="dash-sidebar__group">
-          <span className="dash-sidebar__label">Employer</span>
-          <a href="#jobs" className={tab === 'jobs' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('jobs') }}>
-            My job postings
-          </a>
-          <a href="#applicants" className={tab === 'applicants' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('applicants') }}>
-            Applicants
-          </a>
-          <a href="/interviews">Interviews</a>
-        </div>
-      </aside>
-
-      <div className="dash-main">
-        <div className="dash-header">
-          <div>
-            <span className="eyebrow">Employer dashboard</span>
-            <h1 style={{ fontSize: 26, marginTop: 6 }}>{user?.name}</h1>
-          </div>
-          <Link to="/employer/post" className="btn btn--coral">+ Post a new job</Link>
-        </div>
-
+    <DashboardShell
+      eyebrow="Employer dashboard"
+      title={user?.name || 'Dashboard'}
+      actions={<Link to="/employer/post" className="btn btn--coral">+ Post a new job</Link>}
+      tabs={[
+        { key: 'jobs', label: 'My job postings', icon: BriefcaseIcon },
+        { key: 'applicants', label: 'Applicants', icon: UsersIcon, badge: pendingCount },
+      ]}
+      activeTab={tab}
+      onTabChange={setTab}
+    >
         {user?.employerStatus === 'pending' && (
           <div className="panel" style={{ background: '#FFF3E0', border: '1px solid #F0D9A8', marginBottom: 24 }}>
             <strong style={{ color: '#8A5A0F' }}>Your account is awaiting admin approval.</strong>
@@ -182,23 +178,54 @@ export default function EmployerDashboard() {
 
         {!loading && !error && (
           <>
-            <div className="stat-grid">
-              <div className="stat-card">
-                <div className="stat-card__num">{jobs.length}</div>
-                <div className="stat-card__label">Total postings</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-card__num">{openJobs}</div>
-                <div className="stat-card__label">Currently open</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-card__num">{totalApplicants}</div>
-                <div className="stat-card__label">Total applicants</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-card__num">{pendingCount}</div>
-                <div className="stat-card__label">Awaiting review</div>
-              </div>
+            <div className="dash__stats">
+              <StatCard value={jobs.length} label="Total postings" icon={BriefcaseIcon} tone="lime" />
+              <StatCard value={openJobs} label="Currently open" icon={CheckIcon} tone="teal" />
+              <StatCard value={totalApplicants} label="Total applicants" icon={UsersIcon} tone="lime" />
+              <StatCard value={pendingCount} label="Awaiting review" icon={ClockIcon} tone="coral" />
+            </div>
+
+            <div className="dash__cols">
+              <section className="card">
+                <div className="card__head">
+                  <h2 className="card__title">Applications received</h2>
+                  <p className="card__note">Last 14 days, across all your roles</p>
+                </div>
+                {activeDayCount(activity) >= 3 ? (
+                  <ActivityChart series={activity} label="Applications" unit="application" />
+                ) : (
+                  <p className="chart__empty">
+                    Not enough activity to chart yet - once applications start
+                    arriving their pattern will show up here.
+                  </p>
+                )}
+              </section>
+
+              <section className="card">
+                <div className="card__head">
+                  <h2 className="card__title">Busiest roles</h2>
+                </div>
+                {topJobs.length > 0 ? (
+                  <div className="mini-list">
+                    {topJobs.map((job) => (
+                      <div className="mini-item" key={job._id}>
+                        <span className="mini-item__mark">{job.applicantsCount || 0}</span>
+                        <span className="mini-item__body">
+                          <Link to={`/employer/jobs/${job._id}/candidates`} className="mini-item__title">
+                            {job.title}
+                          </Link>
+                          <span className="mini-item__meta">
+                            {job.type} - {job.location?.split(',')[0]}
+                          </span>
+                        </span>
+                        <span className="mini-item__end"><StatusPill status={job.status} /></span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="chart__empty">No postings yet.</p>
+                )}
+              </section>
             </div>
 
             {tab === 'jobs' && (
@@ -543,7 +570,6 @@ export default function EmployerDashboard() {
             )}
           </>
         )}
-      </div>
-    </div>
+    </DashboardShell>
   )
 }

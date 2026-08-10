@@ -5,8 +5,11 @@ import EmptyState from '../components/EmptyState.jsx'
 import { SkeletonJobList } from '../components/Skeleton.jsx'
 import { fetchJobs } from '../api/jobs.js'
 import { categories, jobTypes, locations } from '../data/mockJobs.js' // static filter option lists only
+import { useAuth } from '../context/AuthContext.jsx'
+import DashboardShell from '../components/DashboardShell.jsx'
 
 export default function JobListings() {
+  const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const [query, setQuery] = useState(searchParams.get('q') || '')
   const [category, setCategory] = useState(searchParams.get('category') || 'All categories')
@@ -52,11 +55,10 @@ export default function JobListings() {
     setStudentOnly(false)
   }
 
-  return (
-    <div className="container" style={{ paddingTop: 40, paddingBottom: 72 }}>
-      <span className="eyebrow">Browse jobs</span>
-      <h1 style={{ fontSize: 32, marginTop: 8, marginBottom: 28 }}>Browse open roles</h1>
-
+  // Extracted so the signed-in and public layouts render exactly the same
+  // filters and results, rather than two copies that can drift apart.
+  const body = (
+    <>
       <div className="filters">
         <div className="form-field">
           <label htmlFor="q">Keyword</label>
@@ -134,6 +136,26 @@ export default function JobListings() {
           )}
         </>
       )}
+    </>
+  )
+
+  // /jobs is public, so the dashboard frame is only right for someone who has
+  // one. A visitor has no avatar, role or sign-out to put in a sidebar, and an
+  // employer arriving here is deliberately looking at the public view of the
+  // board — both get the plain page.
+  if (user?.role === 'seeker') {
+    return (
+      <DashboardShell eyebrow="Find work" title="Browse open roles">
+        {body}
+      </DashboardShell>
+    )
+  }
+
+  return (
+    <div className="container" style={{ paddingTop: 40, paddingBottom: 72 }}>
+      <span className="eyebrow">Browse jobs</span>
+      <h1 style={{ fontSize: 32, marginTop: 8, marginBottom: 28 }}>Browse open roles</h1>
+      {body}
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { updateProfile } from '../api/auth.js'
 import { uploadImageToCloudinary } from '../api/cloudinary.js'
 import Avatar from '../components/Avatar.jsx'
+import DashboardShell from '../components/DashboardShell.jsx'
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2MB
 
@@ -84,27 +85,7 @@ export default function CompanyProfile() {
   }
 
   return (
-    <div className="dash-shell">
-      <aside className="dash-sidebar">
-        <div className="dash-sidebar__group">
-          <span className="dash-sidebar__label">Employer</span>
-          <a href="/employer">My job postings</a>
-          <a href="/employer">Applicants</a>
-        </div>
-        <div className="dash-sidebar__group">
-          <span className="dash-sidebar__label">Account</span>
-          <a href="/employer/profile" className="active">Company profile</a>
-        </div>
-      </aside>
-
-      <div className="dash-main">
-        <div className="dash-header">
-          <div>
-            <span className="eyebrow">Account</span>
-            <h1 style={{ fontSize: 26, marginTop: 6 }}>Company profile</h1>
-          </div>
-        </div>
-
+    <DashboardShell eyebrow="Account" title="Company profile">
         <form className="panel" style={{ maxWidth: 560 }} onSubmit={handleSubmit}>
           <div className="form-field">
             <label>Profile picture</label>
@@ -151,7 +132,6 @@ export default function CompanyProfile() {
             {uploading ? 'Uploading photo…' : saving ? 'Saving…' : 'Save changes'}
           </button>
         </form>
-      </div>
-    </div>
+    </DashboardShell>
   )
 }

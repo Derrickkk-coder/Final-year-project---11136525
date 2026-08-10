@@ -8,6 +8,7 @@ import AiIcon from '../components/AiIcon.jsx'
 import { SkeletonRows } from '../components/Skeleton.jsx'
 import { fetchCvAnalysis, analyzeCv } from '../api/cv.js'
 import { fetchJobs } from '../api/jobs.js'
+import DashboardShell from '../components/DashboardShell.jsx'
 
 function ScoreBar({ name, score, comment }) {
   return (
@@ -88,28 +89,7 @@ export default function CvReview() {
   }
 
   return (
-    <div className="dash-shell">
-      <aside className="dash-sidebar">
-        <div className="dash-sidebar__group">
-          <span className="dash-sidebar__label">Job seeker</span>
-          <a href="/dashboard">My applications</a>
-          <a href="/jobs">Browse jobs</a>
-        </div>
-        <div className="dash-sidebar__group">
-          <span className="dash-sidebar__label">Account</span>
-          <a href="/profile">My profile</a>
-          <a href="/cv-review" className="active">CV review</a>
-        </div>
-      </aside>
-
-      <div className="dash-main">
-        <div className="dash-header">
-          <div>
-            <span className="eyebrow">AI tools</span>
-            <h1 style={{ fontSize: 26, marginTop: 6 }}>CV review</h1>
-          </div>
-        </div>
-
+    <DashboardShell eyebrow="AI tools" title="CV review">
         {loading && <SkeletonRows count={4} height={56} />}
 
         {!loading && !hasCv && (
@@ -275,7 +255,6 @@ export default function CvReview() {
             </div>
           </>
         )}
-      </div>
-    </div>
+    </DashboardShell>
   )
 }

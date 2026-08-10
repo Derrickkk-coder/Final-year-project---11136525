@@ -6,6 +6,10 @@ import { useConfirm } from '../context/ConfirmContext.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import SupportInbox from '../components/SupportInbox.jsx'
+import DashboardShell, { StatCard } from '../components/DashboardShell.jsx'
+import ActivityChart from '../components/ActivityChart.jsx'
+import { seriesFromDailyTotals, activeDayCount } from '../utils/activitySeries.js'
+import { GridIcon, UsersIcon, BriefcaseIcon, ClockIcon, CheckIcon, FileIcon, ChatIcon } from '../components/DashboardIcons.jsx'
 import { SkeletonRows } from '../components/Skeleton.jsx'
 import {
   fetchEmployers, approveEmployer, rejectEmployer, fetchAdminStats,
@@ -27,9 +31,11 @@ export default function AdminDashboard() {
   const { user } = useAuth()
   const toast = useToast()
   const confirm = useConfirm()
-  const [tab, setTab] = useState('pending')
+  const [tab, setTab] = useState('overview')
 
   const [stats, setStats] = useState(null)
+  const [statsLoading, setStatsLoading] = useState(true)
+  const [perDay, setPerDay] = useState([])
   const [employers, setEmployers] = useState([])
   const [users, setUsers] = useState([])
   const [jobs, setJobs] = useState([])
@@ -43,15 +49,22 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchAdminStats()
-      .then((data) => setStats(data.stats))
+      .then((data) => {
+        setStats(data.stats)
+        setPerDay(data.applicationsPerDay || [])
+      })
       .catch(() => {})
+      .finally(() => setStatsLoading(false))
   }, [])
 
   useEffect(() => {
     // SupportInbox fetches and polls for itself, so there's nothing to load here
     // — and falling through to the employer branch would fetch every employer
     // for a tab that doesn't show them.
-    if (tab === 'support') {
+    if (tab === 'overview' || tab === 'support') {
+      // Neither has a list to load here: the overview runs off the stats fetched
+      // once on mount, and SupportInbox fetches and polls for itself. Falling
+      // through would ask the server for employers with status "overview".
       setLoading(false)
       setError('')
       return
@@ -84,7 +97,14 @@ export default function AdminDashboard() {
   }, [tab, reloadKey])
 
   const refreshStats = () => {
-    fetchAdminStats().then((data) => setStats(data.stats)).catch(() => {})
+    setStatsLoading(true)
+    fetchAdminStats()
+      .then((data) => {
+        setStats(data.stats)
+        setPerDay(data.applicationsPerDay || [])
+      })
+      .catch(() => {})
+      .finally(() => setStatsLoading(false))
   }
 
   // Every handler below used to swallow its error silently, so a failed action
@@ -199,67 +219,65 @@ export default function AdminDashboard() {
 
   const isEmployerTab = tab === 'pending' || tab === 'approved' || tab === 'rejected'
 
+  const activity = seriesFromDailyTotals(perDay, { days: 14 })
+
   return (
-    <div className="dash-shell">
-      <aside className="dash-sidebar dash-sidebar--admin">
-        <div className="dash-sidebar__group">
-          <span className="dash-sidebar__label">Employers</span>
-          {EMPLOYER_TABS.map((t) => (
-            <a key={t.key} href={`#${t.key}`} className={tab === t.key ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab(t.key) }}>{t.label}</a>
-          ))}
-        </div>
-        <div className="dash-sidebar__group">
-          <span className="dash-sidebar__label">Platform</span>
-          <a href="#users" className={tab === 'users' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('users') }}>
-            All users
-          </a>
-          <a href="#jobs" className={tab === 'jobs' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('jobs') }}>
-            All jobs
-          </a>
-          <a href="#comments" className={tab === 'comments' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('comments') }}>
-            Comments
-          </a>
-          <a href="#support" className={tab === 'support' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setTab('support') }}>
-            Support chat
-          </a>
-        </div>
-      </aside>
+    <DashboardShell
+      eyebrow="Admin dashboard"
+      title={user?.name || 'Dashboard'}
+      tabs={[
+        { key: 'overview', label: 'Dashboard', icon: GridIcon },
+        ...EMPLOYER_TABS.map((t) => ({ key: t.key, label: t.label, icon: BriefcaseIcon })),
+        { key: 'users', label: 'All users', icon: UsersIcon },
+        { key: 'jobs', label: 'All jobs', icon: FileIcon },
+        { key: 'comments', label: 'Comments', icon: ChatIcon },
+        { key: 'support', label: 'Support chat', icon: ChatIcon },
+      ]}
+      activeTab={tab}
+      onTabChange={setTab}
+    >
+        {/* The platform-wide totals answer "how is NextLeap doing", which is a
+            different question from the one every other tab asks. Repeating them
+            above each table pushed the actual work below the fold. */}
+        {tab === 'overview' && statsLoading && <SkeletonRows count={3} height={92} />}
 
-      <div className="dash-main">
-        <div className="dash-header">
-          <div>
-            <span className="eyebrow">Admin dashboard</span>
-            <h1 style={{ fontSize: 26, marginTop: 6 }}>{user?.name}</h1>
-          </div>
-        </div>
+        {tab === 'overview' && !statsLoading && !stats && (
+          <EmptyState
+            icon="⚠️"
+            tone="error"
+            title="Couldn't load the overview"
+            description="The platform figures didn't come back. The tabs in the sidebar still work."
+            action={
+              <button className="btn btn--pine" onClick={refreshStats}>Try again</button>
+            }
+          />
+        )}
 
-        {stats && (
-          <div className="stat-grid">
-            <div className="stat-card">
-              <div className="stat-card__num">{stats.totalSeekers}</div>
-              <div className="stat-card__label">Job seekers</div>
+        {tab === 'overview' && stats && (
+          <>
+            <div className="dash__stats">
+              <StatCard value={stats.totalSeekers} label="Job seekers" icon={UsersIcon} tone="lime" />
+              <StatCard value={stats.totalEmployers} label="Employers" icon={BriefcaseIcon} tone="teal" />
+              <StatCard value={stats.pendingEmployers} label="Awaiting approval" icon={ClockIcon} tone="coral" />
+              <StatCard value={stats.openJobs} label="Open jobs" icon={CheckIcon} tone="lime" />
+              <StatCard value={stats.totalJobs} label="Total jobs posted" icon={FileIcon} tone="teal" />
+              <StatCard value={stats.totalApplications} label="Total applications" icon={ChatIcon} tone="teal" />
             </div>
-            <div className="stat-card">
-              <div className="stat-card__num">{stats.totalEmployers}</div>
-              <div className="stat-card__label">Employers</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-card__num">{stats.pendingEmployers}</div>
-              <div className="stat-card__label">Awaiting approval</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-card__num">{stats.openJobs}</div>
-              <div className="stat-card__label">Open jobs</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-card__num">{stats.totalJobs}</div>
-              <div className="stat-card__label">Total jobs posted</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-card__num">{stats.totalApplications}</div>
-              <div className="stat-card__label">Total applications</div>
-            </div>
-          </div>
+
+            <section className="card" style={{ marginBottom: 'var(--space-6)' }}>
+              <div className="card__head">
+                <h2 className="card__title">Applications across the platform</h2>
+                <p className="card__note">Last 14 days</p>
+              </div>
+              {activeDayCount(activity) >= 3 ? (
+                <ActivityChart series={activity} label="Applications" unit="application" />
+              ) : (
+                <p className="chart__empty">
+                  Not enough activity in the last 14 days to chart.
+                </p>
+              )}
+            </section>
+          </>
         )}
 
         {loading && <SkeletonRows count={5} height={52} />}
@@ -612,7 +630,6 @@ export default function AdminDashboard() {
             )}
           </>
         )}
-      </div>
-    </div>
+    </DashboardShell>
   )
 }

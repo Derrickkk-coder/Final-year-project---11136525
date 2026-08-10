@@ -166,6 +166,30 @@ export async function getStats(req, res, next) {
       Application.countDocuments(),
     ])
 
+    // Applications per day for the dashboard chart. Aggregated in Mongo rather
+    // than by pulling every application into Node — the counts are all the
+    // client needs, and the documents themselves would be wasted transfer.
+    //
+    // Grouped with an explicit timezone so a day boundary matches what the admin
+    // sees. Without it Mongo groups by UTC, and a late-evening application would
+    // land on the following day in the chart.
+    const since = new Date()
+    since.setDate(since.getDate() - 13)
+    since.setHours(0, 0, 0, 0)
+
+    const perDay = await Application.aggregate([
+      { $match: { createdAt: { $gte: since } } },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: 'Africa/Accra' },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ])
+
     res.json({
       success: true,
       stats: {
@@ -176,6 +200,7 @@ export async function getStats(req, res, next) {
         openJobs,
         totalApplications,
       },
+      applicationsPerDay: perDay.map((d) => ({ day: d._id, count: d.count })),
     })
   } catch (err) {
     next(err)

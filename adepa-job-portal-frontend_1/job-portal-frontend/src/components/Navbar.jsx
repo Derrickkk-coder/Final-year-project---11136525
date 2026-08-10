@@ -28,9 +28,16 @@ export default function Navbar() {
         </Link>
 
         <nav className="nav__links nav__links--desktop">
-          <NavLink to="/jobs" className={({ isActive }) => (isActive ? 'active' : '')}>
-            Browse jobs
-          </NavLink>
+          {/* Visitors only. It's the point of the site for someone not signed in,
+              but nobody with an account belongs on the public board from here: a
+              seeker has it in their sidebar, an employer posts vacancies rather
+              than shopping for them, and an admin moderates jobs through the
+              "All jobs" tab. */}
+          {!user && (
+            <NavLink to="/jobs" className={({ isActive }) => (isActive ? 'active' : '')}>
+              Browse jobs
+            </NavLink>
+          )}
           {user?.role === 'employer' && (
             <NavLink to="/employer" className={({ isActive }) => (isActive ? 'active' : '')}>
               Employer dashboard
@@ -107,9 +114,12 @@ export default function Navbar() {
       >
         <div className="nav__mobile-panel__inner">
           <nav className="nav__mobile-links">
-            <NavLink to="/jobs" className={({ isActive }) => (isActive ? 'active' : '')}>
-              Browse jobs
-            </NavLink>
+            {/* Mirrors the desktop nav above */}
+            {!user && (
+              <NavLink to="/jobs" className={({ isActive }) => (isActive ? 'active' : '')}>
+                Browse jobs
+              </NavLink>
+            )}
             {user?.role === 'employer' && (
               <NavLink to="/employer" className={({ isActive }) => (isActive ? 'active' : '')}>
                 Employer dashboard

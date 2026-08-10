@@ -1,14 +1,19 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Footer() {
+  const { user } = useAuth()
+
   return (
     <footer className="footer">
       <div className="container footer__inner">
         <span>© {new Date().getFullYear()} NextLeap · University of Ghana Final Year Project - Akwaboah Derrick-11136525</span>
 
         <div className="footer__links">
-          <Link to="/jobs">Browse jobs</Link>
+          {/* Same rule as the navbar — this was the last route to the public
+              board left in the chrome for signed-in users. */}
+          {!user && <Link to="/jobs">Browse jobs</Link>}
           <Link to="/register">For employers</Link>
           <Link to="/login">Log in</Link>
         </div>
