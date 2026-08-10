@@ -161,23 +161,25 @@ export default function Home() {
 
       <LogoStrip />
 
-      {/* Four steps, each covering both audiences rather than splitting into two
-          tracks — the flow is genuinely the same shape from either side. */}
-      <section className="section how">
+      {/* Was the how-it-works slot. Both sections are position-styled - a tinted
+          band here, a white bordered one further down - so swapping the two moved
+          the content and left each band where the page's rhythm wants it. */}
+      <section className="section section--band">
         <div className="container">
           <Reveal>
-            <span className="eyebrow">How it works</span>
-            <h2 className="section__title" style={{ marginTop: 8, marginBottom: 'var(--space-10)' }}>
-              From sign-up to hired, in four steps
-            </h2>
+            <span className="eyebrow">Why NextLeap</span>
+            <h2 className="section__title" style={{ marginTop: 8, marginBottom: 36 }}>How NextLeap is different</h2>
           </Reveal>
-
-          <div className="how-grid">
-            {HOW_IT_WORKS.map((step, i) => (
-              <Reveal className="how-step" key={step.title} delay={i * 110}>
-                <div className="how-step__num" aria-hidden="true">{i + 1}</div>
-                <h3 className="how-step__title">{step.title}</h3>
-                <p className="how-step__body">{step.body}</p>
+          <div className="features-grid">
+            {FEATURES.map((f, i) => (
+              <Reveal className="feature-card" key={f.title} delay={i * 110}>
+                <div className="feature-badge" style={{
+                  width: 36, height: 36, borderRadius: '50%', background: 'var(--teal-100)',
+                  color: 'var(--teal-700)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: 800, marginBottom: 14,
+                }}>✓</div>
+                <h3 style={{ fontSize: 17, marginBottom: 8 }}>{f.title}</h3>
+                <p style={{ color: 'var(--ink-soft)', fontSize: 14.5, lineHeight: 1.6 }}>{f.body}</p>
               </Reveal>
             ))}
           </div>
@@ -249,22 +251,23 @@ export default function Home() {
         </section>
       )}
 
+      {/* Four steps, each covering both audiences rather than splitting into two
+          tracks — the flow is genuinely the same shape from either side. */}
       <section className="section" style={{ background: '#fff', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
         <div className="container">
           <Reveal>
-            <span className="eyebrow">Why NextLeap</span>
-            <h2 className="section__title" style={{ marginTop: 8, marginBottom: 36 }}>How NextLeap is different</h2>
+            <span className="eyebrow">How it works</span>
+            <h2 className="section__title" style={{ marginTop: 8, marginBottom: 'var(--space-10)' }}>
+              From sign-up to hired, in four steps
+            </h2>
           </Reveal>
-          <div className="features-grid">
-            {FEATURES.map((f, i) => (
-              <Reveal className="feature-card" key={f.title} delay={i * 110}>
-                <div className="feature-badge" style={{
-                  width: 36, height: 36, borderRadius: '50%', background: 'var(--teal-100)',
-                  color: 'var(--teal-700)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 800, marginBottom: 14,
-                }}>✓</div>
-                <h3 style={{ fontSize: 17, marginBottom: 8 }}>{f.title}</h3>
-                <p style={{ color: 'var(--ink-soft)', fontSize: 14.5, lineHeight: 1.6 }}>{f.body}</p>
+
+          <div className="how-grid">
+            {HOW_IT_WORKS.map((step, i) => (
+              <Reveal className="how-step" key={step.title} delay={i * 110}>
+                <div className="how-step__num" aria-hidden="true">{i + 1}</div>
+                <h3 className="how-step__title">{step.title}</h3>
+                <p className="how-step__body">{step.body}</p>
               </Reveal>
             ))}
           </div>

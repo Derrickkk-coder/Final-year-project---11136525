@@ -322,7 +322,9 @@
 .hero__stat-label { font-size: 12px; color: var(--ink-soft); font-weight: 600; max-width: 14ch; }
 
 /* ============ How it works ============ */
-.how { background: var(--paper-raised); border-bottom: 1px solid var(--line); }
+/* Tinted band. Named for what it is rather than what it holds — it used to be
+   .how, and the how-it-works content has since moved out of it. */
+.section--band { background: var(--paper-raised); border-bottom: 1px solid var(--line); }
 .how-grid {
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-6);
   /* Connecting rule behind the numbered markers, so the four read as a sequence
