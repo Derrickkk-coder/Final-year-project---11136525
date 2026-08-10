@@ -68,6 +68,16 @@ export default function SupportWidget() {
     sayBot(BOT_NODES[BOT_START].body)
   }, [open, mode])
 
+  // Marks the page while the panel is open so CSS can freeze it — but only at
+  // the mobile breakpoint, where the panel is a full sheet. The breakpoint lives
+  // in the stylesheet (body.chat-open) rather than here, so there's one place
+  // that decides what "mobile" means.
+  useEffect(() => {
+    if (!open) return
+    document.body.classList.add('chat-open')
+    return () => document.body.classList.remove('chat-open')
+  }, [open])
+
   // Keep the newest message in view. Depends on the typing flags too, since a
   // bubble appearing changes the height.
   useEffect(() => {
