@@ -281,3 +281,21 @@
   .dash__main { padding: var(--space-5) var(--space-4); }
   .dash__title { font-size: 23px; }
 }
+
+/* Phone widths. auto-fit's 180px floor can only fit one column in ~370px of
+   content, so each tile stretched the full width and a two-digit number sat in
+   a card tall enough for a paragraph. Two fixed columns instead, with the tile
+   scaled to match: the number is still the largest thing in it, just not
+   competing with the page title. */
+@media (max-width: 560px) {
+  .dash__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  .stat { padding: var(--space-4); border-radius: 14px; }
+  .stat__num { font-size: 23px; }
+  .stat__label { font-size: var(--text-xs); margin-top: 2px; }
+  .stat__icon { width: 32px; height: 32px; }
+  .stat__icon svg { width: 16px; height: 16px; }
+}

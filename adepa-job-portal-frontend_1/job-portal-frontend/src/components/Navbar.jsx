@@ -18,6 +18,12 @@ export default function Navbar() {
   const { present: hasSidebar, open: sidebarOpen, setOpen: setSidebarOpen } = useSidebar()
   const drawerOpen = hasSidebar ? sidebarOpen : menuOpen
 
+  // Where the mobile avatar goes. An admin has no profile page of their own, so
+  // it takes them to the dashboard that is their account area — better than an
+  // avatar that looks tappable and isn't.
+  const profileTo =
+    user?.role === 'employer' ? '/employer/profile' : user?.role === 'admin' ? '/admin' : '/profile'
+
   useEffect(() => {
     setMenuOpen(false)
   }, [location.pathname])
@@ -84,6 +90,14 @@ export default function Navbar() {
             pointless — you'd have to open the menu to discover you had one. */}
         <div className="nav__right">
           {user && <NotificationBell />}
+
+          {/* Mobile only: on desktop the avatar is already in .nav__actions
+              alongside the name and Log out, and two would be one too many. */}
+          {user && (
+            <Link to={profileTo} className="nav__me" aria-label={`${user.name} — your profile`}>
+              <Avatar src={user.profilePictureUrl} name={user.name} size={30} />
+            </Link>
+          )}
 
           <div className="nav__actions nav__actions--desktop">
             {user ? (

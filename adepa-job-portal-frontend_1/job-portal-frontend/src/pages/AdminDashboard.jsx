@@ -10,7 +10,7 @@ import DashboardShell, { StatCard } from '../components/DashboardShell.jsx'
 import ActivityChart from '../components/ActivityChart.jsx'
 import { seriesFromDailyTotals, activeDayCount } from '../utils/activitySeries.js'
 import { GridIcon, UsersIcon, BriefcaseIcon, ClockIcon, CheckIcon, FileIcon, ChatIcon } from '../components/DashboardIcons.jsx'
-import { SkeletonRows } from '../components/Skeleton.jsx'
+import { SkeletonRows, SkeletonStatCards } from '../components/Skeleton.jsx'
 import {
   fetchEmployers, approveEmployer, rejectEmployer, fetchAdminStats,
   fetchAllUsers, setUserActiveStatus, fetchAllJobsAdmin, deleteJobAdmin,
@@ -239,7 +239,7 @@ export default function AdminDashboard() {
         {/* The platform-wide totals answer "how is NextLeap doing", which is a
             different question from the one every other tab asks. Repeating them
             above each table pushed the actual work below the fold. */}
-        {tab === 'overview' && statsLoading && <SkeletonRows count={3} height={92} />}
+        {tab === 'overview' && statsLoading && <SkeletonStatCards count={6} />}
 
         {tab === 'overview' && !statsLoading && !stats && (
           <EmptyState

@@ -13,6 +13,7 @@ import {
   pingTyping,
 } from '../api/support.js'
 import useBodyScrollLock from '../hooks/useBodyScrollLock.js'
+import { useSidebar } from '../context/SidebarContext.jsx'
 
 // Mirrors the 560px breakpoint in global.css at which .chat-panel becomes a
 // full-height sheet. Needed in JS because the iOS scroll lock can't be expressed
@@ -49,6 +50,12 @@ export default function SupportWidget() {
   const scrollRef = useRef(null)
   const lastTypingPing = useRef(0)
   const node = BOT_NODES[nodeKey]
+
+  // The dashboard drawer opens over the bottom-left corner this button lives in,
+  // and at z-index 250 the button wins — it was sitting on top of the drawer's
+  // Log out. A floating action button over an open drawer is wrong anyway: the
+  // drawer is the thing being interacted with.
+  const { open: drawerOpen } = useSidebar()
 
   // A notification links here with ?support=open so a reply is one click away
   useEffect(() => {
@@ -219,7 +226,9 @@ export default function SupportWidget() {
     <>
       <button
         type="button"
-        className={`help-fab ${open ? 'is-open' : ''}`}
+        className={`help-fab ${open ? 'is-open' : ''} ${drawerOpen ? 'is-stowed' : ''}`}
+        // Out of the tab order too, not just out of sight
+        tabIndex={drawerOpen ? -1 : 0}
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label={open ? 'Close help' : 'Need help?'}

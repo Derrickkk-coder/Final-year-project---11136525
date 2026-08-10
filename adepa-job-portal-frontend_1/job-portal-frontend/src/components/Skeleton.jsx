@@ -54,13 +54,24 @@ export function SkeletonJobList({ count = 4 }) {
   )
 }
 
+// Mirrors .stat inside .dash__stats. It used to have its own .stat-grid/.stat-card
+// pair, which meant the loading state and the real thing were two sets of numbers
+// to keep in step — and they'd already come apart: the tiles go to two columns on
+// a phone while the skeleton went to one. Borrowing the real classes makes them
+// agree at every breakpoint by construction.
 export function SkeletonStatCards({ count = 4 }) {
   return (
-    <div className="stat-grid" role="status" aria-label="Loading figures">
+    <div className="dash__stats" role="status" aria-label="Loading figures">
       {Array.from({ length: count }, (_, i) => (
-        <div className="stat-card" key={i} aria-hidden="true">
-          <Skeleton width={54} height={28} />
-          <Skeleton width="72%" height={12} style={{ marginTop: 8 }} />
+        <div className="stat" key={i} aria-hidden="true">
+          <div className="stat__text">
+            <Skeleton width={44} height={26} />
+            <Skeleton width="80%" height={12} style={{ marginTop: 6 }} />
+          </div>
+          {/* .stat__icon without a tone class is an unpainted circle: it reserves
+              the icon's width at whichever breakpoint applies, so the tile keeps
+              its height without inventing one of the accent colours. */}
+          <span className="stat__icon skeleton" />
         </div>
       ))}
     </div>
