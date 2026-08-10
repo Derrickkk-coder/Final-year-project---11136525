@@ -3,12 +3,20 @@ import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import Avatar from './Avatar.jsx'
 import NotificationBell from './NotificationBell.jsx'
+import { useSidebar } from '../context/SidebarContext.jsx'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+
+  // On a dashboard the hamburger opens that page's sidebar instead of the site
+  // drawer. The sidebar already holds everything the drawer would have shown a
+  // signed-in user — their name, their sections, sign out — so two collapsible
+  // menus in the same header would just be one of them being wrong.
+  const { present: hasSidebar, open: sidebarOpen, setOpen: setSidebarOpen } = useSidebar()
+  const drawerOpen = hasSidebar ? sidebarOpen : menuOpen
 
   useEffect(() => {
     setMenuOpen(false)
@@ -22,6 +30,20 @@ export default function Navbar() {
   return (
     <header className="nav">
       <div className="container nav__inner">
+        {/* First in the DOM as well as on screen, so tab order matches the
+            layout. Hidden above 900px, where the full nav is on show. */}
+        <button
+          className="nav__burger"
+          aria-label={drawerOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={drawerOpen}
+          aria-controls={hasSidebar ? 'dash-sidebar' : 'nav-mobile-panel'}
+          onClick={() => (hasSidebar ? setSidebarOpen(!sidebarOpen) : setMenuOpen((v) => !v))}
+        >
+          <span className={`nav__burger-line ${drawerOpen ? 'is-open' : ''}`} />
+          <span className={`nav__burger-line ${drawerOpen ? 'is-open' : ''}`} />
+          <span className={`nav__burger-line ${drawerOpen ? 'is-open' : ''}`} />
+        </button>
+
         <Link to="/" className="nav__brand">
           <img src="/images/logo-mark.png" alt="NextLeap logo" className="nav__brand-mark" />
           NextLeap
@@ -84,17 +106,6 @@ export default function Navbar() {
             )}
           </div>
 
-          <button
-            className="nav__burger"
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={menuOpen}
-            aria-controls="nav-mobile-panel"
-            onClick={() => setMenuOpen((v) => !v)}
-          >
-            <span className={`nav__burger-line ${menuOpen ? 'is-open' : ''}`} />
-            <span className={`nav__burger-line ${menuOpen ? 'is-open' : ''}`} />
-            <span className={`nav__burger-line ${menuOpen ? 'is-open' : ''}`} />
-          </button>
         </div>
       </div>
 

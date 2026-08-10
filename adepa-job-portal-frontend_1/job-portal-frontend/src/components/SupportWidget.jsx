@@ -12,6 +12,7 @@ import {
   sendSupportMessage,
   pingTyping,
 } from '../api/support.js'
+import useBodyScrollLock from '../hooks/useBodyScrollLock.js'
 
 // Mirrors the 560px breakpoint in global.css at which .chat-panel becomes a
 // full-height sheet. Needed in JS because the iOS scroll lock can't be expressed
@@ -74,49 +75,19 @@ export default function SupportWidget() {
     sayBot(BOT_NODES[BOT_START].body)
   }, [open, mode])
 
-  // Freezing the page behind the sheet.
-  //
-  // `overflow: hidden` on body — which is what the .chat-open class does — is
-  // simply ignored by iOS Safari for touch scrolling, so on a phone it achieved
-  // nothing. The only reliable lock is taking the body out of flow with
-  // position: fixed, which does stop touch scrolling. That collapses the page to
-  // scroll offset 0, so the offset has to be captured and restored, otherwise
-  // closing the chat dumps the reader back at the top of the page.
-  //
-  // Mobile only: on desktop the panel is a small floating card, and someone may
-  // legitimately want to scroll the page while reading it.
+  // .chat-open handles the desktop case, where the body only needs overflow
+  // hidden. It is not enough on a phone — see the hook below.
   useEffect(() => {
     if (!open) return
-
     document.body.classList.add('chat-open')
-
-    const isSheet = window.matchMedia?.(MOBILE_SHEET_QUERY)?.matches
-    if (!isSheet) {
-      return () => document.body.classList.remove('chat-open')
-    }
-
-    const scrollY = window.scrollY
-    const { style } = document.body
-    const previous = {
-      position: style.position,
-      top: style.top,
-      left: style.left,
-      right: style.right,
-      width: style.width,
-    }
-
-    style.position = 'fixed'
-    style.top = `-${scrollY}px`
-    style.left = '0'
-    style.right = '0'
-    style.width = '100%'
-
-    return () => {
-      Object.assign(style, previous)
-      document.body.classList.remove('chat-open')
-      window.scrollTo(0, scrollY)
-    }
+    return () => document.body.classList.remove('chat-open')
   }, [open])
+
+  // Mobile only, because on desktop the panel is a small floating card and
+  // someone may legitimately want to scroll the page while reading it. The lock
+  // itself used to be inlined here; it's now shared with the dashboard's mobile
+  // drawer, which hits the same iOS quirk.
+  useBodyScrollLock(open, MOBILE_SHEET_QUERY)
 
   // Keep the newest message in view. Depends on the typing flags too, since a
   // bubble appearing changes the height.

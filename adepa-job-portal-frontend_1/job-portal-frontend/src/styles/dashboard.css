@@ -44,6 +44,7 @@
 /* ---- Sidebar ---- */
 .dash__side {
   display: flex; flex-direction: column;
+  position: relative;
   padding: var(--space-6) var(--space-4);
   border-right: 1px solid var(--line);
   background: var(--paper-raised);
@@ -95,6 +96,12 @@
 }
 .dash__logout { color: var(--ink-faint); }
 .dash__logout:hover { color: var(--rust); background: #FFF3F0; }
+
+/* Off on desktop, where the sidebar is a permanent rail and there is nothing to
+   cover. The control that opens the drawer is the header's hamburger — see
+   SidebarContext. */
+.dash__scrim { display: none; }
+.dash__close { display: none; }
 
 /* ---- Content ---- */
 .dash__main { padding: var(--space-8); min-width: 0; }
@@ -211,33 +218,66 @@
   .dash__cols { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* Sidebar goes horizontal above the content, as the old dashboards did below
-   900px — a 244px rail plus content doesn't fit a phone. */
+/* A 244px rail plus content doesn't fit a phone, so below 900px the sidebar
+   becomes an overlay drawer opened from a menu button in the content header.
+   It was previously a horizontal strip across the top, which meant scrolling
+   sideways through the nav to reach the later items and gave the eye a second
+   thing to parse before the page itself.
+
+   Keep the breakpoint in step with DRAWER_QUERY in DashboardShell.jsx — the
+   scroll lock is set in JS and has to agree with the layout. */
 @media (max-width: 900px) {
   .dash { padding: var(--space-3); }
   .dash__shell { grid-template-columns: minmax(0, 1fr); border-radius: 18px; }
+
+  .dash__scrim {
+    display: block; position: fixed; inset: 0; z-index: 60;
+    padding: 0; border: none; cursor: pointer;
+    background: rgba(1, 58, 80, 0.42);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.22s ease;
+  }
+  .dash__scrim.is-open { opacity: 1; pointer-events: auto; }
+
+  /* The drawer covers the header, so the hamburger that opened it is underneath
+     and can't close it. Tapping the scrim or pressing Escape both work, but
+     neither is discoverable — hence a real button. */
+  .dash__close {
+    display: flex; align-items: center; justify-content: center;
+    position: absolute; top: 10px; right: 10px;
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--paper);
+    color: var(--ink-soft); cursor: pointer;
+  }
+  .dash__close:active { background: var(--paper-raised); }
+
   .dash__side {
-    border-right: none; border-bottom: 1px solid var(--line);
-    padding: var(--space-4);
+    position: fixed; top: 0; left: 0; z-index: 61;
+    width: 272px; max-width: 82vw;
+    height: 100%;
+    overflow-y: auto;
+    /* A drag inside the drawer shouldn't hand the scroll to the page behind it */
+    overscroll-behavior: contain;
+    border-right: 1px solid var(--line);
+    padding: var(--space-5) var(--space-4) var(--space-6);
+    transform: translateX(-100%);
+    /* Visibility flips instantly, so on the way out it has to wait for the slide
+       to finish — otherwise the drawer vanishes rather than leaving. */
+    visibility: hidden;
+    transition: transform 0.26s var(--ease-out-soft), visibility 0s linear 0.26s;
   }
-  .dash__who {
-    flex-direction: row; text-align: left; align-items: center;
-    gap: var(--space-3); padding-bottom: var(--space-4);
+  .dash__side.is-open {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform 0.26s var(--ease-out-soft), visibility 0s linear 0s;
+    box-shadow: 16px 0 44px rgba(1, 58, 80, 0.2);
   }
-  .dash__who strong { margin-top: 0; }
-  .dash__nav {
-    flex-direction: row; overflow-x: auto; gap: var(--space-2);
-    padding-bottom: 2px;
-    /* Keeps a swipe along the nav from scrolling the page underneath */
-    overscroll-behavior-x: contain;
+  /* dvh, so a drawer isn't cut off by iOS's collapsing chrome. Separated because
+     the minifier drops duplicate declarations, taking the fallback with them. */
+  @supports (height: 1dvh) {
+    .dash__side { height: 100dvh; }
   }
-  .dash__nav-item { white-space: nowrap; padding: 9px 13px; }
-  .dash__side-foot {
-    margin-top: var(--space-4); padding-top: var(--space-4);
-    border-top: 1px solid var(--line);
-    display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
-  }
-  .dash__meter { flex: 1; padding: 0; }
+
   .dash__main { padding: var(--space-5) var(--space-4); }
   .dash__title { font-size: 23px; }
 }

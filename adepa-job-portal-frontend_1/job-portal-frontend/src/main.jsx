@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext.jsx'
 import { NotificationsProvider } from './context/NotificationsContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
 import { ConfirmProvider } from './context/ConfirmContext.jsx'
+import { SidebarProvider } from './context/SidebarContext.jsx'
 import Toaster from './components/Toaster.jsx'
 import './index.css'
 
@@ -20,7 +21,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <ConfirmProvider>
           <AuthProvider>
             <NotificationsProvider>
-              <App />
+              {/* Above App so the header and the routed page below it share one
+                  drawer state — they're siblings inside Layout. */}
+              <SidebarProvider>
+                <App />
+              </SidebarProvider>
               <Toaster />
             </NotificationsProvider>
           </AuthProvider>

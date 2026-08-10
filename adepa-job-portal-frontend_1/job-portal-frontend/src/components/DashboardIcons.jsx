@@ -103,3 +103,10 @@ export const LogoutIcon = () => (
     <path d="M17.5 8.5 21 12l-3.5 3.5M21 12H10" />
   </svg>
 )
+
+export const CloseIcon = () => (
+  <svg {...stroke}>
+    <line x1="5" y1="5" x2="19" y2="19" />
+    <line x1="19" y1="5" x2="5" y2="19" />
+  </svg>
+)
