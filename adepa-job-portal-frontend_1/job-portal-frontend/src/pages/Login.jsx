@@ -3,6 +3,27 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { resendVerification } from '../api/auth.js'
 import roleHome from '../utils/roleHome.js'
+import { MailIcon, LockIcon, AvatarGlyph } from '../components/AuthIcons.jsx'
+
+function EyeIcon({ off }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {off ? (
+        <>
+          <line x1="2" y1="2" x2="22" y2="22" />
+          <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+          <path d="M16.7 16.7C15.1 17.5 13.6 18 12 18c-7 0-11-7-11-7a19.8 19.8 0 0 1 4.2-5.2" />
+          <path d="M9.9 4.2C10.6 4.1 11.3 4 12 4c7 0 11 7 11 7a19.9 19.9 0 0 1-2.6 3.6" />
+        </>
+      ) : (
+        <>
+          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" />
+          <circle cx="12" cy="12" r="3" />
+        </>
+      )}
+    </svg>
+  )
+}
 
 export default function Login() {
   const [searchParams] = useSearchParams()
@@ -10,6 +31,7 @@ export default function Login() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [notVerified, setNotVerified] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -32,7 +54,6 @@ export default function Login() {
     setSubmitting(true)
     try {
       const user = await login({ email, password })
-      // Admins previously fell into the seeker branch and got bounced to '/'
       navigate(roleHome(user.role))
     } catch (err) {
       if (!err.response) {
@@ -64,67 +85,103 @@ export default function Login() {
   }
 
   return (
-    <div className="auth-shell">
-      <div className="auth-shell__art">
+    <div className="auth-split">
+      <aside className="auth-split__art">
         <div>
-          <span className="hero__eyebrow">Welcome back</span>
-          <h2 style={{ fontSize: 34, marginTop: 12, maxWidth: '15ch' }}>Find a better way to work.</h2>
+          <span className="auth-split__eyebrow">Welcome back</span>
+          <h2>Find a better way to work.</h2>
         </div>
-        <p style={{ color: 'rgba(238,241,236,0.65)', fontSize: 14 }}>
+        <p className="auth-split__note">
           NextLeap — built as a final year project for the Department of Computer Science,
           University of Ghana.
         </p>
-      </div>
+      </aside>
 
-      <div className="auth-shell__form">
-        <h1 style={{ fontSize: 28, marginBottom: 6 }}>Log in</h1>
+      <div className="auth-split__main">
+      <div className="auth-card">
+        <div className="auth-badge"><AvatarGlyph /></div>
+        <h1 className="auth-title">Log in</h1>
+        <p className="auth-sub">Welcome back to NextLeap.</p>
 
         {wasDeactivated && (
-          <div className="panel" style={{ background: '#FFE9E1', border: '1px solid #F5C4B0', marginBottom: 20, padding: 16 }}>
-            <strong style={{ color: 'var(--coral-dark)', fontSize: 14 }}>Your account has been deactivated.</strong>
-            <p style={{ color: 'var(--coral-dark)', fontSize: 13, marginTop: 4, marginBottom: 0 }}>
-              You've been signed out. Contact support if you believe this is a mistake.
-            </p>
+          <div className="auth-error">
+            <strong>Your account has been deactivated.</strong> You've been signed out. Contact
+            support if you believe this is a mistake.
           </div>
         )}
 
-        <p style={{ color: 'var(--ink-soft)', marginBottom: 28, fontSize: 14 }}>
-          New here? <Link to="/register" style={{ color: 'var(--pine)', fontWeight: 600 }}>Create an account</Link>
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-field">
-            <label htmlFor="email">Email address</label>
-            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
-          </div>
-          <div className="form-field">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 4 }}>
-              <label htmlFor="password">Password</label>
-              <Link to="/forgot-password" style={{ fontSize: 12.5, color: 'var(--pine)', fontWeight: 600 }}>Forgot password?</Link>
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="auth-row" style={{ '--row': 0 }}>
+            <div className="auth-row__head">
+              <label htmlFor="email">Email</label>
             </div>
-            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+            <div className="auth-field">
+              <span className="auth-field__icon"><MailIcon /></span>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                autoComplete="email"
+              />
+            </div>
           </div>
 
-          {error && <p style={{ color: 'var(--rust)', fontSize: 13, marginBottom: 14 }}>{error}</p>}
-
-          {notVerified && (
-            <div style={{ marginBottom: 18 }}>
+          <div className="auth-row" style={{ '--row': 1 }}>
+            <div className="auth-row__head">
+              <label htmlFor="password">Password</label>
+              {/* Kept alongside Password rather than Email as in the reference —
+                  it's the password you've forgotten */}
+              <Link to="/forgot-password" className="auth-row__aside">Forgot password?</Link>
+            </div>
+            <div className="auth-field">
+              <span className="auth-field__icon"><LockIcon /></span>
+              <input
+                id="password"
+                className="has-toggle"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                autoComplete="current-password"
+              />
               <button
                 type="button"
-                className="btn btn--outline-pine btn--sm"
+                className="auth-field__toggle"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                <EyeIcon off={showPassword} />
+              </button>
+            </div>
+          </div>
+
+          {error && <p className="auth-error">{error}</p>}
+
+          {notVerified && (
+            <div className="auth-notice">
+              <button
+                type="button"
+                className="btn btn--outline-teal btn--sm"
                 onClick={handleResend}
                 disabled={resending}
               >
                 {resending ? 'Sending…' : 'Resend verification email'}
               </button>
-              {resendMessage && <p style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 10 }}>{resendMessage}</p>}
+              {resendMessage && <p style={{ margin: '10px 0 0', fontSize: 'var(--text-sm)' }}>{resendMessage}</p>}
             </div>
           )}
 
-          <button className="btn btn--pine btn--block" type="submit" disabled={submitting}>
-            {submitting ? 'Logging in…' : 'Log in'}
+          <button className="auth-submit" type="submit" disabled={submitting}>
+            {submitting ? 'Logging in…' : 'Log In'}
           </button>
         </form>
+
+        <p className="auth-foot">
+          Not registered yet? <Link to="/register">Sign Up &rsaquo;</Link>
+        </p>
+      </div>
       </div>
     </div>
   )

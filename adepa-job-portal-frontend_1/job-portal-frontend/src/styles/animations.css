@@ -27,6 +27,22 @@
   to   { opacity: 1; }
 }
 
+/* ---- Auth card (see auth.css) ---- */
+/* The card arrives with a slight lift and scale, its rows follow one by one,
+   and the medallion pops last so the eye lands on it. */
+@keyframes authCardIn {
+  from { opacity: 0; transform: translateY(22px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes authRowIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes authBadgeIn {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
 /* Sweeps a highlight across skeleton blocks. The gradient is 200% wide, so
    moving it one full width passes the bright band across once per cycle. */
 @keyframes shimmer {
