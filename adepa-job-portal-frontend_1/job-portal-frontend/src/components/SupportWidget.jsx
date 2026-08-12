@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import ChatBubble from './chat/ChatBubble.jsx'
 import TypingBubble from './chat/TypingBubble.jsx'
 import { BOT_NODES, BOT_START, botThinkingMs } from '../utils/supportBot.js'
-import { withTimeSeparators, formatSeparator } from '../utils/chatGrouping.js'
+import { withTimeSeparators, formatSeparator, mergeMessages } from '../utils/chatGrouping.js'
 import {
   startSupportConversation,
   fetchMyConversation,
@@ -112,7 +112,7 @@ export default function SupportWidget() {
         if (cancelled) return
 
         if (data.messages.length > 0) {
-          setMessages((prev) => [...prev, ...data.messages])
+          setMessages((prev) => mergeMessages(prev, data.messages))
         }
         // Always refresh the conversation: peerTyping changes with no new messages
         setConversation(data.conversation)
@@ -201,7 +201,7 @@ export default function SupportWidget() {
     setError('')
     try {
       const data = await sendSupportMessage(conversation._id, body)
-      setMessages((prev) => [...prev, data.message])
+      setMessages((prev) => mergeMessages(prev, [data.message]))
     } catch (err) {
       setError(err.response?.data?.message || 'Could not send that message.')
       setDraft(body) // hand the text back rather than losing it

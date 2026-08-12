@@ -5,7 +5,7 @@ import TypingBubble from './chat/TypingBubble.jsx'
 import EmptyState from './EmptyState.jsx'
 import { SkeletonRows } from './Skeleton.jsx'
 import { useToast } from '../context/ToastContext.jsx'
-import { withTimeSeparators, formatSeparator } from '../utils/chatGrouping.js'
+import { withTimeSeparators, formatSeparator, mergeMessages } from '../utils/chatGrouping.js'
 import {
   fetchSupportConversations,
   fetchMessages,
@@ -70,7 +70,7 @@ export default function SupportInbox() {
         const newest = messages[messages.length - 1]?.createdAt
         const data = await fetchMessages(activeId, newest)
         if (cancelled) return
-        if (data.messages.length > 0) setMessages((prev) => [...prev, ...data.messages])
+        if (data.messages.length > 0) setMessages((prev) => mergeMessages(prev, data.messages))
         setActive(data.conversation)
       } catch {
         /* next tick */
@@ -118,7 +118,7 @@ export default function SupportInbox() {
     setSending(true)
     try {
       const data = await sendSupportMessage(activeId, body)
-      setMessages((prev) => [...prev, data.message])
+      setMessages((prev) => mergeMessages(prev, [data.message]))
       loadList()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not send that message.')
