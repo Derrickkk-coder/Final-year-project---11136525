@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { categories, jobTypes, experienceLevels } from '../data/mockJobs.js' // static option lists only
+import { STUDENT_JOB_TYPES } from '../utils/studentFriendly.js'
 import { createJob } from '../api/jobs.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import SkillsInput from '../components/SkillsInput.jsx'
@@ -20,6 +21,23 @@ export default function PostJob() {
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
   const setSkills = (skills) => setForm((f) => ({ ...f, skills }))
+
+  const isStudentType = STUDENT_JOB_TYPES.includes(form.type)
+
+  // Internships, National Service and graduate trainee roles don't carry a
+  // seniority or a salary band, so switching into one of these types blanks
+  // whatever was entered — otherwise it would sit hidden in state and still
+  // get submitted. Only fires on an actual change, not on load, so opening
+  // EditJob for a legacy posting that has both set doesn't wipe them the
+  // moment the page opens; the server clears them on save regardless.
+  const updateType = (e) => {
+    const type = e.target.value
+    setForm((f) => ({
+      ...f,
+      type,
+      ...(STUDENT_JOB_TYPES.includes(type) ? { salary: '', experienceLevel: '' } : {}),
+    }))
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -109,7 +127,7 @@ export default function PostJob() {
           </div>
           <div className="form-field">
             <label htmlFor="type">Job type</label>
-            <select id="type" value={form.type} onChange={update('type')}>
+            <select id="type" value={form.type} onChange={updateType}>
               {jobTypes.filter((t) => t !== 'All types').map((t) => <option key={t}>{t}</option>)}
             </select>
           </div>
@@ -130,22 +148,38 @@ export default function PostJob() {
           </div>
         </div>
 
-        <div className="form-field">
-          <label htmlFor="experienceLevel">Experience level</label>
-          <select id="experienceLevel" value={form.experienceLevel} onChange={update('experienceLevel')}>
-            <option value="">Not specified</option>
-            {experienceLevels.map((l) => <option key={l}>{l}</option>)}
-          </select>
-          <span className="hint">
-            Marking a role Entry level puts it in the students &amp; graduates feed, alongside
-            internships, national service and graduate trainee posts.
-          </span>
-        </div>
+        {isStudentType ? (
+          <div className="form-field">
+            <label>Experience level</label>
+            <p className="hint" style={{ marginTop: 0 }}>
+              Not applicable — {form.type} roles go straight into the students &amp; graduates
+              feed, so there's no level to set.
+            </p>
+          </div>
+        ) : (
+          <div className="form-field">
+            <label htmlFor="experienceLevel">Experience level</label>
+            <select id="experienceLevel" value={form.experienceLevel} onChange={update('experienceLevel')}>
+              <option value="">Not specified</option>
+              {experienceLevels.map((l) => <option key={l}>{l}</option>)}
+            </select>
+            <span className="hint">
+              Marking a role Entry level puts it in the students &amp; graduates feed, alongside
+              internships, national service and graduate trainee posts.
+            </span>
+          </div>
+        )}
 
         <div className="form-row">
           <div className="form-field">
             <label htmlFor="salary">Salary range</label>
-            <input id="salary" value={form.salary} onChange={update('salary')} placeholder="e.g. GHS 6,000 – 9,000" />
+            {isStudentType ? (
+              // The row is a fixed two-column grid, so the field stays in place
+              // rather than leaving closingAt stranded alone in it.
+              <p className="hint" style={{ marginTop: 8 }}>Not applicable for {form.type} roles.</p>
+            ) : (
+              <input id="salary" value={form.salary} onChange={update('salary')} placeholder="e.g. GHS 6,000 – 9,000" />
+            )}
           </div>
           <div className="form-field">
             <label htmlFor="closingAt">Application closing date</label>

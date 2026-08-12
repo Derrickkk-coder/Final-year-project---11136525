@@ -7,6 +7,7 @@ import {
   studentFriendlyQuery,
   isStudentFriendly,
   fieldMatchesCategory,
+  STUDENT_JOB_TYPES,
 } from '../utils/studentFriendly.js'
 
 // Tells seekers who've applied in this category before that a new role landed.
@@ -58,14 +59,19 @@ export async function createJob(req, res, next) {
       })
     }
 
+    // Internships, National Service and graduate trainee posts don't carry a
+    // seniority or a salary band — enforced here rather than trusted from the
+    // form, since a request can reach this route without going through it.
+    const isStudentType = STUDENT_JOB_TYPES.includes(type)
+
     const job = await Job.create({
       title,
       location,
       type,
       remote,
-      salary,
+      salary: isStudentType ? undefined : salary,
       // Empty string would fail the enum, so send nothing when unclassified
-      experienceLevel: experienceLevel || undefined,
+      experienceLevel: isStudentType ? undefined : experienceLevel || undefined,
       category,
       description,
       responsibilities: responsibilities || [],
@@ -335,6 +341,14 @@ export async function updateJob(req, res, next) {
     // Separate because clearing it needs undefined, not the '' the form sends
     if (req.body.experienceLevel !== undefined) {
       job.experienceLevel = req.body.experienceLevel || undefined
+    }
+
+    // Checked against job.type rather than req.body.type, since an edit that
+    // doesn't touch the type field must still be caught if the job was already
+    // one of these — e.g. a posting saved before this rule existed.
+    if (STUDENT_JOB_TYPES.includes(job.type)) {
+      job.salary = undefined
+      job.experienceLevel = undefined
     }
 
     // Normalised the same way as on create, so an edit can't reintroduce
