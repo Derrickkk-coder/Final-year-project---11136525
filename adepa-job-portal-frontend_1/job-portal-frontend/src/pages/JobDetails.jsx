@@ -161,11 +161,18 @@ export default function JobDetails() {
     <div className="container" style={{ paddingTop: 40, paddingBottom: 72 }}>
       <Link to="/jobs" style={{ fontSize: 13, color: 'var(--ink-soft)' }}>&larr; Back to all jobs</Link>
 
-      <div className="panel" style={{ marginTop: 20, marginBottom: 32, background: 'var(--pine-deep)', color: 'var(--paper)' }}>
+      {/* A fixed dark panel, like the footer and the auth art panel — not page
+          content that should track the theme. It used to reach for var(--paper)
+          for its "white" text, which happened to work only because --paper was
+          near-white in light mode; in dark mode --paper *is* the page's dark
+          background, so that text would have gone almost black on this teal
+          panel. Pinned to literal colors instead, matching how the other fixed
+          panels are already written. */}
+      <div className="panel" style={{ marginTop: 20, marginBottom: 32, background: '#013A50', color: '#fff' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 20 }}>
           <div>
             <span className="ticket__ref" style={{ color: 'rgba(255,255,255,0.7)' }}>REF {job.ref}</span>
-            <h1 style={{ fontSize: 30, marginTop: 8, color: 'var(--paper)' }}>{job.title}</h1>
+            <h1 style={{ fontSize: 30, marginTop: 8, color: '#fff' }}>{job.title}</h1>
             <p style={{ color: 'rgba(238,241,236,0.75)', marginTop: 4 }}>{job.company}</p>
           </div>
           <div style={{ textAlign: 'right' }}>

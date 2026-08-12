@@ -4,6 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NextLeap | Board Your Next Opportunity</title>
+    <script>
+      // Runs before the stylesheet paints, so an explicit dark/light choice
+      // takes effect on the very first frame. Without this, the page would
+      // render once under the OS default and jump to the stored choice the
+      // moment React mounts and ThemeProvider's effect runs — a flash on every
+      // load for anyone whose choice differs from their system setting.
+      // Kept in lockstep with ThemeContext.jsx: same key, same three values.
+      (function () {
+        try {
+          var stored = localStorage.getItem('nextleap-theme')
+          if (stored === 'light' || stored === 'dark') {
+            document.documentElement.dataset.theme = stored
+          }
+        } catch (e) {}
+      })()
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="icon" type="image/x-icon" href="/adepa-job-portal-frontend_1/job-portal-frontend/public/images/logo-mark.png" />
 <link rel="apple-touch-icon" href="/adepa-job-portal-frontend_1/job-portal-frontend/public/images/logo-mark.png" />

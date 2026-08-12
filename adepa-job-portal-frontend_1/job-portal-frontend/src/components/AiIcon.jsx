@@ -24,7 +24,10 @@ export default function AiIcon({ size = 14, style = {} }) {
           width: '44%',
           height: '44%',
           borderRadius: '50%',
-          background: '#fff',
+          // Punches the ring's hole in the surface it sits on, so it reads as a
+          // ring rather than a filled disc wherever it's placed. A literal white
+          // would sit as a stark dot on a dark card.
+          background: 'var(--paper-raised)',
         }}
       />
     </span>

@@ -51,6 +51,18 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 .bell-btn:hover { background: var(--teal-100); }
+
+/* Same shape and size as the bell button beside it, so the two read as one
+   family of icon controls rather than two different button styles competing
+   in the same header. */
+.theme-toggle {
+  display: flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--teal-700); padding: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.theme-toggle:hover { background: var(--teal-100); }
 .bell-btn__badge {
   position: absolute; top: 2px; right: 2px;
   min-width: 17px; height: 17px; padding: 0 4px;
@@ -167,7 +179,7 @@
 }
 
 /* Secondary — teal, filled, flat */
-.btn--pine, .btn--teal { background: var(--teal-700); color: #fff; }
+.btn--pine, .btn--teal { background: var(--teal-fill); color: #fff; }
 .btn--pine:hover, .btn--teal:hover {
   background: var(--teal-900); box-shadow: var(--shadow-lift); transform: translateY(-1px);
 }
@@ -176,7 +188,7 @@
 .btn--outline-pine, .btn--outline-teal {
   background: transparent; border-color: var(--teal-700); color: var(--teal-700);
 }
-.btn--outline-pine:hover, .btn--outline-teal:hover { background: var(--teal-700); color: #fff; }
+.btn--outline-pine:hover, .btn--outline-teal:hover { background: var(--teal-fill); color: #fff; }
 .btn--outline-light { background: transparent; border-color: var(--line); color: var(--teal-700); }
 .btn--outline-light:hover { border-color: var(--teal-700); background: var(--teal-100); }
 
@@ -202,7 +214,7 @@
 /* ============ Skeleton loaders ============ */
 .skeleton {
   display: block;
-  background: linear-gradient(90deg, var(--line) 25%, #EFF4F5 50%, var(--line) 75%);
+  background: linear-gradient(90deg, var(--line) 25%, var(--skeleton-shimmer) 50%, var(--line) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 }
@@ -224,7 +236,7 @@
   margin: 0 auto; max-width: 44ch; font-size: var(--text-base); color: var(--ink-soft);
 }
 .empty-state__action { margin-top: var(--space-5); display: flex; justify-content: center; gap: var(--space-2); flex-wrap: wrap; }
-.empty-state--error { border-style: solid; border-color: #F5C4B0; background: #FFF6F2; }
+.empty-state--error { border-style: solid; border-color: var(--coral-border); background: var(--coral-100); }
 .empty-state--error .empty-state__title { color: var(--coral-dark); }
 
 /* ============ Toasts ============ */
@@ -255,7 +267,7 @@
   background: var(--teal-100); color: var(--teal-700);
 }
 .toast--success .toast__icon { background: var(--success-bg); color: var(--success); }
-.toast--error .toast__icon { background: #FFE9E1; color: var(--coral-dark); }
+.toast--error .toast__icon { background: var(--coral-100); color: var(--coral-dark); }
 .toast__message { flex: 1; font-size: var(--text-base); line-height: 1.5; color: var(--ink); }
 .toast__close {
   flex-shrink: 0; border: none; background: transparent; cursor: pointer;
@@ -296,13 +308,35 @@
   background-position: right center;
   padding: 64px 0 56px;
 }
+/* A white-to-pale-teal wash over the photo is what makes the dark heading and
+   body copy on the left readable — in dark mode both of those go light, so the
+   wash has to invert too, or the text would land back on a near-white sweep.
+   Same shape (opaque near the copy, fading to a tint that lets the photo
+   through on the right), just dark-paper and dark-teal in place of white and
+   the pale tint. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .hero {
+    background:
+      linear-gradient(100deg, rgba(14,22,27,0.94) 0%, rgba(14,22,27,0.82) 35%, rgba(18,48,61,0.55) 65%, rgba(18,48,61,0.35) 100%),
+      url('/images/hero-bg.png');
+    background-size: cover;
+    background-position: right center;
+  }
+}
+:root[data-theme="dark"] .hero {
+  background:
+    linear-gradient(100deg, rgba(14,22,27,0.94) 0%, rgba(14,22,27,0.82) 35%, rgba(18,48,61,0.55) 65%, rgba(18,48,61,0.35) 100%),
+    url('/images/hero-bg.png');
+  background-size: cover;
+  background-position: right center;
+}
 .hero__grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center; }
 .hero__eyebrow { color: var(--coral); font-size: 13px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 16px; display: block; }
-.hero__title { font-size: clamp(34px, 4.6vw, 52px); line-height: 1.08; font-weight: 800; color: var(--teal-900); }
+.hero__title { font-size: clamp(34px, 4.6vw, 52px); line-height: 1.08; font-weight: 800; color: var(--teal-900-ink); }
 .hero__title em { font-style: normal; color: var(--coral); }
 .hero__sub { margin-top: 18px; font-size: 17px; line-height: 1.6; color: var(--ink-soft); max-width: 48ch; }
 .hero__form {
-  margin-top: 28px; display: flex; gap: 8px; background: #fff;
+  margin-top: 28px; display: flex; gap: 8px; background: var(--paper-raised);
   border: 1.5px solid var(--line); padding: 7px; border-radius: var(--radius-pill);
   box-shadow: var(--shadow-card);
 }
@@ -334,7 +368,7 @@
 .how-step { position: relative; }
 .how-step__num {
   width: 38px; height: 38px; border-radius: 50%;
-  background: var(--teal-700); color: #fff;
+  background: var(--teal-fill); color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-display); font-weight: 800; font-size: var(--text-md);
   margin-bottom: var(--space-4);
@@ -352,7 +386,7 @@
 }
 
 /* Hero side panel: mini job list preview */
-.board { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-card); padding: 8px; box-shadow: var(--shadow-lift); }
+.board { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 8px; box-shadow: var(--shadow-lift); }
 .board__header {
   display: flex; justify-content: space-between; align-items: center; font-size: 12px;
   font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--ink-soft);
@@ -371,7 +405,7 @@
 }
 
 /* ============ Logo strip ============ */
-.logo-strip { padding: 36px 0; background: #fff; border-bottom: 1px solid var(--line); }
+.logo-strip { padding: 36px 0; background: var(--paper-raised); border-bottom: 1px solid var(--line); }
 .logo-strip__label { text-align: center; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 22px; }
 .logo-strip__row { display: flex; justify-content: center; align-items: center; gap: 44px; flex-wrap: wrap; }
 .logo-strip__item { font-family: var(--font-display); font-weight: 700; font-size: 17px; color: var(--ink-faint); }
@@ -398,8 +432,8 @@
   font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: var(--radius-pill);
   background: var(--teal-100); border: none; color: var(--teal-700);
 }
-.tag--gold { background: #FFE9E1; color: var(--coral-dark); }
-.tag--rust { background: #FFE9E1; color: var(--coral-dark); }
+.tag--gold { background: var(--coral-100); color: var(--coral-dark); }
+.tag--rust { background: var(--coral-100); color: var(--coral-dark); }
 .tag--student { background: var(--success-bg); color: var(--success); }
 
 /* ============ Student & graduate mode ============ */
@@ -443,14 +477,14 @@
   border-radius: var(--radius-card); box-shadow: var(--shadow-card);
   padding: var(--space-6);
 }
-.panel--pine { background: var(--teal-700); color: #fff; border: none; }
+.panel--pine { background: var(--teal-fill); color: #fff; border: none; }
 /* One knob for the whole page cadence — see --section-y in tokens.css */
 .section { padding: var(--section-y) 0; }
 .section__head {
   display: flex; justify-content: space-between; align-items: flex-end;
   margin-bottom: var(--space-8); gap: var(--space-6);
 }
-.section__title { font-size: var(--text-3xl); font-weight: 800; color: var(--teal-900); line-height: var(--leading-tight); }
+.section__title { font-size: var(--text-3xl); font-weight: 800; color: var(--teal-900-ink); line-height: var(--leading-tight); }
 .section__desc { color: var(--ink-soft); margin-top: var(--space-2); max-width: 52ch; line-height: var(--leading-normal); }
 
 /* ============ Testimonials ============ */
@@ -479,7 +513,7 @@
 }
 
 .testimonial-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.testimonial-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-card); padding: 22px; box-shadow: var(--shadow-card); }
+.testimonial-card { background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 22px; box-shadow: var(--shadow-card); }
 /* Fixed width inside the marquee, so the -50% loop distance is predictable and
    cards don't stretch to fill the track */
 .testimonial-marquee__track .testimonial-card {
@@ -498,10 +532,24 @@
 /* iMessage's own palette, kept as tokens rather than sprinkled hex. These sit
    outside the brand palette on purpose: the chat is deliberately imitating a
    familiar messaging app, and the blue is the single most recognisable part of
-   that. Swap these two values to bring it back to NextLeap teal. */
+   that. Swap these two values to bring it back to NextLeap teal.
+
+   The blue stays fixed in dark mode too — real iMessage keeps its outgoing
+   bubble blue regardless of appearance, only the incoming bubble goes dark. */
 :root {
   --chat-blue: #0B84FF;
   --chat-grey: #E9E9EB;
+  --chat-grey-ink: #000;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --chat-grey: #26262A;
+    --chat-grey-ink: #F2F2F5;
+  }
+}
+:root[data-theme="dark"] {
+  --chat-grey: #26262A;
+  --chat-grey-ink: #F2F2F5;
 }
 
 /* Floating help button. Above toasts (200) but below dialogs (300), so a
@@ -510,7 +558,7 @@
   position: fixed; bottom: var(--space-6); left: var(--space-6); z-index: 250;
   display: inline-flex; align-items: center; gap: var(--space-2);
   padding: 13px 20px; border: none; border-radius: var(--radius-pill);
-  background: var(--teal-700); color: #fff; cursor: pointer;
+  background: var(--teal-fill); color: #fff; cursor: pointer;
   font-family: var(--font-body); font-size: var(--text-base); font-weight: 700;
   box-shadow: 0 4px 12px rgba(1, 58, 80, 0.24), 0 12px 32px rgba(1, 58, 80, 0.18);
   transition: transform 0.18s var(--ease-out-soft), background 0.18s ease,
@@ -560,7 +608,14 @@
 }
 /* iMessage thread header: dismiss on the left, identity centred, translucent
    light ground. The grid's matching outer columns are what keep the name
-   optically centred rather than pushed off by the back button. */
+   optically centred rather than pushed off by the back button.
+
+   The translucent ground is a literal near-white here rather than a token —
+   missed in the first dark-mode pass because it reads like a dimming scrim
+   (also a translucent rgba) rather than what it actually is: a light glass
+   surface with --ink text sitting directly on it. Once --ink went near-white
+   for dark mode, this became near-white text on a near-white ground — the
+   washed-out header that was reported. */
 .chat-panel__head {
   display: grid; grid-template-columns: 34px 1fr 34px; align-items: center;
   padding: var(--space-3) var(--space-3) var(--space-4);
@@ -568,6 +623,14 @@
   backdrop-filter: saturate(150%) blur(14px);
   border-bottom: 1px solid var(--line);
   color: var(--ink); flex-shrink: 0;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .chat-panel__head {
+    background: rgba(22, 35, 43, 0.88);
+  }
+}
+:root[data-theme="dark"] .chat-panel__head {
+  background: rgba(22, 35, 43, 0.88);
 }
 .chat-panel__back {
   border: none; background: transparent; cursor: pointer;
@@ -619,7 +682,7 @@
   margin-top: 3px;
 }
 .chat-bubble.is-out { background: var(--chat-blue); color: #fff; border-bottom-right-radius: 19px; }
-.chat-bubble.is-in { background: var(--chat-grey); color: #000; border-bottom-left-radius: 19px; }
+.chat-bubble.is-in { background: var(--chat-grey); color: var(--chat-grey-ink); border-bottom-left-radius: 19px; }
 /* Only the last bubble of a run gets the squared corner, so a run reads as one
    utterance rather than several */
 .chat-bubble.is-out.has-tail { border-bottom-right-radius: 5px; }
@@ -681,7 +744,7 @@
 .chat-note a { color: var(--teal-700); font-weight: 700; }
 .chat-error {
   font-size: var(--text-xs); color: var(--rust); margin: 0;
-  padding: var(--space-2) var(--space-4); background: #FFE9E1;
+  padding: var(--space-2) var(--space-4); background: var(--coral-100);
 }
 
 /* ---- Composer ---- */
@@ -832,7 +895,7 @@
   padding: var(--space-4) var(--space-5);
 }
 /* Left edge shows where each comment stands, so the queue is scannable */
-.mod-item.is-pending { border-left-color: #B5710F; }
+.mod-item.is-pending { border-left-color: var(--amber-ink); }
 .mod-item.is-approved { border-left-color: var(--success); }
 .mod-item.is-rejected { border-left-color: var(--coral-dark); opacity: 0.72; }
 .mod-item__head {
@@ -882,9 +945,9 @@
 }
 .comment-box__thanks {
   display: block; font-family: var(--font-display); font-size: var(--text-lg);
-  color: #14603C; margin-bottom: 4px;
+  color: var(--success-ink); margin-bottom: 4px;
 }
-.comment-box--done p { margin: 0 0 var(--space-4); color: #14603C; font-size: var(--text-base); line-height: 1.55; }
+.comment-box--done p { margin: 0 0 var(--space-4); color: var(--success-ink); font-size: var(--text-base); line-height: 1.55; }
 .comment-box--done p:last-child { margin-bottom: 0; }
 .comment-box__tick {
   flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
@@ -896,7 +959,7 @@
 .category-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
 .category-pill {
   font-size: 13.5px; font-weight: 600; padding: 9px 16px; border-radius: var(--radius-pill);
-  background: #fff; border: 1px solid var(--line); color: var(--ink);
+  background: var(--paper-raised); border: 1px solid var(--line); color: var(--ink);
 }
 .category-pill:hover { border-color: var(--teal-700); color: var(--teal-700); }
 
@@ -964,7 +1027,7 @@
   left: 4px;
   width: calc(50% - 4px);
   height: calc(100% - 8px);
-  background: var(--teal-700);
+  background: var(--teal-fill);
   border-radius: var(--radius-pill);
   transition: transform 0.28s ease;
   z-index: 0;
@@ -1009,7 +1072,7 @@
 .dash-sidebar__label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-faint); padding: 0 12px; margin-bottom: 8px; display: block; }
 .dash-sidebar a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--ink-soft); margin-bottom: 2px; }
 .dash-sidebar a:hover { background: var(--teal-100); color: var(--teal-700); }
-.dash-sidebar a.active { background: var(--teal-700); color: #fff; }
+.dash-sidebar a.active { background: var(--teal-fill); color: #fff; }
 .dash-main { padding: 32px 40px; background: var(--paper); min-width: 0; }
 .dash-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
 
@@ -1033,12 +1096,12 @@
 
 .status-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 4px 11px; border-radius: var(--radius-pill); }
 .status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.status-pill--pending { background: #FFF3E0; color: #B5710F; }
+.status-pill--pending { background: var(--amber-bg); color: var(--amber-ink); }
 .status-pill--review { background: var(--teal-100); color: var(--teal-700); }
 /* A deeper teal than 'review' — further along the funnel, not yet accepted */
-.status-pill--shortlisted { background: #CFE6EC; color: var(--teal-900); }
+.status-pill--shortlisted { background: var(--teal-200); color: var(--teal-900-ink); }
 .status-pill--accepted { background: var(--success-bg); color: var(--success); }
-.status-pill--rejected { background: #FFE9E1; color: var(--coral-dark); }
+.status-pill--rejected { background: var(--coral-100); color: var(--coral-dark); }
 
 /* ============ Mobile card list (replaces tables on small screens) ============ */
 /* Desktop: show the table, hide the card list. Below the breakpoint (see media
@@ -1304,7 +1367,7 @@
 .cand__interview {
   margin-top: var(--space-4); padding: var(--space-3) var(--space-4);
   background: var(--success-bg); border-radius: var(--radius-sm);
-  font-size: var(--text-sm); color: #14603C;
+  font-size: var(--text-sm); color: var(--success-ink);
 }
 
 .cand__actions {
@@ -1376,14 +1439,14 @@
 .cal__day:hover { background: var(--teal-100); }
 .cal__day.is-outside { opacity: 0.38; }
 .cal__day.is-today .cal__daynum {
-  background: var(--teal-700); color: #fff;
+  background: var(--teal-fill); color: #fff;
   width: 22px; height: 22px; border-radius: 50%;
   display: inline-flex; align-items: center; justify-content: center;
 }
 .cal__day.is-selected { border-color: var(--teal-700); background: var(--paper-raised); }
 /* Days with interviews get a filled ground, so the month reads at a glance */
 .cal__day.has-items { background: var(--success-bg); }
-.cal__day.has-items:hover { background: #D3EFDE; }
+.cal__day.has-items:hover { background: var(--teal-200); }
 .cal__day.has-items.is-selected { background: var(--success-bg); }
 
 .cal__daynum { font-size: var(--text-sm); font-weight: 700; line-height: 22px; }
@@ -1435,7 +1498,7 @@
 .interview-row:first-of-type { border-top: none; padding-top: 0; }
 .interview-row__when {
   flex-shrink: 0; text-align: center; min-width: 62px;
-  background: var(--teal-700); color: #fff;
+  background: var(--teal-fill); color: #fff;
   border-radius: var(--radius-sm); padding: var(--space-3) var(--space-2);
 }
 .interview-row__date {
@@ -1466,7 +1529,7 @@
   padding: 5px 11px; border-radius: var(--radius-pill);
 }
 .match-skill.is-have { background: var(--success-bg); color: var(--success); }
-.match-skill.is-missing { background: #FFF3E0; color: #8A5A0F; }
+.match-skill.is-missing { background: var(--amber-bg); color: var(--amber-ink); }
 .match-skill__note { font-weight: 500; opacity: 0.75; }
 .match-detail__caveat {
   margin: var(--space-3) 0 0; font-size: var(--text-xs); color: var(--ink-faint);
@@ -1786,6 +1849,24 @@
         rgba(255, 255, 255, 0.92) 50%,
         rgba(228, 241, 244, 0.74) 100%
       ),
+      url('/images/hero-bg.png');
+    background-size: cover;
+    background-position: center;
+  }
+  /* Same dark-paper-and-dark-teal swap as the desktop wash, re-angled the same
+     way this whole block already re-angles it for one column. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .hero {
+      background:
+        linear-gradient(180deg, rgba(14, 22, 27, 0.95) 0%, rgba(14, 22, 27, 0.9) 50%, rgba(18, 48, 61, 0.78) 100%),
+        url('/images/hero-bg.png');
+      background-size: cover;
+      background-position: center;
+    }
+  }
+  :root[data-theme="dark"] .hero {
+    background:
+      linear-gradient(180deg, rgba(14, 22, 27, 0.95) 0%, rgba(14, 22, 27, 0.9) 50%, rgba(18, 48, 61, 0.78) 100%),
       url('/images/hero-bg.png');
     background-size: cover;
     background-position: center;

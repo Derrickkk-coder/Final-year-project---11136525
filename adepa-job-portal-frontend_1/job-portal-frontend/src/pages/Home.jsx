@@ -253,7 +253,7 @@ export default function Home() {
 
       {/* Four steps, each covering both audiences rather than splitting into two
           tracks — the flow is genuinely the same shape from either side. */}
-      <section className="section" style={{ background: '#fff', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
+      <section className="section" style={{ background: 'var(--paper-raised)', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
         <div className="container">
           <Reveal>
             <span className="eyebrow">How it works</span>

@@ -13,9 +13,26 @@
   --coral-dark: #E8552F;
   --success: #1E8E5A;
   --success-bg: #E4F5EA;
+  --success-ink: #14603C;   /* deeper green, for text sitting directly on the page rather than on --success-bg */
   --line: #E2E9EB;
+
+  /* In light mode these are just aliases — no conflict to solve here. Dark
+     mode gives them their own values; see the note below. */
+  --teal-fill: var(--teal-700);
+  --teal-900-ink: var(--teal-900);
   --shadow-card: 0 1px 2px rgba(1,58,80,0.05), 0 6px 20px rgba(1,58,80,0.06);
   --shadow-lift: 0 6px 16px rgba(1,58,80,0.10), 0 18px 40px rgba(1,58,80,0.10);
+
+  /* ---- Small tint families, extracted from repeated raw hex so dark mode has
+     something to override. Each pairs a pale chip background with the ink that
+     sits on it — status pills, tags, warning banners, the loading shimmer. ---- */
+  --coral-100: #FFE9E1;     /* pale coral/danger tint — chip backgrounds */
+  --coral-border: #F5C4B0;  /* pale coral border, e.g. the empty-state error panel */
+  --teal-200: #CFE6EC;      /* a step past --teal-100, for chips that need more presence */
+  --amber-bg: #FFF3E0;
+  --amber-border: #F0D9A8;
+  --amber-ink: #8A5A0F;
+  --skeleton-shimmer: #EFF4F5; /* the moving highlight in the loading skeleton gradient */
 
   /* ---- Type ---- */
   --font-display: "Poppins", -apple-system, sans-serif;
@@ -78,7 +95,119 @@
   --rust: var(--coral-dark);
 }
 
+/* ============================================================
+   Dark mode
+   ------------------------------------------------------------
+   Three states, matching ThemeContext.jsx: "system" (no attribute — this
+   media query is the only thing that applies, so it only takes effect when
+   the OS itself is dark), explicit "light" (the :not() guard excludes it, so
+   the page stays light regardless of the OS), and explicit "dark" (the
+   [data-theme="dark"] block below always wins, media query or not).
+
+   Every value here was chosen against a computed WCAG contrast ratio, not by
+   eye. --teal-500 and --teal-100 each do one job (text, and a muted chip fill
+   respectively) so they just get pushed to the appropriate end.
+
+   --teal-900 and --teal-700 were the hard case: both are used as a solid
+   button/band fill *and* as heading or link text elsewhere, and those two
+   roles want opposite lightness in dark mode. The first pass here picked one
+   middle value for each and split the difference — which made every fill
+   (the footer, the "Hiring?" band, the active dashboard pill) read as a
+   bright, washed-out teal instead of the deep brand color those bands are
+   supposed to be. Fills are the more visually prominent of the two roles —
+   full-bleed color the eye lands on, not a line of text — so --teal-900 and
+   --teal-700 stay tuned for THAT, close to their light-mode richness, and the
+   text usages move to their own tokens instead:
+     --teal-900-ink   — the ~4 places teal-900 was heading/label text
+     --teal-fill       — the ~10 places teal-700 was actually a button fill,
+                          not text (named for the minority role here, since
+                          teal-700 is text/link/icon color everywhere else)
+   In light mode both are plain aliases (see tokens.css above) — there's no
+   conflict to solve there, so nothing about light mode changes.
+
+   Brand colors that are already dark-appropriate — coral, the lime dashboard
+   accent, the auth art panel's teal wash, the footer's own base color,
+   iMessage's own blue — are deliberately left alone. They aren't "light mode
+   colors" to begin with, so inverting them would be the mistake, not the fix. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #EDF3F4;
+    --ink-soft: #9FB0B5;
+    --ink-faint: #7E9096;
+    --paper: #0E161B;
+    --paper-raised: #16232B;
+    --teal-900: #0B4E6B;
+    --teal-700: #258DAB;
+    --teal-fill: #0F5C7D;
+    --teal-900-ink: #2E93B3;
+    --teal-500: #5FC7DE;
+    --teal-100: #12303D;
+    --teal-200: #102E3B;
+    --success: #34C486;
+    --success-bg: #12331F;
+    --success-ink: #34C486;
+    --coral-100: #3A1D16;
+    --coral-border: #5C2E20;
+    --amber-bg: #3A2D0F;
+    --amber-border: #5C4A1E;
+    --amber-ink: #E9B44C;
+    --skeleton-shimmer: #223440;
+    --line: #26343C;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.35);
+    --shadow-lift: 0 6px 16px rgba(0,0,0,0.35), 0 18px 40px rgba(0,0,0,0.4);
+    --shadow-pop: 0 12px 28px rgba(0,0,0,0.45), 0 32px 64px rgba(0,0,0,0.45);
+    /* --teal-100 stays muted for chip backgrounds, so the ring borrows the
+       brighter --teal-500 instead — a ring needs to read as an outline, not
+       blend in like a tinted surface. */
+    --focus-ring: 0 0 0 3px var(--teal-500);
+  }
+}
+
+:root[data-theme="dark"] {
+  --ink: #EDF3F4;
+  --ink-soft: #9FB0B5;
+  --ink-faint: #7E9096;
+  --paper: #0E161B;
+  --paper-raised: #16232B;
+  --teal-900: #0B4E6B;
+  --teal-700: #258DAB;
+  --teal-fill: #0F5C7D;
+  --teal-900-ink: #2E93B3;
+  --teal-500: #5FC7DE;
+  --teal-100: #12303D;
+  --teal-200: #102E3B;
+  --success: #34C486;
+  --success-bg: #12331F;
+  --success-ink: #34C486;
+  --coral-100: #3A1D16;
+  --coral-border: #5C2E20;
+  --amber-bg: #3A2D0F;
+  --amber-border: #5C4A1E;
+  --amber-ink: #E9B44C;
+  --skeleton-shimmer: #223440;
+  --line: #26343C;
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.35);
+  --shadow-lift: 0 6px 16px rgba(0,0,0,0.35), 0 18px 40px rgba(0,0,0,0.4);
+  --shadow-pop: 0 12px 28px rgba(0,0,0,0.45), 0 32px 64px rgba(0,0,0,0.45);
+  --focus-ring: 0 0 0 3px var(--teal-500);
+}
+
 * { box-sizing: border-box; }
+
+html {
+  /* Tells the browser which palette to use for chrome this CSS doesn't paint
+     itself — scrollbars, `<select>` popups, autofill, the works. Without this,
+     the OS's own dark-mode scrollbar only shows up when the OS happens to be
+     dark, regardless of what the site's own toggle says: native UI reads
+     color-scheme, not this app's [data-theme] attribute. "light dark" here
+     means "either, follow the OS" — the right default for the "system" state,
+     since it needs no JS and can't drift out of sync with the media query
+     tokens.css already keys off of. The explicit states pin it, same pattern
+     as every color token above. */
+  color-scheme: light dark;
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 
 html, body {
   margin: 0;
@@ -89,6 +218,12 @@ html, body {
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden; /* safety net: stops any wide child from forcing page-level horizontal scroll */
 }
+
+/* Firefox's scrollbar-color equivalent of the same thing, tinted to the brand
+   rather than left as the browser's flat gray default. WebKit/Blink get the
+   same effect from color-scheme above without extra rules — this is additive
+   polish, not a substitute for it. */
+html { scrollbar-color: var(--ink-faint) transparent; }
 
 #root { min-height: 100vh; display: flex; flex-direction: column; }
 

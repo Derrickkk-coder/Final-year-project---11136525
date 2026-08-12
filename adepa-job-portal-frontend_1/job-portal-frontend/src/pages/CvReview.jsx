@@ -104,9 +104,9 @@ export default function CvReview() {
         {!loading && hasCv && (
           <>
             {stale && (
-              <div className="panel" style={{ background: '#FFF3E0', border: '1px solid #F0D9A8', marginBottom: 20 }}>
-                <strong style={{ color: '#8A5A0F' }}>This review is out of date.</strong>
-                <p style={{ color: '#8A5A0F', fontSize: 'var(--text-base)', margin: '4px 0 0' }}>
+              <div className="panel" style={{ background: 'var(--amber-bg)', border: '1px solid var(--amber-border)', marginBottom: 20 }}>
+                <strong style={{ color: 'var(--amber-ink)' }}>This review is out of date.</strong>
+                <p style={{ color: 'var(--amber-ink)', fontSize: 'var(--text-base)', margin: '4px 0 0' }}>
                   You've replaced your CV since it was written. Run it again for scores that match
                   the file employers actually see.
                 </p>

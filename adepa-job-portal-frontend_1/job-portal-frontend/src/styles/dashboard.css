@@ -14,13 +14,22 @@
   --dash-ground: #E8EEEC;
   /* The stat-card accent. Lime against deep teal is the reference's pairing and
      it stays clear of the status colours (green = accepted, coral = rejected),
-     so an accent can never be mistaken for a state. */
+     so an accent can never be mistaken for a state. Left unchanged in dark
+     mode — it's a saturated accent chip, not page chrome, and it reads fine
+     against a dark card without inverting. */
   --dash-accent: #D6F05A;
   --dash-accent-ink: #24471B;
   /* Single-series chart colour. Not a categorical slot — there is nothing to
-     separate it from. */
+     separate it from. Inherits --teal-500's dark override automatically. */
   --chart-line: var(--teal-500);
 }
+/* The shell sits on --dash-ground rather than --paper directly (see .dash
+   below), so it needs its own dark value — same target as --paper's, for one
+   consistent page-ground colour rather than two near-identical near-blacks. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --dash-ground: #0E161B; }
+}
+:root[data-theme="dark"] { --dash-ground: #0E161B; }
 
 .dash {
   background: var(--dash-ground);
@@ -95,7 +104,7 @@
   transition: width 0.5s var(--ease-out-soft);
 }
 .dash__logout { color: var(--ink-faint); }
-.dash__logout:hover { color: var(--rust); background: #FFF3F0; }
+.dash__logout:hover { color: var(--rust); background: var(--coral-100); }
 
 /* Off on desktop, where the sidebar is a permanent rail and there is nothing to
    cover. The control that opens the drawer is the header's hamburger — see
@@ -138,7 +147,7 @@
 }
 .stat__icon.is-lime { background: var(--dash-accent); color: var(--dash-accent-ink); }
 .stat__icon.is-teal { background: var(--teal-100); color: var(--teal-700); }
-.stat__icon.is-coral { background: #FFE9E1; color: var(--coral-dark); }
+.stat__icon.is-coral { background: var(--coral-100); color: var(--coral-dark); }
 
 /* ---- Panels & the two-column body ---- */
 .dash__cols {

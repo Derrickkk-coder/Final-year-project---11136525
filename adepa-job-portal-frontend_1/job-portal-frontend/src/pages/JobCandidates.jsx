@@ -130,11 +130,11 @@ export default function JobCandidates() {
       {/* An untagged role can only be matched by scanning its text, which is
           less precise — and the employer is the one who can fix that. */}
       {!loading && !error && rankingBasis === 'inferred' && (
-        <div className="panel" style={{ background: '#FFF3E0', border: '1px solid #F0D9A8', marginBottom: 20 }}>
-          <strong style={{ color: '#8A5A0F' }}>This role has no tagged skills.</strong>
-          <p style={{ color: '#8A5A0F', fontSize: 'var(--text-base)', margin: '4px 0 0' }}>
+        <div className="panel" style={{ background: 'var(--amber-bg)', border: '1px solid var(--amber-border)', marginBottom: 20 }}>
+          <strong style={{ color: 'var(--amber-ink)' }}>This role has no tagged skills.</strong>
+          <p style={{ color: 'var(--amber-ink)', fontSize: 'var(--text-base)', margin: '4px 0 0' }}>
             Candidates are being matched against the words in your description, which is rough.{' '}
-            <Link to={`/employer/jobs/${id}/edit`} style={{ color: '#8A5A0F', fontWeight: 700 }}>
+            <Link to={`/employer/jobs/${id}/edit`} style={{ color: 'var(--amber-ink)', fontWeight: 700 }}>
               Add required skills
             </Link>{' '}
             for accurate ranking.

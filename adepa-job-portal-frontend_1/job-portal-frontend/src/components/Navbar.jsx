@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import Avatar from './Avatar.jsx'
 import NotificationBell from './NotificationBell.jsx'
+import ThemeToggle from './ThemeToggle.jsx'
 import { useSidebar } from '../context/SidebarContext.jsx'
 
 export default function Navbar() {
@@ -89,6 +90,10 @@ export default function Navbar() {
             beside the burger. A badge inside the collapsed drawer would be
             pointless — you'd have to open the menu to discover you had one. */}
         <div className="nav__right">
+          {/* Always on, logged in or not, on every screen size — appearance
+              isn't an account setting. */}
+          <ThemeToggle />
+
           {user && <NotificationBell />}
 
           {/* Mobile only: on desktop the avatar is already in .nav__actions

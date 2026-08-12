@@ -138,16 +138,16 @@ export default function EmployerDashboard() {
       onTabChange={setTab}
     >
         {user?.employerStatus === 'pending' && (
-          <div className="panel" style={{ background: '#FFF3E0', border: '1px solid #F0D9A8', marginBottom: 24 }}>
-            <strong style={{ color: '#8A5A0F' }}>Your account is awaiting admin approval.</strong>
-            <p style={{ color: '#8A5A0F', fontSize: 14, marginTop: 4, marginBottom: 0 }}>
+          <div className="panel" style={{ background: 'var(--amber-bg)', border: '1px solid var(--amber-border)', marginBottom: 24 }}>
+            <strong style={{ color: 'var(--amber-ink)' }}>Your account is awaiting admin approval.</strong>
+            <p style={{ color: 'var(--amber-ink)', fontSize: 14, marginTop: 4, marginBottom: 0 }}>
               You can browse your dashboard, but you won't be able to post jobs until an admin reviews your account.
             </p>
           </div>
         )}
 
         {user?.employerStatus === 'rejected' && (
-          <div className="panel" style={{ background: '#FFE9E1', border: '1px solid #F5C4B0', marginBottom: 24 }}>
+          <div className="panel" style={{ background: 'var(--coral-100)', border: '1px solid var(--coral-border)', marginBottom: 24 }}>
             <strong style={{ color: 'var(--coral-dark)' }}>Your employer account was not approved.</strong>
             <p style={{ color: 'var(--coral-dark)', fontSize: 14, marginTop: 4, marginBottom: 0 }}>
               Contact support if you believe this is a mistake.
@@ -421,7 +421,7 @@ export default function EmployerDashboard() {
                               </tr>
                               {analyzeErrorId === app._id && (
                                 <tr>
-                                  <td colSpan={8} style={{ background: '#FFE9E1' }}>
+                                  <td colSpan={8} style={{ background: 'var(--coral-100)' }}>
                                     <span style={{ color: 'var(--coral-dark)', fontSize: 13 }}>
                                       Could not generate an analysis right now. Please try again in a moment.
                                     </span>
