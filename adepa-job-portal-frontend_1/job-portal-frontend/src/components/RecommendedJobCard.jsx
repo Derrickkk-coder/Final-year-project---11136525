@@ -41,6 +41,7 @@ export default function RecommendedJobCard({ job }) {
         matchedCount={job.matchedCount}
         requiredCount={job.requiredCount}
         inferred={job.matchInferred}
+        jobTitle={job.title}
       />
 
       <footer className="rec-card__foot">

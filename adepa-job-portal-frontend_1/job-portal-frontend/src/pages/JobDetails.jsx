@@ -238,6 +238,7 @@ export default function JobDetails() {
                   matchedCount={job.matchedCount}
                   requiredCount={job.requiredCount}
                   inferred={job.matchInferred}
+                  jobTitle={job.title}
                   compact
                 />
               </div>

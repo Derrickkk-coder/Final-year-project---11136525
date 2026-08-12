@@ -1529,8 +1529,51 @@
   padding: 5px 11px; border-radius: var(--radius-pill);
 }
 .match-skill.is-have { background: var(--success-bg); color: var(--success); }
-.match-skill.is-missing { background: var(--amber-bg); color: var(--amber-ink); }
 .match-skill__note { font-weight: 500; opacity: 0.75; }
+
+/* A missing skill can grow a "find a course" panel underneath its own button,
+   so it drops out of the pill row onto its own full-width line rather than
+   being squeezed between its neighbours — a pill shape only reads right while
+   it's still pill-sized. */
+.match-skill.is-missing {
+  flex: 1 1 100%;
+  flex-direction: column; align-items: stretch; gap: 0;
+  background: var(--amber-bg); color: var(--amber-ink);
+  border-radius: var(--radius-sm); padding: 7px 11px;
+}
+.match-skill__row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-2);
+}
+.match-skill__learn {
+  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+  border: none; background: transparent; cursor: pointer;
+  padding: 3px 8px; border-radius: var(--radius-pill);
+  font-family: inherit; font-size: 11.5px; font-weight: 700;
+  color: var(--amber-ink);
+}
+.match-skill__learn:hover { background: rgba(0, 0, 0, 0.06); }
+.match-skill__resources-status {
+  margin: var(--space-2) 0 0; font-size: var(--text-xs); font-weight: 500;
+  color: var(--amber-ink); opacity: 0.85;
+}
+.match-skill__resources-status.is-error { color: var(--coral-dark); opacity: 1; }
+.match-skill__resources {
+  list-style: none; margin: var(--space-2) 0 0; padding-top: var(--space-2);
+  border-top: 1px solid var(--amber-border);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.match-skill__resources li {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--space-3); font-weight: 500;
+}
+.match-skill__resources a {
+  color: var(--teal-700); font-weight: 600; text-decoration: none;
+}
+.match-skill__resources a:hover { text-decoration: underline; }
+.match-skill__provider {
+  flex-shrink: 0; font-size: 11px; color: var(--ink-faint); font-weight: 600;
+}
 .match-detail__caveat {
   margin: var(--space-3) 0 0; font-size: var(--text-xs); color: var(--ink-faint);
 }

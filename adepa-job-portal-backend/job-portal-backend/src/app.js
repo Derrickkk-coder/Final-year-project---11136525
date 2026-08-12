@@ -10,6 +10,7 @@ import cvRoutes from './routes/cvRoutes.js'
 import statsRoutes from './routes/statsRoutes.js'
 import testimonialRoutes from './routes/testimonialRoutes.js'
 import supportRoutes from './routes/supportRoutes.js'
+import skillRoutes from './routes/skillRoutes.js'
 
 const app = express()
 
@@ -40,6 +41,7 @@ app.use('/api/cv', cvRoutes)
 app.use('/api/stats', statsRoutes)
 app.use('/api/testimonials', testimonialRoutes)
 app.use('/api/support', supportRoutes)
+app.use('/api/skills', skillRoutes)
 
 // ---- Error handling (must be last) ----
 app.use(notFound)
