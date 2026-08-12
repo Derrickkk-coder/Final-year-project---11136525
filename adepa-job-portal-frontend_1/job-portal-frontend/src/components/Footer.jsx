@@ -11,11 +11,12 @@ export default function Footer() {
         <span>© {new Date().getFullYear()} NextLeap · University of Ghana Final Year Project - Akwaboah Derrick-11136525</span>
 
         <div className="footer__links">
-          {/* Same rule as the navbar — this was the last route to the public
-              board left in the chrome for signed-in users. */}
+          {/* All three are visitor-only: "For employers" and "Log in" are
+              acquisition links with nothing to offer someone already signed
+              in, same reasoning as gating Browse jobs above. */}
           {!user && <Link to="/jobs">Browse jobs</Link>}
-          <Link to="/register">For employers</Link>
-          <Link to="/login">Log in</Link>
+          {!user && <Link to="/register">For employers</Link>}
+          {!user && <Link to="/login">Log in</Link>}
         </div>
 
         <div className="footer__socials">

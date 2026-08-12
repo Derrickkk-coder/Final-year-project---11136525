@@ -7,7 +7,7 @@ import RecommendedJobCard from '../components/RecommendedJobCard.jsx'
 import interviewFormat from '../utils/interviewFormat.js'
 import NotificationsPanel from '../components/NotificationsPanel.jsx'
 import EmptyState from '../components/EmptyState.jsx'
-import { SkeletonJobList, SkeletonRows } from '../components/Skeleton.jsx'
+import { SkeletonJobList, SkeletonRows, SkeletonStatCards } from '../components/Skeleton.jsx'
 import { fetchMyApplications } from '../api/applications.js'
 import { fetchRecommendedJobs } from '../api/jobs.js'
 import DashboardShell, { StatCard } from '../components/DashboardShell.jsx'
@@ -68,12 +68,16 @@ export default function JobSeekerDashboard() {
       title={user?.name || 'Dashboard'}
       actions={<Link to="/jobs" className="btn btn--pine">Find more jobs</Link>}
     >
-        <div className="dash__stats">
-          <StatCard value={counts.total} label="Total applications" icon={FileIcon} tone="lime" />
-          <StatCard value={counts.pending} label="Pending review" icon={ClockIcon} tone="teal" />
-          <StatCard value={counts.review} label="In review" icon={EyeIcon} tone="teal" />
-          <StatCard value={counts.accepted} label="Accepted" icon={CheckIcon} tone="lime" />
-        </div>
+        {loading ? (
+          <SkeletonStatCards count={4} />
+        ) : (
+          <div className="dash__stats">
+            <StatCard value={counts.total} label="Total applications" icon={FileIcon} tone="lime" />
+            <StatCard value={counts.pending} label="Pending review" icon={ClockIcon} tone="teal" />
+            <StatCard value={counts.review} label="In review" icon={EyeIcon} tone="teal" />
+            <StatCard value={counts.accepted} label="Accepted" icon={CheckIcon} tone="lime" />
+          </div>
+        )}
 
         <div className="dash__cols">
           <section className="card">

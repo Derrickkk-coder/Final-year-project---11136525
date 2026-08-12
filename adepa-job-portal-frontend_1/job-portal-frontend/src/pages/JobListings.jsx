@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, Navigate } from 'react-router-dom'
 import JobCard from '../components/JobCard.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import { SkeletonJobList } from '../components/Skeleton.jsx'
@@ -11,6 +11,13 @@ import DashboardShell from '../components/DashboardShell.jsx'
 export default function JobListings() {
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
+
+  // The links to get here are already gone from an admin's nav (they moderate
+  // through "All jobs" instead), but /jobs itself is a public route, so typing
+  // it in still worked. This closes that gap rather than just hiding the door.
+  // Scoped to the listing only — a job's own /jobs/:id page isn't touched, so
+  // an admin moderating a specific posting doesn't get bounced away from it.
+  if (user?.role === 'admin') return <Navigate to="/admin" replace />
   const [query, setQuery] = useState(searchParams.get('q') || '')
   const [category, setCategory] = useState(searchParams.get('category') || 'All categories')
   const [type, setType] = useState('All types')
