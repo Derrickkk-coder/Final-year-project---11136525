@@ -910,6 +910,16 @@
   margin: 0 0 var(--space-4); font-size: var(--text-base);
   color: var(--ink); line-height: var(--leading-normal);
 }
+/* The AI's own verdict, not just the status pill's outcome — so "approved"
+   reads differently depending on whether a person made that call or the AI
+   did, and "pending" says specifically what the AI flagged rather than
+   leaving the admin to re-read the comment and guess. */
+.mod-item__ai {
+  display: flex; align-items: baseline; gap: 6px;
+  margin: -4px 0 var(--space-4); font-size: var(--text-sm);
+}
+.mod-item__ai.is-positive { color: var(--success-ink); }
+.mod-item__ai.is-flagged { color: var(--amber-ink); }
 .mod-item__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 
 /* ============ Public comment form (landing page) ============ */

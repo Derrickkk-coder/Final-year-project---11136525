@@ -54,6 +54,22 @@ const testimonialSchema = new mongoose.Schema(
       type: String,
       select: false,
     },
+    // Set once, at submission, by moderateTestimonial.js. `null` means the
+    // call failed or was skipped rather than "neutral" — the comment still got
+    // a status (falls back to pending either way), this just records whether
+    // an AI actually looked at it and what it decided, so a status of
+    // "approved" is auditable as either "the AI called this positive" or
+    // "an admin looked at it" rather than looking the same either way.
+    aiSentiment: {
+      type: String,
+      enum: ['positive', 'not_positive', null],
+      default: null,
+    },
+    aiReason: {
+      type: String,
+      trim: true,
+      default: '',
+    },
   },
   { timestamps: true }
 )

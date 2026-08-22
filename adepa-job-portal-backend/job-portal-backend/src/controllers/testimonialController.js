@@ -1,8 +1,9 @@
 import Testimonial from '../models/Testimonial.js'
+import { moderateTestimonial } from '../utils/moderateTestimonial.js'
 
-// Flip to false to publish submissions immediately, skipping moderation.
-// Left on because this endpoint takes anonymous writes that render on the
-// landing page — see the note on `status` in the model.
+// Flip to false to publish submissions immediately, skipping moderation (AI
+// included) entirely. Left on because this endpoint takes anonymous writes
+// that render on the landing page — see the note on `status` in the model.
 const REQUIRE_APPROVAL = true
 
 // Never send the IP or moderation state to the public feed
@@ -67,28 +68,55 @@ export async function createTestimonial(req, res, next) {
       })
     }
 
+    const finalRating = Number(rating) || 5
+
+    // Defaults to the old behaviour — held for a person — and only moves to
+    // published if the AI both ran and was confident it's genuine positive
+    // feedback. A failed call (quota, network, a malformed response) falls
+    // back to exactly what happened before this feature existed, rather than
+    // either blocking the submission or, worse, auto-publishing on a
+    // moderation call that never actually happened.
+    let status = 'pending'
+    let aiSentiment = null
+    let aiReason = ''
+
+    if (REQUIRE_APPROVAL) {
+      try {
+        const verdict = await moderateTestimonial({ quote, authorType, rating: finalRating })
+        aiSentiment = verdict.sentiment
+        aiReason = verdict.reason
+        if (verdict.sentiment === 'positive') status = 'approved'
+      } catch (err) {
+        console.error('[ai] Testimonial moderation failed, holding for a person:', err.message)
+      }
+    } else {
+      status = 'approved'
+    }
+
     const testimonial = await Testimonial.create({
       name,
       authorType,
       role,
       company,
       quote,
-      rating: Number(rating) || 5,
-      status: REQUIRE_APPROVAL ? 'pending' : 'approved',
+      rating: finalRating,
+      status,
       submittedFromIp: ip,
+      aiSentiment,
+      aiReason,
     })
 
     lastSubmitByIp.set(ip, Date.now())
 
     res.status(201).json({
       success: true,
-      // Says plainly that it isn't live yet, so nobody reloads looking for it.
-      // The "Thank you!" heading is supplied by the form, so it isn't repeated
-      // here.
-      message: REQUIRE_APPROVAL
-        ? 'Your comment is under review, and will appear on the site once it has been approved.'
-        : 'Your comment is now live on the landing page.',
-      published: !REQUIRE_APPROVAL,
+      // Says plainly whether it's live yet, so nobody reloads looking for a
+      // comment still waiting on a person. The "Thank you!" heading is
+      // supplied by the form, so it isn't repeated here.
+      message: status === 'approved'
+        ? 'Your comment is now live on the landing page.'
+        : 'Your comment is under review, and will appear on the site once it has been approved.',
+      published: status === 'approved',
       testimonial: { _id: testimonial._id },
     })
   } catch (err) {

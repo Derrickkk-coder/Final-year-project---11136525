@@ -562,8 +562,9 @@ export default function AdminDashboard() {
           <>
             <h2 style={{ fontSize: 18, marginBottom: 4 }}>Landing page comments</h2>
             <p style={{ color: 'var(--ink-soft)', fontSize: 'var(--text-sm)', marginTop: 0, marginBottom: 'var(--space-5)' }}>
-              Left by visitors without an account, so nothing appears on the site until you approve
-              it. Pending ones are at the top.
+              Left by visitors without an account. An AI check publishes genuine positive feedback
+              immediately and holds everything else — criticism, spam, anything ambiguous — for you.
+              Pending ones are at the top, and you can override any decision below.
             </p>
 
             {testimonials.length > 0 ? (
@@ -588,6 +589,18 @@ export default function AdminDashboard() {
                       </div>
 
                       <p className="mod-item__quote">&ldquo;{t.quote}&rdquo;</p>
+
+                      {/* aiSentiment is null for anything submitted before this
+                          feature shipped, or when the AI call itself failed —
+                          both fall back to the old plain-pending look rather
+                          than claiming a verdict that was never actually made. */}
+                      {t.aiSentiment && (
+                        <p className={`mod-item__ai is-${t.aiSentiment === 'positive' ? 'positive' : 'flagged'}`}>
+                          <span aria-hidden="true">{t.aiSentiment === 'positive' ? '✓' : '⚑'}</span>{' '}
+                          {t.aiSentiment === 'positive' ? 'Auto-approved by AI' : 'Flagged by AI'}
+                          {t.aiReason ? ` — ${t.aiReason}` : ''}
+                        </p>
+                      )}
 
                       <div className="mod-item__actions">
                         {t.status !== 'approved' && (
