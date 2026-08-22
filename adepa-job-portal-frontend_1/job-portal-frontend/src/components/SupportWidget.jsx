@@ -20,6 +20,13 @@ import { useSidebar } from '../context/SidebarContext.jsx'
 // in CSS alone — change both together.
 const MOBILE_SHEET_QUERY = '(max-width: 560px)'
 
+// How far a pointer has to move before a press becomes a drag rather than a
+// tap. Below this it's just a finger settling, not an intent to move the
+// button — without a threshold, every tap would jitter by a pixel and never
+// register as a click.
+const DRAG_THRESHOLD_PX = 6
+const DRAG_STORAGE_KEY = 'nextleap-help-fab-pos'
+
 // While the panel is open, how often to check for the other side's messages and
 // typing state. Fast enough that a reply and a typing bubble feel live; slow
 // enough to be reasonable on a free-tier host.
@@ -56,6 +63,123 @@ export default function SupportWidget() {
   // Log out. A floating action button over an open drawer is wrong anyway: the
   // drawer is the thing being interacted with.
   const { open: drawerOpen } = useSidebar()
+
+  // ---- Drag-to-reposition, mobile only ----
+  // Offset from the button's normal bottom-left resting spot, applied as a
+  // transform. Restored from wherever it was last left, so it doesn't snap
+  // back to the corner on every visit.
+  const [dragOffset, setDragOffset] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(DRAG_STORAGE_KEY))
+      if (Number.isFinite(stored?.x) && Number.isFinite(stored?.y)) return stored
+    } catch {
+      // Malformed or inaccessible storage — start from the resting spot
+    }
+    return { x: 0, y: 0 }
+  })
+  const [isMobile, setIsMobile] = useState(
+    () => window.matchMedia?.(MOBILE_SHEET_QUERY)?.matches ?? false
+  )
+  const fabRef = useRef(null)
+  // Not state: a drag spans many pointermove events and only the endpoints
+  // (was it a drag at all, where did it end) need to survive between them.
+  const dragRef = useRef(null)
+  // Read inside the click handler, which fires from the browser after
+  // pointerup regardless of whether the pointer moved — this is what tells it
+  // to swallow that click rather than toggle the panel.
+  const draggedRef = useRef(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia?.(MOBILE_SHEET_QUERY)
+    if (!mq) return
+    const sync = () => setIsMobile(mq.matches)
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  // Keeps the button on screen across a resize — rotating the phone, or a
+  // desktop window narrowing past the breakpoint with an old offset still
+  // saved from a taller layout.
+  useEffect(() => {
+    const onResize = () => setDragOffset((prev) => clampToViewport(fabRef.current, prev))
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  function clampToViewport(el, offset) {
+    if (!el) return offset
+    const rect = el.getBoundingClientRect()
+    // The rect already includes whatever offset is currently applied, so
+    // subtracting it back out recovers the CSS-anchored resting position —
+    // the fixed point every clamp below is measured from, whatever the
+    // stylesheet's own bottom/left values happen to be.
+    const baseLeft = rect.left - offset.x
+    const baseTop = rect.top - offset.y
+    const margin = 6
+    return {
+      x: Math.min(Math.max(offset.x, margin - baseLeft), window.innerWidth - rect.width - margin - baseLeft),
+      y: Math.min(Math.max(offset.y, margin - baseTop), window.innerHeight - rect.height - margin - baseTop),
+    }
+  }
+
+  function handleFabPointerDown(e) {
+    // Only the closed FAB drags — once open on mobile it's hidden entirely
+    // (the panel's own ✕ closes it), and dragging the button around behind an
+    // open desktop panel would just be confusing.
+    if (!isMobile || open) return
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      startOffset: dragOffset,
+      dragging: false,
+    }
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+
+  function handleFabPointerMove(e) {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== e.pointerId) return
+
+    const dx = e.clientX - drag.startX
+    const dy = e.clientY - drag.startY
+    if (!drag.dragging && Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return
+
+    drag.dragging = true
+    setDragOffset(
+      clampToViewport(fabRef.current, {
+        x: drag.startOffset.x + dx,
+        y: drag.startOffset.y + dy,
+      })
+    )
+  }
+
+  function handleFabPointerUp(e) {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== e.pointerId) return
+    dragRef.current = null
+
+    if (!drag.dragging) return
+    draggedRef.current = true
+    setDragOffset((current) => {
+      try {
+        localStorage.setItem(DRAG_STORAGE_KEY, JSON.stringify(current))
+      } catch {
+        // Not worth surfacing — it just won't be remembered next visit
+      }
+      return current
+    })
+  }
+
+  function handleFabClick() {
+    // A drag still ends with a click event; this is what stops it from also
+    // toggling the panel open the moment a drag is released.
+    if (draggedRef.current) {
+      draggedRef.current = false
+      return
+    }
+    setOpen((v) => !v)
+  }
 
   // A notification links here with ?support=open so a reply is one click away
   useEffect(() => {
@@ -222,12 +346,21 @@ export default function SupportWidget() {
     <>
       <button
         type="button"
+        ref={fabRef}
         className={`help-fab ${open ? 'is-open' : ''} ${drawerOpen ? 'is-stowed' : ''}`}
         // Out of the tab order too, not just out of sight
         tabIndex={drawerOpen ? -1 : 0}
-        onClick={() => setOpen((v) => !v)}
+        // Only actually offset on mobile — the drag handlers already only run
+        // there, but a stale offset from a phone-width session shouldn't nudge
+        // the desktop button if the window is later resized up past it.
+        style={isMobile ? { transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)` } : undefined}
+        onPointerDown={handleFabPointerDown}
+        onPointerMove={handleFabPointerMove}
+        onPointerUp={handleFabPointerUp}
+        onPointerCancel={handleFabPointerUp}
+        onClick={handleFabClick}
         aria-expanded={open}
-        aria-label={open ? 'Close help' : 'Need help?'}
+        aria-label={open ? 'Close help' : isMobile ? 'Need help? Press and drag to move.' : 'Need help?'}
       >
         {open ? (
           <span aria-hidden="true">✕</span>

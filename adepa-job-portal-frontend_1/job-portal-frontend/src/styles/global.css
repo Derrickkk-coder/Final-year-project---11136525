@@ -806,7 +806,19 @@
      rather than an inline style also keeps it clear of ConfirmProvider, which
      sets body.style.overflow directly and restores whatever it found. */
   body.chat-open { overflow: hidden; }
-  .help-fab { bottom: var(--space-4); left: var(--space-4); padding: 11px 17px; }
+  /* Round, icon-only, and draggable on a phone — the label reads fine as a
+     one-off explanation on a roomy desktop corner, but on mobile it's the
+     more usual "chat bubble" shape, and SupportWidget.jsx positions it via a
+     transform on top of this resting spot while it's being dragged.
+     touch-action: none hands the gesture to the drag handler instead of the
+     page trying to scroll or the browser trying to zoom on it. */
+  .help-fab {
+    bottom: var(--space-4); left: var(--space-4);
+    width: 54px; height: 54px; padding: 0; justify-content: center;
+    border-radius: 50%;
+    touch-action: none;
+  }
+  .help-fab__label { display: none; }
   .chat-bubble { max-width: 88%; }
 }
 
